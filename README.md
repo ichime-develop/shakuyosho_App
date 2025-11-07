@@ -1,16 +1,51 @@
-# shakuyousho_app
+# しゃくよーしょアプリ (shakuyousho_app)
 
-A new Flutter project.
+友人やグループ内での「立替・割り勘・貸し借り」を、借用書風UIでシンプルに記録・共有できる Flutter アプリです。
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 📱 概要
+- 個人またはグループ単位での貸し借りを登録・精算
+- イベント（旅行・飲み会など）ごとの立替履歴を自動整理
+- 透明性と合意形成を重視したUI設計（借用書スタイル）
+- Flutter + Riverpod + go_router 構成
 
-A few resources to get you started if this is your first Flutter project:
+---
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## 📘 開発ドキュメント
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+| ドキュメント | 内容 |
+|---------------|------|
+| [docs/SCREEN_MAP.md](docs/SCREEN_MAP.md) | 画面一覧・画面遷移マップ（Copilot参照用） |
+| Notion プロジェクトページ | 仕様・タスク管理（非公開） |
+
+---
+
+## 🧱 環境構築手順
+
+環境構築・バージョン固定方法は [しゃくよーしょ開発環境構築手順書（2025年版）](docs/ENV_SETUP.md) を参照。
+
+---
+
+## 🚀 実行
+
+```bash
+fvm flutter pub get
+fvm flutter run
+```
+
+---
+
+## 🤝 開発メンバー
+
+| 名前 | 役割 |
+|------|------|
+| 市川 慶汰 | ロジック担当 / 設計・仕様策定 |
+| 坂口 | UI・ロジック両担当 |
+
+---
+
+## 🧭 参考リンク
+- [Flutter documentation](https://docs.flutter.dev)
+- [Riverpod docs](https://riverpod.dev)
+- [go_router package](https://pub.dev/packages/go_router)
