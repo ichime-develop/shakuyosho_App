@@ -9,7 +9,10 @@ class Fr0200FriendDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final friendId = Uri.base.queryParameters['friendId'] ?? '';
     return Scaffold(
-      appBar: AppBar(title: const Text('FR0200 Friend Detail')),
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => context.pop()),
+        title: const Text('FR0200 Friend Detail'),
+      ),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shakuyousho_app/core/utils/app_logger.dart';
 import 'package:go_router/go_router.dart';
 import '../common/common_bottom_nav_bar.dart';
 
@@ -18,26 +19,22 @@ class To0100Screen extends ConsumerStatefulWidget {
 }
 
 class _To0100ScreenState extends ConsumerState<To0100Screen>
-    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+    with
+        SingleTickerProviderStateMixin,
+        AutomaticKeepAliveClientMixin,
+        ScreenLogMixin {
   late final TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    logInit('TO0100');
     _tabController = TabController(
       length: 2,
       vsync: this,
       initialIndex: widget.initialTab,
     );
-    // タブ変更時にURLと同期（/to0100/personal or /to0100/event）
-    _tabController.addListener(() {
-      if (_tabController.indexIsChanging) return; // アニメ中の重複発火を回避
-      final path = _tabController.index == 0
-          ? '/to0100/personal'
-          : '/to0100/event';
-      final current = _currentLocation;
-      if (current != path) context.go(path);
-    });
+    // URL同期は TabBar.onTap にて replace で行う（back-stack を汚さない）
   }
 
   @override
@@ -47,17 +44,15 @@ class _To0100ScreenState extends ConsumerState<To0100Screen>
         widget.initialTab != _tabController.index &&
         widget.initialTab >= 0 &&
         widget.initialTab < _tabController.length) {
-      _tabController.animateTo(widget.initialTab);
+      // route-driven changes should switch instantly without animating
+      _tabController.index = widget.initialTab;
     }
-  }
-
-  String get _currentLocation {
-    final info = GoRouter.of(context).routeInformationProvider.value;
-    return info.uri.toString();
   }
 
   @override
   void dispose() {
+    // log lifecycle for diagnostics
+    logDispose('TO0100');
     _tabController.dispose();
     super.dispose();
   }
@@ -85,6 +80,7 @@ class _To0100ScreenState extends ConsumerState<To0100Screen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    logBuild(context, 'TO0100');
     return Scaffold(
       appBar: AppBar(
         title: const Text('しゃくよーしょ'),
@@ -96,6 +92,14 @@ class _To0100ScreenState extends ConsumerState<To0100Screen>
         ],
         bottom: TabBar(
           controller: _tabController,
+          // handle taps by replacing the URL (don't push a new history entry)
+          onTap: (index) {
+            final path = index == 0 ? '/to0100/personal' : '/to0100/event';
+            // replace keeps the same page instance (router uses NoTransitionPage)
+            context.replace(path);
+            // update controller immediately to avoid double animations
+            _tabController.index = index;
+          },
           tabs: const [
             Tab(text: '個人', icon: Icon(Icons.person_outline)),
             Tab(text: 'イベント', icon: Icon(Icons.event_note)),
@@ -569,7 +573,7 @@ class _Controller {
   static void onOpenFriendDetail(BuildContext context, String friendId) =>
       context.go('/fr0200?friendId=$friendId');
 
-  static void onOpenMy(BuildContext context) => context.go('/my0100');
+  // note: onOpenMy removed (unused). Use CommonBottomNavBar navigation instead.
 
   static void onOpenEventList(BuildContext context) => context.go('/ev0100');
   static void onOpenEventDetail(BuildContext context, String eventId) =>

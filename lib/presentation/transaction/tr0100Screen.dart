@@ -8,7 +8,10 @@ class Tr0100TransactionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('TR0100 Transaction')),
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => context.pop()),
+        title: const Text('TR0100 Transaction'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

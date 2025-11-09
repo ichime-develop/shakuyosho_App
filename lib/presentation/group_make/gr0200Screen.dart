@@ -8,14 +8,20 @@ class Gr0200GroupJoinScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('GR0200 Group Join')),
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => context.pop()),
+        title: const Text('GR0200 Group Join'),
+      ),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('グループ参加（仮）'),
             const SizedBox(height: 12),
-            ElevatedButton(onPressed: () => context.go('/to0100'), child: const Text('戻る TO0100')),
+            ElevatedButton(
+              onPressed: () => context.go('/to0100'),
+              child: const Text('戻る TO0100'),
+            ),
           ],
         ),
       ),

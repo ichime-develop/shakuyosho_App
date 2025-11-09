@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shakuyousho_app/core/utils/route_logger.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/presentation/loan_book/lb0100Screen.dart';
 import 'package:shakuyousho_app/presentation/transaction/tr0100Screen.dart';
 import 'package:shakuyousho_app/presentation/top/to0100Screen.dart';
+import 'package:shakuyousho_app/presentation/friends/fr0100Screen.dart';
+import 'package:shakuyousho_app/presentation/friends/fr0200Screen.dart';
+import 'package:shakuyousho_app/presentation/my/my0100Screen.dart';
+import 'package:shakuyousho_app/presentation/event/ev0100Screen.dart';
+import 'package:shakuyousho_app/presentation/event/ev0200Screen.dart';
+import 'package:shakuyousho_app/presentation/settlement/sv0100Screen.dart';
 
 import '../presentation/splash/st0100screen.dart';
 import '../presentation/group_make/gr0100screen.dart';
@@ -11,6 +18,7 @@ import '../presentation/group_make/gr0200Screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
+    observers: ref.read(goRouterObserversProvider),
     initialLocation: '/st0100',
     // `/to0100` 直打ちを `/to0100/personal` へ逃がす（後方互換）
     redirect: (context, state) {
@@ -26,23 +34,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const St0100SplashScreen(),
       ),
 
-      // TO0100: タブ別のURL（個人/イベント）。現状は同一画面を返す。
-      GoRoute(
-        path: '/to0100/personal',
-        name: 'TO0100_PERSONAL',
-        builder: (_, __) => const To0100Screen(initialTab: 0),
-      ),
-      GoRoute(
-        path: '/to0100/event',
-        name: 'TO0100_EVENT',
-        builder: (_, __) => const To0100Screen(initialTab: 1),
-      ),
-
-      // 既存ルート（互換用）。redirect で /to0100/personal に寄せる。
+      // TO0100: 統一ルート（タブは path parameter によって制御）
       GoRoute(
         path: '/to0100',
         name: 'TO0100',
-        builder: (_, __) => const To0100Screen(),
+        redirect: (context, state) => '/to0100/personal',
+      ),
+      GoRoute(
+        path: '/to0100/:tab(personal|event)',
+        name: 'TO0100_TAB',
+        pageBuilder: (context, state) {
+          final tab = state.pathParameters['tab'];
+          final initial = (tab == 'event') ? 1 : 0;
+          return NoTransitionPage(
+            key: const ValueKey('TO0100'),
+            child: To0100Screen(initialTab: initial),
+          );
+        },
       ),
 
       GoRoute(
@@ -70,46 +78,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/fr0100',
         name: 'FR0100',
-        builder: (context, state) => const _PlaceholderScaffold(title: 'FR0100 ともだち一覧（仮）'),
+        builder: (context, state) => const Fr0100FriendsScreen(),
       ),
       GoRoute(
         path: '/fr0200',
         name: 'FR0200',
-        builder: (context, state) => const _PlaceholderScaffold(title: 'FR0200 ともだち詳細（仮）'),
+        builder: (context, state) => const Fr0200FriendDetailScreen(),
       ),
       GoRoute(
         path: '/my0100',
         name: 'MY0100',
-        builder: (context, state) => const _PlaceholderScaffold(title: 'MY0100 じぶん（仮）'),
+        builder: (context, state) => const My0100Screen(),
       ),
       GoRoute(
         path: '/ev0100',
         name: 'EV0100',
-        builder: (context, state) => const _PlaceholderScaffold(title: 'EV0100 イベント一覧（仮）'),
+        builder: (context, state) => const Ev0100EventListScreen(),
       ),
       GoRoute(
         path: '/ev0200',
         name: 'EV0200',
-        builder: (context, state) => const _PlaceholderScaffold(title: 'EV0200 イベント詳細（仮）'),
+        builder: (context, state) => const Ev0200EventDetailScreen(),
       ),
       GoRoute(
         path: '/sv0100',
         name: 'SV0100',
-        builder: (context, state) => const _PlaceholderScaffold(title: 'SV0100 清算結果（仮）'),
+        builder: (context, state) => const Sv0100SettlementScreen(),
       ),
     ],
   );
 });
 
-// 画面未実装時の簡易プレースホルダ
-class _PlaceholderScaffold extends StatelessWidget {
-  const _PlaceholderScaffold({required this.title});
-  final String title;
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(child: Text(title)),
-    );
-  }
-}
+// Note: placeholder scaffold removed — routes now point to real screens or placeholders in presentation/.

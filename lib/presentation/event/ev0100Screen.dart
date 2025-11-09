@@ -8,7 +8,10 @@ class Ev0100EventListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('EV0100 Events')),
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => context.pop()),
+        title: const Text('EV0100 Events'),
+      ),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

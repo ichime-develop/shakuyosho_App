@@ -9,7 +9,10 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final eventId = Uri.base.queryParameters['eventId'] ?? '';
     return Scaffold(
-      appBar: AppBar(title: const Text('EV0200 Event Detail')),
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => context.pop()),
+        title: const Text('EV0200 Event Detail'),
+      ),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

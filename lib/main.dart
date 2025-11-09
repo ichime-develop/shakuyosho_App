@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'router/app_router.dart';
+import 'core/utils/app_logger.dart';
 
 /// ─────────────────────────────────────────────────────────
 /// しゃくよーしょ: アプリのエントリポイント（Composition Root）
@@ -39,19 +40,22 @@ Future<void> main() async {
   };
 
   // runZonedGuarded で非同期エラーも拾う
-  runZonedGuarded(() {
-    runApp(
-      // 4) 依存注入の根：ProviderScope（全Providerのルート）。
-      const ProviderScope(
-        // 開発時に変更検知したい場合は observers に Logger を追加する。
-        // observers: [_RiverpodLogger()],
-        child: App(),
-      ),
-    );
-  }, (error, stack) {
-    // if (kUseFirebase) FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    // if (kUseSentry)   Sentry.captureException(error, stackTrace: stack);
-  });
+  runZonedGuarded(
+    () {
+      runApp(
+        // 4) 依存注入の根：ProviderScope（全Providerのルート）。
+        const ProviderScope(
+          // 開発時に変更検知したい場合は observers に Logger を追加する。
+          observers: [AppRiverpodLogger()],
+          child: App(),
+        ),
+      );
+    },
+    (error, stack) {
+      // if (kUseFirebase) FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      // if (kUseSentry)   Sentry.captureException(error, stackTrace: stack);
+    },
+  );
 }
 
 class App extends ConsumerWidget {
@@ -71,20 +75,4 @@ class App extends ConsumerWidget {
   }
 }
 
-/// 開発時の簡易ログ（必要なら ProviderScope.observers に追加して使用）。
-class _RiverpodLogger extends ProviderObserver {
-  const _RiverpodLogger();
-
-  @override
-  void didUpdateProvider(
-    ProviderBase provider,
-    Object? previousValue,
-    Object? newValue,
-    ProviderContainer container,
-  ) {
-    assert(() {
-      debugPrint('🪄  ${provider.name ?? provider.runtimeType}: $newValue');
-      return true;
-    }());
-  }
-}
+// _RiverpodLogger removed — AppRiverpodLogger is used from core/utils/app_logger.dart
