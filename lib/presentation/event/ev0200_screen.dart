@@ -44,6 +44,16 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
           onPressed: () => context.pop(),
         ),
         title: Text('EV0200 ${event.title}'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'イベントを削除',
+            onPressed: () => _Controller.confirmAndDeleteEvent(
+              context: context,
+              eventId: event.eventId,
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -65,37 +75,65 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                       final p = payments[index];
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 6),
-                        child: ListTile(
+                        child: InkWell(
                           onTap: () => _Controller.goEditEventTransaction(
                             context: context,
                             eventId: event.eventId,
                             payment: p,
                           ),
-                          title: Text(
-                            event.title,
-                            style: theme.textTheme.titleMedium,
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 2),
-                              Text(
-                                '記載日: ${_fmtDateTime(p.recordedAt)}',
-                                style: theme.textTheme.bodySmall
-                                    ?.copyWith(color: theme.hintColor),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '支払った人: ${p.payerName}',
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                          trailing: Text(
-                            _fmtYen(p.amount),
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // 左側: タイトル + サブ情報
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        event.title,
+                                        style: theme.textTheme.titleMedium,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '記載日: ${_fmtDateTime(p.recordedAt)}',
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(color: theme.hintColor),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '支払った人: ${p.payerName}',
+                                        style: theme.textTheme.bodySmall,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                // 右側: 金額 + 削除ボタン
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      _fmtYen(p.amount),
+                                      style: theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    IconButton(
+                                      iconSize: 20,
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                      icon: const Icon(Icons.delete_outline),
+                                      tooltip: '支払いを削除',
+                                      onPressed: () => _onDeletePayment(context, p.id),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -135,6 +173,43 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _onDeletePayment(BuildContext context, String paymentId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('支払いを削除'),
+        content: const Text(
+          'この支払いを削除しますか？\n'
+          '元に戻すことはできません。（モック段階の文言）',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('削除する'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    // Mock deletion
+    _mockPayments.removeWhere((p) => p.id == paymentId);
+
+    // Rebuild UI (force refresh)
+    (context as Element).markNeedsBuild();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('支払いを削除しました（モック）')),
     );
   }
 }
@@ -182,6 +257,44 @@ class _Controller {
       },
     );
     context.push(uri.toString());
+  }
+
+  /// イベント削除（確認ダイアログ付き）
+  static Future<void> confirmAndDeleteEvent({
+    required BuildContext context,
+    required String eventId,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('イベントを削除'),
+        content: const Text(
+          'このイベントを削除しますか？\n'
+          '登録済みの支払いも含めて元に戻せません。（モック段階の文言）',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('削除する'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // モックデータから削除
+    _mockEvents.removeWhere((e) => e.eventId == eventId);
+    _mockPayments.removeWhere((p) => p.eventId == eventId);
+
+    // 詳細画面を閉じて前の画面に戻る
+    if (context.mounted) {
+      context.pop();
+    }
   }
 }
 

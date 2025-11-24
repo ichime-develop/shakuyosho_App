@@ -313,9 +313,14 @@ class _FriendRow extends StatelessWidget {
 /// ---------------------------
 /// イベントタブ
 /// ---------------------------
-class _EventTabView extends StatelessWidget {
+class _EventTabView extends StatefulWidget {
   const _EventTabView();
 
+  @override
+  State<_EventTabView> createState() => _EventTabViewState();
+}
+
+class _EventTabViewState extends State<_EventTabView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -376,10 +381,9 @@ class _EventTabView extends StatelessWidget {
           (e) => _EventCard(
             data: e,
             onTap: () => _Controller.onOpenEventDetail(context, e.eventId),
-            onAddTx: () =>
-                _Controller.onAddEventTransaction(context, e.eventId),
             onSettle: () =>
                 _Controller.onComputeSettlementFor(context, e.eventId),
+            onDelete: () => _onDeleteEvent(e.eventId),
           ),
         ),
 
@@ -395,14 +399,47 @@ class _EventTabView extends StatelessWidget {
                   data: e,
                   onTap: () =>
                       _Controller.onOpenEventDetail(context, e.eventId),
-                  onAddTx: () =>
-                      _Controller.onAddEventTransaction(context, e.eventId),
                   onSettle: () =>
                       _Controller.onComputeSettlementFor(context, e.eventId),
+                  onDelete: () => _onDeleteEvent(e.eventId),
                 ),
               ),
         ],
       ],
+    );
+  }
+
+  Future<void> _onDeleteEvent(String eventId) async {
+    final context = this.context;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('イベントを削除'),
+        content: const Text(
+          'このイベントを削除しますか？\n記録された支払いも含めて元に戻せません。（モック段階の文言）',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('削除する'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() {
+      _mockEvents.removeWhere((e) => e.eventId == eventId);
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('イベントを削除しました（モック）')),
     );
   }
 }
@@ -411,14 +448,14 @@ class _EventCard extends StatelessWidget {
   const _EventCard({
     required this.data,
     required this.onTap,
-    required this.onAddTx,
     required this.onSettle,
+    required this.onDelete,
   });
 
   final EventSummary data;
   final VoidCallback onTap;
-  final VoidCallback onAddTx;
   final VoidCallback onSettle;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -467,13 +504,22 @@ class _EventCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  _SmallBtn(text: '取引', icon: Icons.add, onPressed: onAddTx),
-                  const SizedBox(height: 6),
                   _SmallBtn(
                     text: '清算',
                     icon: Icons.calculate_outlined,
                     onPressed: onSettle,
+                  ),
+                  const SizedBox(height: 4),
+                  IconButton(
+                    iconSize: 20,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: const Icon(Icons.delete_outline),
+                    tooltip: 'イベントを削除',
+                    onPressed: onDelete,
                   ),
                 ],
               ),
