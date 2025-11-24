@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/core/utils/app_logger.dart';
 import '../common/common_bottom_nav_bar.dart';
 

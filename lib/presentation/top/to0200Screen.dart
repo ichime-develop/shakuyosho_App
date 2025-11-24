@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 class TO0100Screen extends StatefulWidget {
+  const TO0100Screen({super.key});
+
   @override
-  _TO0100ScreenState createState() => _TO0100ScreenState();
+  TO0100ScreenState createState() => TO0100ScreenState();
 }
 
-class _TO0100ScreenState extends State<TO0100Screen> with SingleTickerProviderStateMixin {
-  TabController _tabController;
+class TO0100ScreenState extends State<TO0100Screen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
 
   @override
   void initState() {
