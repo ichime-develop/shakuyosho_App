@@ -37,7 +37,10 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: () => context.pop()),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
         title: const Text('LB0100 借用書'),
         actions: [
           IconButton(

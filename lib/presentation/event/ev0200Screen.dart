@@ -2,30 +2,284 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+/// EV0200: イベント詳細（支払い一覧）
+///
+/// レイアウト仕様:
+/// 1. AppBar: 画面ID + イベント名のみ表示
+/// 2. ボディ: 支払いイベント単位のカード一覧
+///    - イベント名
+///    - 記載した日付
+///    - 金額
+///    - 誰が支払ったか
+///    カードタップで TR0100 に遷移（編集）
+/// 3. 下部ボタン:
+///    - 「追加」: TR0100 へ遷移（新規）
+///    - 「清算」: SV0100 へ遷移
+/// ※ この画面から借用書(LB0100)には遷移しない
 class Ev0200EventDetailScreen extends ConsumerWidget {
   const Ev0200EventDetailScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final eventId = Uri.base.queryParameters['eventId'] ?? '';
+    final qp = Uri.base.queryParameters;
+    final eventId = qp['eventId'] ?? 'ev_001';
+
+    final event = _mockEvents.firstWhere(
+      (e) => e.eventId == eventId,
+      orElse: () => _mockEvents.first,
+    );
+
+    // 本来は eventId に紐づく支払い一覧を Provider から取得する想定
+    final payments = _mockPayments
+        .where((p) => p.eventId == event.eventId)
+        .toList()
+      ..sort((a, b) => b.recordedAt.compareTo(a.recordedAt)); // 新しい順
+
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: () => context.pop()),
-        title: const Text('EV0200 Event Detail'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Event Detail for: $eventId'),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () => context.pop(),
-              child: const Text('戻る'),
-            ),
-          ],
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
         ),
+        title: Text('EV0200 ${event.title}'),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: payments.isEmpty
+                ? Center(
+                    child: Text(
+                      'このイベントの支払いはまだ登録されていません。\n「追加」ボタンから支払いを登録できます。',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: theme.hintColor),
+                    ),
+                  )
+                : ListView.builder(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    itemCount: payments.length,
+                    itemBuilder: (context, index) {
+                      final p = payments[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        child: ListTile(
+                          onTap: () => _Controller.goEditEventTransaction(
+                            context: context,
+                            eventId: event.eventId,
+                            payment: p,
+                          ),
+                          title: Text(
+                            event.title,
+                            style: theme.textTheme.titleMedium,
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 2),
+                              Text(
+                                '記載日: ${_fmtDateTime(p.recordedAt)}',
+                                style: theme.textTheme.bodySmall
+                                    ?.copyWith(color: theme.hintColor),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '支払った人: ${p.payerName}',
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                          trailing: Text(
+                            _fmtYen(p.amount),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+
+          // 下部の操作ボタン
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _Controller.goAddEventTransaction(
+                      context: context,
+                      eventId: event.eventId,
+                    ),
+                    icon: const Icon(Icons.add),
+                    label: const Text('追加'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => _Controller.goSettlement(
+                      context: context,
+                      eventId: event.eventId,
+                    ),
+                    child: const Text('清算'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
+}
+
+class _Controller {
+  /// 清算ボタン → SV0100
+  static void goSettlement({
+    required BuildContext context,
+    required String eventId,
+  }) {
+    final uri = Uri(
+      path: '/sv0100',
+      queryParameters: {
+        'eventId': eventId,
+      },
+    );
+    context.push(uri.toString());
+  }
+
+  /// 追加ボタン → TR0100（新規）
+  static void goAddEventTransaction({
+    required BuildContext context,
+    required String eventId,
+  }) {
+    final uri = Uri(
+      path: '/tr0100',
+      queryParameters: {
+        'eventId': eventId,
+      },
+    );
+    context.push(uri.toString());
+  }
+
+  /// 支払いカードタップ → TR0100（編集）
+  static void goEditEventTransaction({
+    required BuildContext context,
+    required String eventId,
+    required _EventPayment payment,
+  }) {
+    final uri = Uri(
+      path: '/tr0100',
+      queryParameters: {
+        'eventId': eventId,
+        'transactionId': payment.id,
+      },
+    );
+    context.push(uri.toString());
+  }
+}
+
+/// ---------------------------
+/// モックデータ
+/// ---------------------------
+class _EventLite {
+  final String eventId;
+  final String title;
+  final DateTime date;
+  final String location;
+
+  const _EventLite({
+    required this.eventId,
+    required this.title,
+    required this.date,
+    required this.location,
+  });
+}
+
+/// 1件の支払い（イベント内トランザクション）のモック
+class _EventPayment {
+  final String id;
+  final String eventId;
+  final int amount;
+  final String payerName;
+  final DateTime recordedAt;
+
+  const _EventPayment({
+    required this.id,
+    required this.eventId,
+    required this.amount,
+    required this.payerName,
+    required this.recordedAt,
+  });
+}
+
+final _mockEvents = <_EventLite>[
+  _EventLite(
+    eventId: 'ev_001',
+    title: '箱根旅行(2024/05)',
+    date: DateTime(2024, 5, 3),
+    location: '神奈川・箱根',
+  ),
+  _EventLite(
+    eventId: 'ev_002',
+    title: '夏フェス(2024/08)',
+    date: DateTime(2024, 8, 20),
+    location: '千葉・幕張',
+  ),
+];
+
+final List<_EventPayment> _mockPayments = [
+  _EventPayment(
+    id: 'tx_001',
+    eventId: 'ev_001',
+    amount: 6000,
+    payerName: 'A さん',
+    recordedAt: DateTime(2024, 5, 3, 19, 30),
+  ),
+  _EventPayment(
+    id: 'tx_002',
+    eventId: 'ev_001',
+    amount: 1200,
+    payerName: 'B さん',
+    recordedAt: DateTime(2024, 5, 3, 22, 10),
+  ),
+  _EventPayment(
+    id: 'tx_003',
+    eventId: 'ev_001',
+    amount: 4500,
+    payerName: 'C さん',
+    recordedAt: DateTime(2024, 5, 4, 12, 15),
+  ),
+  _EventPayment(
+    id: 'tx_004',
+    eventId: 'ev_002',
+    amount: 8000,
+    payerName: 'みき',
+    recordedAt: DateTime(2024, 8, 20, 18, 0),
+  ),
+];
+
+String _fmtYen(int n) {
+  final s = n.abs().toString();
+  final buf = StringBuffer();
+  for (int i = 0; i < s.length; i++) {
+    final r = s.length - i;
+    buf.write(s[i]);
+    if (r > 1 && r % 3 == 1) buf.write(',');
+  }
+  return '¥${buf.toString()}';
+}
+
+String _fmtDateTime(DateTime d) {
+  final date =
+      '${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
+  final time =
+      '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  return '$date $time';
 }

@@ -571,50 +571,50 @@ class _Controller {
 
   static void onOpenFriends(BuildContext context) => context.go('/fr0100');
   static void onOpenFriendDetail(BuildContext context, String friendId) =>
-      context.go('/fr0200?friendId=$friendId');
+      context.push('/fr0200?friendId=$friendId');
 
   // note: onOpenMy removed (unused). Use CommonBottomNavBar navigation instead.
 
-  static void onOpenEventList(BuildContext context) => context.go('/ev0100');
+  static void onOpenEventList(BuildContext context) => context.push('/ev0100');
   static void onOpenEventDetail(BuildContext context, String eventId) =>
-      context.go('/ev0200?eventId=$eventId');
+      context.push('/ev0200?eventId=$eventId');
 
   // 個人タブアクション
   static void onAddPersonalTransaction(BuildContext context) {
     // 相手選択モーダル→ TR0100 へ、ここはダミー
-    context.go('/tr0100?mode=personal');
+    context.push('/tr0100?mode=personal');
   }
 
   static void onCreatePersonalLb(BuildContext context) {
-    context.go('/lb0100?mode=create');
+    context.push('/lb0100?mode=create');
   }
 
   static void onCreatePersonalLbFor(BuildContext context, String friendId) {
-    context.go('/lb0100?mode=create&friendId=$friendId');
+    context.push('/lb0100?mode=create&friendId=$friendId');
   }
 
   static void onAddPersonalTransactionFor(
     BuildContext context,
     String friendId,
   ) {
-    context.go('/tr0100?mode=personal&friendId=$friendId');
+    context.push('/tr0100?mode=personal&friendId=$friendId');
   }
 
   // イベントタブアクション
   static void onCreateEvent(BuildContext context) {
-    context.go('/gr0100'); // 新規イベント/グループ作成
+    context.push('/gr0100'); // 新規イベント/グループ作成
   }
 
   static void onComputeSettlement(BuildContext context) {
-    context.go('/sv0100'); // 直近イベントを仮定（実装時は選択）
+    context.push('/sv0100'); // 直近イベントを仮定（実装時は選択）
   }
 
   static void onAddEventTransaction(BuildContext context, String eventId) {
-    context.go('/tr0100?mode=event&eventId=$eventId');
+    context.push('/tr0100?mode=event&eventId=$eventId');
   }
 
   static void onComputeSettlementFor(BuildContext context, String eventId) {
-    context.go('/sv0100?eventId=$eventId');
+    context.push('/sv0100?eventId=$eventId');
   }
 }
 

@@ -146,7 +146,7 @@ class _Controller {
 
   static void onGoJoinWithCode(BuildContext context, String code) {
     final uri = Uri(path: '/gr0200', queryParameters: {'code': code});
-    context.go(uri.toString());
+    context.push(uri.toString());
   }
 }
 

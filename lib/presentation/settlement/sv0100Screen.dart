@@ -35,7 +35,10 @@ class _Sv0100SettlementScreenState
 
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: () => context.pop()),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
         title: Text('SV0100 精算：${ctx.event.title}'),
         actions: [
           IconButton(
@@ -171,7 +174,7 @@ class _Sv0100SettlementScreenState
         'memo': 'イベント精算(${ctx.event.title})',
       },
     );
-    context.go(uri.toString());
+    context.push(uri.toString());
   }
 
   void _goTx(_Transfer t) {
@@ -184,7 +187,7 @@ class _Sv0100SettlementScreenState
         'memo': 'イベント精算(${ctx.event.title})',
       },
     );
-    context.go(uri.toString());
+    context.push(uri.toString());
   }
 
   void _goCreateAllLb(List<_Transfer> list) {

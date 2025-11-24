@@ -262,18 +262,18 @@ class _Controller {
   }
 
   static void onOpenFriendDetail(BuildContext context, String friendId) {
-    context.go('/fr0200?friendId=$friendId');
+    context.push('/fr0200?friendId=$friendId');
   }
 
   static void onCreatePersonalLbFor(BuildContext context, String friendId) {
-    context.go('/lb0100?mode=create&friendId=$friendId');
+    context.push('/lb0100?mode=create&friendId=$friendId');
   }
 
   static void onAddPersonalTransactionFor(
     BuildContext context,
     String friendId,
   ) {
-    context.go('/tr0100?mode=personal&friendId=$friendId');
+    context.push('/tr0100?mode=personal&friendId=$friendId');
   }
 }
 

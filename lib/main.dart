@@ -17,45 +17,42 @@ import 'core/utils/app_logger.dart';
 const bool kUseFirebase = false;
 const bool kUseSentry = false;
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+void main() {
+  // runZonedGuarded 内で binding 初期化〜runApp までを同じ Zone で実行し、
+  // "Zone mismatch" 警告を避ける。
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // 1) プラットフォーム初期化（必要なら向き固定など）
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    // 1) プラットフォーム初期化（必要なら向き固定など）
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  // 2) 外部SDKの初期化（必要になったらここで）
-  if (kUseFirebase) {
-    // await Firebase.initializeApp();
-    // FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-  }
-  if (kUseSentry) {
-    // await SentryFlutter.init((o) { o.dsn = 'YOUR_DSN'; });
-  }
+    // 2) 外部SDKの初期化（必要になったらここで）
+    if (kUseFirebase) {
+      // await Firebase.initializeApp();
+      // FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    }
+    if (kUseSentry) {
+      // await SentryFlutter.init((o) { o.dsn = 'YOUR_DSN'; });
+    }
 
-  // 3) グローバルエラーハンドリング
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.dumpErrorToConsole(details);
-    // if (kUseFirebase) FirebaseCrashlytics.instance.recordFlutterFatalError(details);
-    // if (kUseSentry)   Sentry.captureException(details.exception, stackTrace: details.stack);
-  };
+    // 3) グローバルエラーハンドリング
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.dumpErrorToConsole(details);
+      // if (kUseFirebase) FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+      // if (kUseSentry)   Sentry.captureException(details.exception, stackTrace: details.stack);
+    };
 
-  // runZonedGuarded で非同期エラーも拾う
-  runZonedGuarded(
-    () {
-      runApp(
-        // 4) 依存注入の根：ProviderScope（全Providerのルート）。
-        const ProviderScope(
-          // 開発時に変更検知したい場合は observers に Logger を追加する。
-          observers: [AppRiverpodLogger()],
-          child: App(),
-        ),
-      );
-    },
-    (error, stack) {
-      // if (kUseFirebase) FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      // if (kUseSentry)   Sentry.captureException(error, stackTrace: stack);
-    },
-  );
+    // 4) 依存注入の根：ProviderScope（全Providerのルート）。
+    runApp(
+      const ProviderScope(
+        observers: [AppRiverpodLogger()],
+        child: App(),
+      ),
+    );
+  }, (error, stack) {
+    // if (kUseFirebase) FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    // if (kUseSentry)   Sentry.captureException(error, stackTrace: stack);
+  });
 }
 
 class App extends ConsumerWidget {
