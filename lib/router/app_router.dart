@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakuyousho_app/core/utils/route_logger.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shakuyousho_app/presentation/loan_book/lb0100Screen.dart';
-import 'package:shakuyousho_app/presentation/transaction/tr0100Screen.dart';
-import 'package:shakuyousho_app/presentation/top/to0100Screen.dart';
-import 'package:shakuyousho_app/presentation/friends/fr0100Screen.dart';
-import 'package:shakuyousho_app/presentation/friends/fr0200Screen.dart';
-import 'package:shakuyousho_app/presentation/my/my0100Screen.dart';
-import 'package:shakuyousho_app/presentation/event/ev0100Screen.dart';
-import 'package:shakuyousho_app/presentation/event/ev0200Screen.dart';
-import 'package:shakuyousho_app/presentation/settlement/sv0100Screen.dart';
+import 'package:shakuyousho_app/presentation/loan_book/lb0100_screen.dart';
+import 'package:shakuyousho_app/presentation/transaction/tr0100_screen.dart';
+import 'package:shakuyousho_app/presentation/top/to0100_screen.dart';
+import 'package:shakuyousho_app/presentation/friends/fr0100_screen.dart';
+import 'package:shakuyousho_app/presentation/friends/fr0200_screen.dart';
+import 'package:shakuyousho_app/presentation/my/my0100_screen.dart';
+import 'package:shakuyousho_app/presentation/event/ev0100_screen.dart';
+import 'package:shakuyousho_app/presentation/event/ev0200_screen.dart';
+import 'package:shakuyousho_app/presentation/settlement/sv0100_screen.dart';
 
-import '../presentation/splash/st0100screen.dart';
-import '../presentation/group_make/gr0100screen.dart';
-import '../presentation/group_make/gr0200Screen.dart';
+import '../presentation/splash/st0100_screen.dart';
+import '../presentation/group_make/gr0100_screen.dart';
+import '../presentation/group_make/gr0200_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
