@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakuyousho_app/core/utils/app_logger.dart';
 import 'package:go_router/go_router.dart';
 import '../common/common_bottom_nav_bar.dart';
+import 'to0200_screen.dart';
 
 /// TO0100: ホーム（個人 / イベント タブ）
 /// - ヘッダー: タイトル + 通知
@@ -66,7 +67,7 @@ class _To0100ScreenState extends ConsumerState<To0100Screen>
       );
     } else {
       return _EventFab(
-        onCreateEvent: () => _Controller.onCreateEvent(context),
+        onCreateEvent: () => _Controller.onOpenGroupEntrySheet(context),
         onComputeSettlement: () => _Controller.onComputeSettlement(context),
       );
     }
@@ -661,6 +662,35 @@ class _Controller {
 
   static void onComputeSettlementFor(BuildContext context, String eventId) {
     context.push('/sv0100?eventId=$eventId');
+  }
+
+  /// イベントタブの「＋」FAB 押下時に表示するハーフモーダル（TO0200）
+  /// - グループを作成する: GR0100 へ
+  /// - グループに参加する: GR0200 へ
+  static Future<void> onOpenGroupEntrySheet(BuildContext context) async {
+    final rootContext = context;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) {
+        return To0200GroupEntrySheet(
+          onTapCreateGroup: () {
+            Navigator.of(sheetCtx).pop();
+            rootContext.push('/gr0100');
+          },
+          onTapJoinGroup: () {
+            Navigator.of(sheetCtx).pop();
+            rootContext.push('/gr0200');
+          },
+          onTapCancel: () {
+            Navigator.of(sheetCtx).pop();
+          },
+        );
+      },
+    );
   }
 }
 
