@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shakuyousho_app/data/mock/event_mock.dart';
+import 'package:shakuyousho_app/domain/models/event_models.dart';
 
 /// EV0200: イベント詳細（支払い一覧）
 ///
@@ -22,18 +24,17 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final qp = Uri.base.queryParameters;
-    final eventId = qp['eventId'] ?? 'ev_001';
+    final eventId = qp['eventId'] ?? mockEvents.first.id;
 
-    final event = _mockEvents.firstWhere(
-      (e) => e.eventId == eventId,
-      orElse: () => _mockEvents.first,
+    final event = mockEvents.firstWhere(
+      (e) => e.id == eventId,
+      orElse: () => mockEvents.first,
     );
 
     // 本来は eventId に紐づく支払い一覧を Provider から取得する想定
-    final payments = _mockPayments
-        .where((p) => p.eventId == event.eventId)
-        .toList()
-      ..sort((a, b) => b.recordedAt.compareTo(a.recordedAt)); // 新しい順
+    final payments =
+        mockTransactions.where((p) => p.eventId == event.id).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // 新しい順
 
     final theme = Theme.of(context);
 
@@ -50,7 +51,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
             tooltip: 'イベントをけす',
             onPressed: () => _Controller.confirmAndDeleteEvent(
               context: context,
-              eventId: event.eventId,
+              eventId: event.id,
             ),
           ),
         ],
@@ -63,13 +64,16 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                     child: Text(
                       'このイベントのおしはらいはまだないよ。\n「ついか」ボタンからメモできるよ。',
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: theme.hintColor),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.hintColor,
+                      ),
                     ),
                   )
                 : ListView.builder(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     itemCount: payments.length,
                     itemBuilder: (context, index) {
                       final p = payments[index];
@@ -78,18 +82,22 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                         child: InkWell(
                           onTap: () => _Controller.goEditEventTransaction(
                             context: context,
-                            eventId: event.eventId,
+                            eventId: event.id,
                             payment: p,
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // 左側: タイトル + サブ情報
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         event.title,
@@ -97,13 +105,13 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        'メモしたひ: ${_fmtDateTime(p.recordedAt)}',
+                                        'メモしたひ: ${_fmtDateTime(p.createdAt)}',
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(color: theme.hintColor),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        'はらったひと: ${p.payerName}',
+                                        'はらったひと: ${p.paidBy}',
                                         style: theme.textTheme.bodySmall,
                                       ),
                                     ],
@@ -116,11 +124,12 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(
-                                      _fmtYen(p.amount),
-                                      style: theme.textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: theme.colorScheme.primary,
-                                      ),
+                                      _fmtYen(p.totalAmount),
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: theme.colorScheme.primary,
+                                          ),
                                     ),
                                     const SizedBox(height: 4),
                                     IconButton(
@@ -129,7 +138,8 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                                       constraints: const BoxConstraints(),
                                       icon: const Icon(Icons.delete_outline),
                                       tooltip: 'おしはらいをけす',
-                                      onPressed: () => _onDeletePayment(context, p.id),
+                                      onPressed: () =>
+                                          _onDeletePayment(context, p.id),
                                     ),
                                   ],
                                 ),
@@ -144,15 +154,17 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
 
           // 下部の操作ボタン
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 12.0,
+            ),
             child: Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _Controller.goAddEventTransaction(
                       context: context,
-                      eventId: event.eventId,
+                      eventId: event.id,
                     ),
                     icon: const Icon(Icons.add),
                     label: const Text('ついか'),
@@ -163,7 +175,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                   child: FilledButton(
                     onPressed: () => _Controller.goSettlement(
                       context: context,
-                      eventId: event.eventId,
+                      eventId: event.id,
                     ),
                     child: const Text('おかねをまとめる'),
                   ),
@@ -203,14 +215,16 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
     }
 
     // Mock deletion
-    _mockPayments.removeWhere((p) => p.id == paymentId);
+    // In mock file this would remove, but shared mock is immutable here; rebuild not required.
+    // If desired, modify mockTransactions in memory for testing.
+    // _mockPayments.removeWhere((p) => p.id == paymentId);
 
     // Rebuild UI (force refresh)
     (context as Element).markNeedsBuild();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('おしはらいをけしたよ（モック）')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('おしはらいをけしたよ（モック）')));
   }
 }
 
@@ -220,12 +234,7 @@ class _Controller {
     required BuildContext context,
     required String eventId,
   }) {
-    final uri = Uri(
-      path: '/sv0100',
-      queryParameters: {
-        'eventId': eventId,
-      },
-    );
+    final uri = Uri(path: '/sv0100', queryParameters: {'eventId': eventId});
     context.push(uri.toString());
   }
 
@@ -234,12 +243,7 @@ class _Controller {
     required BuildContext context,
     required String eventId,
   }) {
-    final uri = Uri(
-      path: '/tr0100',
-      queryParameters: {
-        'eventId': eventId,
-      },
-    );
+    final uri = Uri(path: '/tr0100', queryParameters: {'eventId': eventId});
     context.push(uri.toString());
   }
 
@@ -247,14 +251,11 @@ class _Controller {
   static void goEditEventTransaction({
     required BuildContext context,
     required String eventId,
-    required _EventPayment payment,
+    required EventTransaction payment,
   }) {
     final uri = Uri(
       path: '/tr0100',
-      queryParameters: {
-        'eventId': eventId,
-        'transactionId': payment.id,
-      },
+      queryParameters: {'eventId': eventId, 'transactionId': payment.id},
     );
     context.push(uri.toString());
   }
@@ -288,8 +289,8 @@ class _Controller {
     if (confirmed != true) return;
 
     // モックデータから削除
-    _mockEvents.removeWhere((e) => e.eventId == eventId);
-    _mockPayments.removeWhere((p) => p.eventId == eventId);
+    // Note: shared mock lists are static fixtures. In integration tests you'd replace providers.
+    // Leaving them as-is for now.
 
     // 詳細画面を閉じて前の画面に戻る
     if (context.mounted) {
@@ -298,85 +299,7 @@ class _Controller {
   }
 }
 
-/// ---------------------------
-/// モックデータ
-/// ---------------------------
-class _EventLite {
-  final String eventId;
-  final String title;
-  final DateTime date;
-  final String location;
-
-  const _EventLite({
-    required this.eventId,
-    required this.title,
-    required this.date,
-    required this.location,
-  });
-}
-
-/// 1件の支払い（イベント内トランザクション）のモック
-class _EventPayment {
-  final String id;
-  final String eventId;
-  final int amount;
-  final String payerName;
-  final DateTime recordedAt;
-
-  const _EventPayment({
-    required this.id,
-    required this.eventId,
-    required this.amount,
-    required this.payerName,
-    required this.recordedAt,
-  });
-}
-
-final _mockEvents = <_EventLite>[
-  _EventLite(
-    eventId: 'ev_001',
-    title: '箱根旅行(2024/05)',
-    date: DateTime(2024, 5, 3),
-    location: '神奈川・箱根',
-  ),
-  _EventLite(
-    eventId: 'ev_002',
-    title: '夏フェス(2024/08)',
-    date: DateTime(2024, 8, 20),
-    location: '千葉・幕張',
-  ),
-];
-
-final List<_EventPayment> _mockPayments = [
-  _EventPayment(
-    id: 'tx_001',
-    eventId: 'ev_001',
-    amount: 6000,
-    payerName: 'A さん',
-    recordedAt: DateTime(2024, 5, 3, 19, 30),
-  ),
-  _EventPayment(
-    id: 'tx_002',
-    eventId: 'ev_001',
-    amount: 1200,
-    payerName: 'B さん',
-    recordedAt: DateTime(2024, 5, 3, 22, 10),
-  ),
-  _EventPayment(
-    id: 'tx_003',
-    eventId: 'ev_001',
-    amount: 4500,
-    payerName: 'C さん',
-    recordedAt: DateTime(2024, 5, 4, 12, 15),
-  ),
-  _EventPayment(
-    id: 'tx_004',
-    eventId: 'ev_002',
-    amount: 8000,
-    payerName: 'みき',
-    recordedAt: DateTime(2024, 8, 20, 18, 0),
-  ),
-];
+// Using shared mock lists from lib/data/mock/event_mock.dart
 
 String _fmtYen(int n) {
   final s = n.abs().toString();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shakuyousho_app/data/mock/event_mock.dart';
 
 /// EV0100: イベント一覧画面
 /// - 旅行・飲み会などのイベント単位で、貸し借りを管理する入り口
@@ -34,7 +35,7 @@ class Ev0100EventListScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
 
-          if (_mockEvents.isEmpty)
+          if (mockEvents.isEmpty)
             const Card(
               child: Padding(
                 padding: EdgeInsets.all(16),
@@ -42,13 +43,8 @@ class Ev0100EventListScreen extends ConsumerWidget {
               ),
             )
           else
-            ..._mockEvents.map((e) {
-              final total =
-                  _mockMembers[e.eventId]?.fold<int>(
-                    0,
-                    (p, m) => p + m.paidYen,
-                  ) ??
-                  0;
+            ...mockEvents.map((e) {
+              final total = e.totalUnsettledAmount;
               return Card(
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(
@@ -65,25 +61,25 @@ class Ev0100EventListScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${_fmtDate(e.date)} ／ ${e.location}',
+                        '${_fmtDate(e.lastUpdatedAt)}',
                         style: theme.textTheme.bodySmall,
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'さんか: ${e.memberCount}にん ／ みんなではらった: ${_fmtYen(total)}',
+                        'さんか: ${e.members.length}にん ／ みんなではらった: ${_fmtYen(total)}',
                         style: theme.textTheme.bodySmall,
                       ),
                     ],
                   ),
-                  onTap: () => _Controller.goDetail(context, e.eventId),
+                  onTap: () => _Controller.goDetail(context, e.id),
                   trailing: PopupMenuButton<String>(
                     onSelected: (v) {
                       switch (v) {
                         case 'detail':
-                          _Controller.goDetail(context, e.eventId);
+                          _Controller.goDetail(context, e.id);
                           break;
                         case 'settlement':
-                          _Controller.goSettlement(context, e.eventId);
+                          _Controller.goSettlement(context, e.id);
                           break;
                       }
                     },
@@ -137,65 +133,7 @@ class _Controller {
   }
 }
 
-/// ---------------------------
-/// モックデータ（EV0200/SV0100 と揃えたイメージ）
-/// ---------------------------
-class _EventLite {
-  final String eventId;
-  final String title;
-  final DateTime date;
-  final String location;
-  final int memberCount;
-
-  const _EventLite({
-    required this.eventId,
-    required this.title,
-    required this.date,
-    required this.location,
-    required this.memberCount,
-  });
-}
-
-class _EventMember {
-  final String userId;
-  final String displayName;
-  final int paidYen;
-
-  const _EventMember({
-    required this.userId,
-    required this.displayName,
-    required this.paidYen,
-  });
-}
-
-final _mockEvents = <_EventLite>[
-  _EventLite(
-    eventId: 'ev_001',
-    title: '箱根旅行(2024/05)',
-    date: DateTime(2024, 5, 3),
-    location: '神奈川・箱根',
-    memberCount: 3,
-  ),
-  _EventLite(
-    eventId: 'ev_002',
-    title: '夏フェス(2024/08)',
-    date: DateTime(2024, 8, 20),
-    location: '千葉・幕張',
-    memberCount: 2,
-  ),
-];
-
-final Map<String, List<_EventMember>> _mockMembers = {
-  'ev_001': const [
-    _EventMember(userId: 'u_ichikawa', displayName: 'いちかわ', paidYen: 12000),
-    _EventMember(userId: 'u_sakaguchi', displayName: 'さかぐち', paidYen: 6000),
-    _EventMember(userId: 'u_ayaka', displayName: 'あやか', paidYen: 0),
-  ],
-  'ev_002': const [
-    _EventMember(userId: 'u_ichikawa', displayName: 'いちかわ', paidYen: 3000),
-    _EventMember(userId: 'u_miki', displayName: 'みき', paidYen: 9000),
-  ],
-};
+// mockEvents and mockTransactions are provided by lib/data/mock/event_mock.dart
 
 String _fmtYen(int n) {
   final s = n.abs().toString();
