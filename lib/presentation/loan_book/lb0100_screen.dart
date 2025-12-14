@@ -41,7 +41,7 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        title: const Text('LB0100 借用書'),
+        title: const Text('LB0100 しゃくようしょ'),
         actions: [
           IconButton(
             tooltip: 'プレビュー',
@@ -49,7 +49,7 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
             icon: const Icon(Icons.visibility_outlined),
           ),
           IconButton(
-            tooltip: '下書きを保存',
+            tooltip: 'したがきをほぞん',
             onPressed: _onSaveDraft,
             icon: const Icon(Icons.save_outlined),
           ),
@@ -67,7 +67,7 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
                 ButtonSegment(
                   value: 'personal',
                   icon: Icon(Icons.person_outline),
-                  label: Text('個人'),
+                  label: Text('こじん'),
                 ),
                 ButtonSegment(
                   value: 'event',
@@ -82,7 +82,7 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
 
             if (_mode == 'personal') ...[
               _Labeled(
-                label: '相手（必須）',
+                label: 'あいて（ひっす）',
                 child: DropdownButtonFormField<String>(
                   value: _friendId,
                   items: _mockFriends
@@ -94,12 +94,12 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
                       )
                       .toList(),
                   onChanged: (v) => setState(() => _friendId = v),
-                  validator: (v) => v == null ? '相手を選択してください' : null,
+                  validator: (v) => v == null ? 'あいてをえらんでね' : null,
                 ),
               ),
             ] else ...[
               _Labeled(
-                label: 'イベント（必須）',
+                label: 'イベント（ひっす）',
                 child: DropdownButtonFormField<String>(
                   value: _eventId,
                   items: _mockEvents
@@ -111,21 +111,21 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
                       )
                       .toList(),
                   onChanged: (v) => setState(() => _eventId = v),
-                  validator: (v) => v == null ? 'イベントを選択してください' : null,
+                  validator: (v) => v == null ? 'イベントをえらんでね' : null,
                 ),
               ),
             ],
             const SizedBox(height: 8),
 
             _Labeled(
-              label: '金額（必須・円）',
+              label: 'きんがく（ひっす・えん）',
               child: TextFormField(
                 controller: _amountCtrl,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(prefixText: '¥ '),
                 validator: (v) {
                   final n = int.tryParse((v ?? '').replaceAll(',', ''));
-                  if (n == null || n <= 0) return '1円以上の金額を入力してください';
+                  if (n == null || n <= 0) return '1えんいじょうをいれてね';
                   return null;
                 },
               ),
@@ -133,25 +133,25 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
             const SizedBox(height: 8),
 
             _Labeled(
-              label: '返済期限（任意）',
+              label: 'めやすのひ（にんい）',
               child: InkWell(
                 onTap: _pickDueDate,
                 borderRadius: BorderRadius.circular(8),
                 child: InputDecorator(
-                  decoration: const InputDecoration(hintText: '未設定'),
-                  child: Text(_dueAt == null ? '未設定' : _fmtDate(_dueAt!)),
+                  decoration: const InputDecoration(hintText: 'まだきめてない'),
+                  child: Text(_dueAt == null ? 'まだきめてない' : _fmtDate(_dueAt!)),
                 ),
               ),
             ),
             const SizedBox(height: 8),
 
             _Labeled(
-              label: 'メモ（任意）',
+              label: 'メモ（にんい）',
               child: TextFormField(
                 controller: _memoCtrl,
                 maxLines: 3,
                 decoration: const InputDecoration(
-                  hintText: '例：ランチ代 / ホテル代立替 など',
+                  hintText: 'れい: らんちだい / ホテルだいたてかえ など',
                 ),
               ),
             ),
@@ -160,8 +160,8 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
             SwitchListTile(
               value: _requireSignature,
               onChanged: (v) => setState(() => _requireSignature = v),
-              title: const Text('署名を必須にする（モック）'),
-              subtitle: const Text('相手の承認時に署名を求めます'),
+              title: const Text('サインをひっすにする（モック）'),
+              subtitle: const Text('あいてのOKのときにサインをたのむよ'),
             ),
             const SizedBox(height: 16),
 
@@ -180,7 +180,7 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
                   child: FilledButton.icon(
                     onPressed: _onIssue,
                     icon: const Icon(Icons.ios_share_outlined),
-                    label: const Text('発行（共有）'),
+                    label: const Text('はっこう（きょうゆう）'),
                   ),
                 ),
               ],
@@ -189,7 +189,7 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
 
             // ヒント
             Text(
-              'メモは借用書にも反映されます。発行後にリンク共有で相手に送信できます（モック）。',
+              'メモはしゃくようしょにもそのままだよ。はっこうしたらリンクできょうゆうできるよ（モック）。',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.hintColor,
               ),
@@ -234,7 +234,7 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
     if (!valid) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('未入力の必須項目があります')));
+      ).showSnackBar(const SnackBar(content: Text('ひっすのところがまだだよ')));
     }
     return valid;
   }
@@ -279,7 +279,7 @@ void _showPreviewSheet(BuildContext context, _IouInput data) {
     useSafeArea: true,
     isScrollControlled: true,
     builder: (ctx) {
-      final title = data.mode == 'event' ? '借用書（イベント）' : '借用書（個人）';
+      final title = data.mode == 'event' ? 'しゃくようしょ（イベント）' : 'しゃくようしょ（こじん）';
       final counterpart = data.mode == 'event'
           ? _mockEvents.firstWhere((e) => e.eventId == data.eventId).title
           : _mockFriends
@@ -302,7 +302,7 @@ void _showPreviewSheet(BuildContext context, _IouInput data) {
                   children: [
                     Row(
                       children: [
-                        const Text('相手：'),
+                        const Text('あいて：'),
                         Expanded(
                           child: Text(
                             counterpart,
@@ -314,7 +314,7 @@ void _showPreviewSheet(BuildContext context, _IouInput data) {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Text('金額：'),
+                        const Text('きんがく：'),
                         Expanded(
                           child: Text(
                             _fmtYen(data.amountYen),
@@ -326,10 +326,10 @@ void _showPreviewSheet(BuildContext context, _IouInput data) {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Text('期限：'),
+                        const Text('めやすのひ：'),
                         Expanded(
                           child: Text(
-                            data.dueAt == null ? '未設定' : _fmtDate(data.dueAt!),
+                            data.dueAt == null ? 'まだきめてない' : _fmtDate(data.dueAt!),
                           ),
                         ),
                       ],
@@ -339,7 +339,7 @@ void _showPreviewSheet(BuildContext context, _IouInput data) {
                       Text('メモ：${data.memo!}'),
                     ],
                     const SizedBox(height: 8),
-                    Text('署名要件：${data.requireSignature ? '必須' : '任意'}'),
+                    Text('サインひつよう：${data.requireSignature ? 'ひつよう' : 'おこのみ'}'),
                   ],
                 ),
               ),
@@ -350,7 +350,7 @@ void _showPreviewSheet(BuildContext context, _IouInput data) {
                 Navigator.of(ctx).pop();
                 ScaffoldMessenger.of(
                   context,
-                ).showSnackBar(const SnackBar(content: Text('プレビューを閉じました')));
+                ).showSnackBar(const SnackBar(content: Text('プレビューをとじたよ')));
               },
               icon: const Icon(Icons.check_circle_outline),
               label: const Text('OK'),
@@ -370,14 +370,14 @@ class _Controller {
     // TODO: Repository を通して下書き保存
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('下書きを保存しました（モック）')));
+    ).showSnackBar(const SnackBar(content: Text('したがきをほぞんしたよ（モック）')));
   }
 
   static void issue(BuildContext context, _IouInput data) {
     // TODO: 共有リンク発行、相手へ送信
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('借用書を発行しました（共有リンク：モック）')));
+    ).showSnackBar(const SnackBar(content: Text('しゃくようしょをつくってリンクをだしたよ（モック）')));
     context.go('/to0100/personal');
   }
 }

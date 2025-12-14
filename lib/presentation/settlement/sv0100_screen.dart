@@ -39,10 +39,10 @@ class _Sv0100SettlementScreenState
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        title: Text('SV0100 精算：${ctx.event.title}'),
+        title: Text('SV0100 おかねまとめ：${ctx.event.title}'),
         actions: [
           IconButton(
-            tooltip: '再計算',
+            tooltip: 'もういちどだす',
             onPressed: () => setState(() {
               /* netBalances は不変。UIリビルドのみ */
             }),
@@ -60,15 +60,14 @@ class _Sv0100SettlementScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('イベント概要', style: theme.textTheme.titleSmall),
+                  Text('イベントのまとめ', style: theme.textTheme.titleSmall),
                   const SizedBox(height: 8),
-                  _kvRow('イベントID', ctx.event.eventId),
+                  _kvRow('イベント ID', ctx.event.eventId),
                   _kvRow(
-                    '参加者',
+                    'メンバー',
                     ctx.members.map((m) => m.displayName).join(', '),
                   ),
-                  _kvRow('支払合計', _fmtYen(ctx.totalPaid)),
-                  _kvRow('1人あたり(均等)', _fmtYen(ctx.eachShare)),
+                  _kvRow('ごうけい', _fmtYen(ctx.totalPaid)),
                 ],
               ),
             ),
@@ -76,17 +75,17 @@ class _Sv0100SettlementScreenState
           const SizedBox(height: 12),
 
           // 支払内訳
-          Text('支払内訳', style: theme.textTheme.titleSmall),
+          Text('はらったメモ', style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           ...ctx.members.map(
             (m) => ListTile(
               leading: CircleAvatar(child: Text(m.initial)),
               title: Text(m.displayName),
               subtitle: Text(
-                '支払: ${_fmtYen(m.paidYen)} / 残高: ${_fmtYen(ctx.netBalances[m.userId] ?? 0)}',
+                'はらい: ${_fmtYen(m.paidYen)} / のこり: ${_fmtYen(ctx.netBalances[m.userId] ?? 0)}',
               ),
               trailing: Text(
-                (ctx.netBalances[m.userId] ?? 0) >= 0 ? '受取' : '支払',
+                (ctx.netBalances[m.userId] ?? 0) >= 0 ? 'もらう' : 'はらう',
                 style: TextStyle(
                   color: (ctx.netBalances[m.userId] ?? 0) >= 0
                       ? Colors.teal
@@ -99,13 +98,13 @@ class _Sv0100SettlementScreenState
           const SizedBox(height: 12),
 
           // 最小送金案
-          Text('最小送金案（ヒューリスティック）', style: theme.textTheme.titleSmall),
+          Text('おかねのうごかしかた（かんたん）', style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           if (transfers.isEmpty)
             const Card(
               child: Padding(
                 padding: EdgeInsets.all(16),
-                child: Text('清算は不要です。'),
+                child: Text('とくにやることはないよ。'),
               ),
             )
           else
@@ -121,8 +120,14 @@ class _Sv0100SettlementScreenState
                       if (v == 'tx') _goTx(t);
                     },
                     itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'lb', child: Text('借用書を発行(LB0100)')),
-                      PopupMenuItem(value: 'tx', child: Text('取引に進む(TR0100)')),
+                      PopupMenuItem(
+                        value: 'lb',
+                        child: Text('しゃくようしょをつくる(LB0100)'),
+                      ),
+                      PopupMenuItem(
+                        value: 'tx',
+                        child: Text('とりひきにすすむ(TR0100)'),
+                      ),
                     ],
                   ),
                 ),
@@ -139,7 +144,7 @@ class _Sv0100SettlementScreenState
                       ? null
                       : () => _goCreateAllLb(transfers),
                   icon: const Icon(Icons.receipt_long_outlined),
-                  label: const Text('全て借用書化(モック)'),
+                  label: const Text('しゃくようしょをつくる'),
                 ),
               ),
               const SizedBox(width: 12),
@@ -149,7 +154,7 @@ class _Sv0100SettlementScreenState
                       ? null
                       : () => _goApplySettlement(transfers),
                   icon: const Icon(Icons.check_circle_outline),
-                  label: const Text('精算を確定(モック)'),
+                  label: const Text('かくてい'),
                 ),
               ),
             ],
@@ -171,7 +176,7 @@ class _Sv0100SettlementScreenState
         'mode': 'personal',
         'friendId': friendId,
         'amount': t.amountYen.toString(),
-        'memo': 'イベント精算(${ctx.event.title})',
+        'memo': 'イベントのおかねまとめ(${ctx.event.title})',
       },
     );
     context.push(uri.toString());
@@ -184,22 +189,22 @@ class _Sv0100SettlementScreenState
         'mode': 'personal',
         'friendId': t.to,
         'amount': t.amountYen.toString(),
-        'memo': 'イベント精算(${ctx.event.title})',
+        'memo': 'イベントのおかねまとめ(${ctx.event.title})',
       },
     );
     context.push(uri.toString());
   }
 
   void _goCreateAllLb(List<_Transfer> list) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('借用書を ${list.length} 件作成（モック）')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('しゃくようしょを${list.length}けんつくったよ（モック）')),
+    );
   }
 
   void _goApplySettlement(List<_Transfer> list) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('精算を確定しました（モック）')));
+    ).showSnackBar(const SnackBar(content: Text('かくてい')));
     context.go('/to0100/event');
   }
 }

@@ -9,10 +9,9 @@ class Fr0200FriendDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final friendId = Uri.base.queryParameters['friendId'] ?? '';
     final friend = _mockFriends[friendId] ?? _mockFriends.values.first;
-    final transactions = _mockTransactions
-        .where((t) => t.friendId == friend.id)
-        .toList()
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final transactions =
+        _mockTransactions.where((t) => t.friendId == friend.id).toList()
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
     final net = _calcNetBalance(transactions);
     final theme = Theme.of(context);
@@ -36,7 +35,9 @@ class Fr0200FriendDetailScreen extends ConsumerWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(child: Text(friend.displayName.substring(0, 1))),
+                    CircleAvatar(
+                      child: Text(friend.displayName.substring(0, 1)),
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -54,13 +55,13 @@ class Fr0200FriendDetailScreen extends ConsumerWidget {
                               color: net > 0
                                   ? Colors.teal
                                   : net < 0
-                                      ? Colors.deepOrange
-                                      : theme.hintColor,
+                                  ? Colors.deepOrange
+                                  : theme.hintColor,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '直近: ${transactions.isEmpty ? '取引なし' : _fmtDateTime(transactions.last.createdAt)}',
+                            'さいきん: ${transactions.isEmpty ? 'とりひきなし' : _fmtDateTime(transactions.last.createdAt)}',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.hintColor,
                             ),
@@ -79,18 +80,19 @@ class Fr0200FriendDetailScreen extends ConsumerWidget {
           // チャットタイムライン
           Expanded(
             child: transactions.isEmpty
-                ? const Center(
-                    child: Text('この友だちとのお金のやりとりはまだありません。'),
-                  )
+                ? const Center(child: Text('このともだちとのおかねのやりとりはまだないよ。'))
                 : ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     itemCount: transactions.length,
                     itemBuilder: (context, index) {
                       final tx = transactions[index];
                       final isMe = tx.direction == _Direction.fromMe;
-                      final align = isMe ? Alignment.centerRight : Alignment.centerLeft;
-                      final crossAlign =
-                          isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+                      final align = isMe
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft;
+                      final crossAlign = isMe
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start;
                       final bubbleColor = isMe
                           ? theme.colorScheme.primaryContainer
                           : theme.colorScheme.surfaceVariant;
@@ -105,20 +107,23 @@ class Fr0200FriendDetailScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 _fmtDateTime(tx.createdAt),
-                                style: theme.textTheme.labelSmall
-                                    ?.copyWith(color: theme.hintColor),
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.hintColor,
+                                ),
                               ),
                               const SizedBox(height: 2),
                               GestureDetector(
                                 onTap: tx.status == _TransactionStatus.pending
                                     ? () => _Controller.onTapTransaction(
-                                          context,
-                                          friend.id,
-                                          tx,
-                                        )
+                                        context,
+                                        friend.id,
+                                        tx,
+                                      )
                                     : null,
                                 child: Container(
-                                  constraints: const BoxConstraints(maxWidth: 280),
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 280,
+                                  ),
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 12,
                                     vertical: 8,
@@ -132,10 +137,11 @@ class Fr0200FriendDetailScreen extends ConsumerWidget {
                                     children: [
                                       Text(
                                         _fmtYen(tx.amount),
-                                        style: theme.textTheme.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: textColor,
-                                        ),
+                                        style: theme.textTheme.titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: textColor,
+                                            ),
                                       ),
                                       if (tx.label.isNotEmpty) ...[
                                         const SizedBox(height: 4),
@@ -151,18 +157,14 @@ class Fr0200FriendDetailScreen extends ConsumerWidget {
                                         children: [
                                           Text(
                                             _statusText(tx.status),
-                                            style: theme.textTheme.labelSmall?.copyWith(
-                                              color: _statusColor(tx.status),
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                            style: theme.textTheme.labelSmall
+                                                ?.copyWith(
+                                                  color: _statusColor(
+                                                    tx.status,
+                                                  ),
+                                                  fontWeight: FontWeight.w600,
+                                                ),
                                           ),
-                                          if (tx.status == _TransactionStatus.pending)
-                                            Text(
-                                              '  タップで借用書を作成',
-                                              style: theme.textTheme.labelSmall?.copyWith(
-                                                color: theme.hintColor,
-                                              ),
-                                            ),
                                         ],
                                       ),
                                     ],
@@ -186,7 +188,7 @@ class Fr0200FriendDetailScreen extends ConsumerWidget {
                   child: TextField(
                     enabled: false,
                     decoration: InputDecoration(
-                      hintText: '支払いの追加やメモは今後ここから（モック）',
+                      hintText: 'おしはらいのついかやメモはこんごここから（モック）',
                       border: const OutlineInputBorder(),
                       isDense: true,
                     ),
@@ -196,7 +198,7 @@ class Fr0200FriendDetailScreen extends ConsumerWidget {
                 IconButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('支払い追加機能は未実装です（モック）')),
+                      const SnackBar(content: Text('おしはらいをついかするきのうはまだだよ（モック）')),
                     );
                   },
                   icon: const Icon(Icons.add_circle_outline),
@@ -275,7 +277,7 @@ final List<_FriendTransaction> _mockTransactions = [
     friendId: 'f_sakaguchi',
     direction: _Direction.fromMe,
     amount: 3200,
-    label: '飲み会 割り勘',
+    label: 'のみかい わりかん',
     createdAt: DateTime(2024, 5, 3, 19, 30),
     status: _TransactionStatus.pending,
   ),
@@ -284,7 +286,7 @@ final List<_FriendTransaction> _mockTransactions = [
     friendId: 'f_sakaguchi',
     direction: _Direction.toMe,
     amount: 1200,
-    label: 'タクシー代 立替',
+    label: 'タクシーだい たてかえ',
     createdAt: DateTime(2024, 5, 4, 0, 15),
     status: _TransactionStatus.iouIssued,
   ),
@@ -315,11 +317,11 @@ int _calcNetBalance(List<_FriendTransaction> list) {
 
 String _netText(int net) {
   if (net > 0) {
-    return 'あなたが ${_fmtYen(net)} 貸しています';
+    return ' ${_fmtYen(net)} かしているよ';
   } else if (net < 0) {
-    return 'あなたが ${_fmtYen(-net)} 借りています';
+    return ' ${_fmtYen(-net)} かりているよ';
   } else {
-    return '貸し借りはありません';
+    return 'いまはトントンだよ';
   }
 }
 
@@ -345,11 +347,11 @@ String _fmtDateTime(DateTime d) {
 String _statusText(_TransactionStatus s) {
   switch (s) {
     case _TransactionStatus.pending:
-      return '未精算';
+      return 'まだまとめてない';
     case _TransactionStatus.iouIssued:
-      return '借用書発行済み';
+      return 'しゃくようしょずみ';
     case _TransactionStatus.settled:
-      return '精算済み';
+      return 'まとめおわり';
   }
 }
 

@@ -19,7 +19,7 @@ class _St0100SplashScreenState extends State<St0100SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(child: Text('ST0100 Splash (仮画像可)')),
+      body: Center(child: Text('ST0100 スプラッシュ（かり）')),
     );
   }
 }

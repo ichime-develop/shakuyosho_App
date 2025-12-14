@@ -102,7 +102,7 @@ class _To0100ScreenState extends ConsumerState<To0100Screen>
             _tabController.index = index;
           },
           tabs: const [
-            Tab(text: '個人', icon: Icon(Icons.person_outline)),
+            Tab(text: 'こじん', icon: Icon(Icons.person_outline)),
             Tab(text: 'イベント', icon: Icon(Icons.event_note)),
           ],
         ),
@@ -142,13 +142,13 @@ class _PersonalTabView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('あなたの残高', style: theme.textTheme.titleMedium),
+                  Text('あなたのざんだか', style: theme.textTheme.titleMedium),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(
                         child: _KpiTile(
-                          label: '貸している',
+                          label: 'かしている',
                           value: _fmtYen(pos),
                           valueColor: Colors.teal,
                           icon: Icons.trending_up,
@@ -157,7 +157,7 @@ class _PersonalTabView extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _KpiTile(
-                          label: '借りている',
+                          label: 'かりている',
                           value: _fmtYen(neg),
                           valueColor: Colors.deepOrange,
                           icon: Icons.trending_down,
@@ -175,7 +175,7 @@ class _PersonalTabView extends StatelessWidget {
 
         // 期限切迫（上位3）
         if (_mockUrgentDueFriends.isNotEmpty) ...[
-          Text('期限が近い（上位）', style: theme.textTheme.titleSmall),
+          Text('きげんがちかいメモ', style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           ..._mockUrgentDueFriends
               .take(3)
@@ -198,10 +198,10 @@ class _PersonalTabView extends StatelessWidget {
         // 友だち一覧（残高）
         Row(
           children: [
-            Expanded(child: Text('友だち一覧', style: theme.textTheme.titleSmall)),
+            Expanded(child: Text('ともだちリスト', style: theme.textTheme.titleSmall)),
             TextButton(
               onPressed: () => _Controller.onOpenFriends(context),
-              child: const Text('すべて見る'),
+              child: const Text('ぜんぶみる'),
             ),
           ],
         ),
@@ -250,7 +250,7 @@ class _FriendRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              data.isOverdue ? '期限超過' : '期限 ${_fmtDate(data.dueAt!)}',
+              data.isOverdue ? 'きげんおくれ' : 'めやす ${_fmtDate(data.dueAt!)}',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: data.isOverdue ? Colors.red : Colors.orange,
               ),
@@ -275,7 +275,7 @@ class _FriendRow extends StatelessWidget {
                     Text(data.displayName, style: theme.textTheme.bodyLarge),
                     const SizedBox(height: 4),
                     Text(
-                      isPlus ? 'あなたが貸している' : 'あなたが借りている',
+                      isPlus ? 'かしている' : 'かりている',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.hintColor,
                       ),
@@ -285,7 +285,7 @@ class _FriendRow extends StatelessWidget {
               ),
               if (dueBadge != null) ...[dueBadge, const SizedBox(width: 12)],
               Text(
-                _fmtYen(data.netAmount.abs()) + (isPlus ? ' 貸' : ' 借'),
+                _fmtYen(data.netAmount.abs()) + (isPlus ? ' かし' : ' かり'),
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: color,
                   fontWeight: FontWeight.w700,
@@ -298,8 +298,8 @@ class _FriendRow extends StatelessWidget {
                   if (v == 'tx') onQuickTx();
                 },
                 itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'lb', child: Text('借用書を作成')),
-                  PopupMenuItem(value: 'tx', child: Text('取引を追加')),
+                  PopupMenuItem(value: 'lb', child: Text('しゃくようしょをつくる')),
+                  PopupMenuItem(value: 'tx', child: Text('とりひきをついか')),
                 ],
                 icon: const Icon(Icons.more_horiz),
               ),
@@ -342,19 +342,19 @@ class _EventTabViewState extends State<_EventTabView> {
               runSpacing: 8,
               children: [
                 _KpiTile(
-                  label: '進行中イベント',
+                  label: 'しんこうちゅうイベント',
                   value: '${inProgress.length}',
                   icon: Icons.play_circle_outline,
                 ),
                 _KpiTile(
-                  label: '未清算合計',
+                  label: 'まだまとめてないぶん',
                   value: _fmtYen(
                     inProgress.fold<int>(0, (p, e) => p + e.unsettledAmount),
                   ),
                   icon: Icons.payments_outlined,
                 ),
                 _KpiTile(
-                  label: '未承認の記録',
+                  label: 'まちのきろく',
                   value:
                       '${inProgress.fold<int>(0, (p, e) => p + e.pendingCount)}',
                   icon: Icons.pending_actions_outlined,
@@ -369,11 +369,11 @@ class _EventTabViewState extends State<_EventTabView> {
         Row(
           children: [
             Expanded(
-              child: Text('進行中のイベント', style: theme.textTheme.titleSmall),
+              child: Text('しんこうちゅうのイベント', style: theme.textTheme.titleSmall),
             ),
             TextButton(
               onPressed: () => _Controller.onOpenEventList(context),
-              child: const Text('すべて見る'),
+              child: const Text('ぜんぶみる'),
             ),
           ],
         ),
@@ -391,7 +391,7 @@ class _EventTabViewState extends State<_EventTabView> {
         // 過去イベント（抜粋）
         if (finished.isNotEmpty) ...[
           const SizedBox(height: 12),
-          Text('最近のイベント（完了）', style: theme.textTheme.titleSmall),
+          Text('さいきんのイベント（おわり）', style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           ...finished
               .take(3)
@@ -416,10 +416,8 @@ class _EventTabViewState extends State<_EventTabView> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('イベントを削除'),
-        content: const Text(
-          'このイベントを削除しますか？\n記録された支払いも含めて元に戻せません。（モック段階の文言）',
-        ),
+        title: const Text('イベントをけす'),
+        content: const Text('このイベントをけしていい？\nメモしたおしはらいももとにもどらないよ。（モック）'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -427,7 +425,7 @@ class _EventTabViewState extends State<_EventTabView> {
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('削除する'),
+            child: const Text('けす'),
           ),
         ],
       ),
@@ -439,9 +437,9 @@ class _EventTabViewState extends State<_EventTabView> {
       _mockEvents.removeWhere((e) => e.eventId == eventId);
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('イベントを削除しました（モック）')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('イベントをけしたよ（モック）')));
   }
 }
 
@@ -490,14 +488,14 @@ class _EventCard extends StatelessWidget {
                     Text(data.title, style: theme.textTheme.titleMedium),
                     const SizedBox(height: 4),
                     Text(
-                      '${_fmtDate(data.start)}〜${_fmtDate(data.end)}｜参加${data.memberCount}人',
+                      '${_fmtDate(data.start)}〜${_fmtDate(data.end)}｜さんか${data.memberCount}にん',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.hintColor,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '未清算 ${_fmtYen(data.unsettledAmount)} / 未承認 ${data.pendingCount}件',
+                      'まだまとめてない: ${_fmtYen(data.unsettledAmount)} / まち: ${data.pendingCount}けん',
                       style: theme.textTheme.bodySmall,
                     ),
                   ],
@@ -509,7 +507,7 @@ class _EventCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   _SmallBtn(
-                    text: '清算',
+                    text: 'おかねまとめ',
                     icon: Icons.calculate_outlined,
                     onPressed: onSettle,
                   ),
@@ -519,7 +517,7 @@ class _EventCard extends StatelessWidget {
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     icon: const Icon(Icons.delete_outline),
-                    tooltip: 'イベントを削除',
+                    tooltip: 'イベントをけす',
                     onPressed: onDelete,
                   ),
                 ],
@@ -613,7 +611,7 @@ class _Controller {
     // TODO: 通知一覧へ（未実装）
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('通知：未実装')));
+    ).showSnackBar(const SnackBar(content: Text('つうち: まだだよ')));
   }
 
   static void onOpenFriends(BuildContext context) => context.go('/fr0100');
@@ -714,7 +712,7 @@ class _PersonalFab extends StatelessWidget {
         FloatingActionButton.extended(
           heroTag: 'fab_lb',
           onPressed: onCreateLb,
-          label: const Text('借用書を発行'),
+          label: const Text('しゃくようしょをつくる'),
           icon: const Icon(Icons.description_outlined),
         ),
         const SizedBox(height: 12),
@@ -748,7 +746,7 @@ class _EventFab extends StatelessWidget {
         FloatingActionButton.extended(
           heroTag: 'fab_settle',
           onPressed: onComputeSettlement,
-          label: const Text('清算を計算'),
+          label: const Text('おかねをせいさん'),
           icon: const Icon(Icons.calculate_outlined),
         ),
         const SizedBox(height: 12),

@@ -17,10 +17,10 @@ class Gr0100GroupCreateScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('GR0100 グループ作成/招待'),
+        title: const Text('GR0100 グループをつくる/しょうたい'),
         actions: [
           IconButton(
-            tooltip: '共有',
+            tooltip: 'きょうゆう',
             onPressed: () => _Controller.onShare(context, _mockGroup),
             icon: const Icon(Icons.ios_share_outlined),
           ),
@@ -40,7 +40,7 @@ class Gr0100GroupCreateScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Text('招待コード：'),
+                      const Text('しょうたいコード：'),
                       SelectableText(
                         _mockGroup.inviteCode,
                         style: theme.textTheme.titleMedium?.copyWith(
@@ -60,7 +60,7 @@ class Gr0100GroupCreateScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '有効期限：${_fmtDate(_mockGroup.expiresAt)}',
+                    'つかえるひ：${_fmtDate(_mockGroup.expiresAt)}',
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -76,7 +76,7 @@ class Gr0100GroupCreateScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('QR（仮表示）', style: theme.textTheme.titleSmall),
+                  Text('QR（かりひょうじ）', style: theme.textTheme.titleSmall),
                   const SizedBox(height: 8),
                   Container(
                     height: 160,
@@ -89,7 +89,7 @@ class Gr0100GroupCreateScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'このQR/コードを送ると、友だちは GR0200 から参加できます（モック）。',
+                    'この QR とコードをおくると、ともだちは GR0200 からさんかできるよ（モック）。',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.hintColor,
                     ),
@@ -109,7 +109,7 @@ class Gr0100GroupCreateScreen extends ConsumerWidget {
                 child: Text(m.displayName.characters.first),
               ),
               title: Text(m.displayName),
-              subtitle: Text(m.isAdmin ? '管理者' : 'メンバー'),
+              subtitle: Text(m.isAdmin ? 'かんりしゃ' : 'メンバー'),
             ),
           ),
 
@@ -118,7 +118,7 @@ class Gr0100GroupCreateScreen extends ConsumerWidget {
             onPressed: () =>
                 _Controller.onGoJoinWithCode(context, _mockGroup.inviteCode),
             icon: const Icon(Icons.group_add_outlined),
-            label: const Text('このコードで参加手順へ（GR0200）'),
+            label: const Text('このコードでさんかページへ（GR0200）'),
           ),
         ],
       ),
@@ -134,13 +134,13 @@ class _Controller {
     await Clipboard.setData(ClipboardData(text: code));
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('招待コードをコピーしました')));
+    ).showSnackBar(const SnackBar(content: Text('しょうたいコードをコピーしたよ')));
   }
 
   static void onShare(BuildContext context, _GroupInvite g) {
     // TODO: 共有実装（Shareプラグイン等）。今はSnackBarのみ。
     final text =
-        '「${g.title}」に招待します。コード: ${g.inviteCode}\n有効期限: ${_fmtDate(g.expiresAt)}';
+        '「${g.title}」にしょうたいするね。コード: ${g.inviteCode}\nつかえるひ: ${_fmtDate(g.expiresAt)}';
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 

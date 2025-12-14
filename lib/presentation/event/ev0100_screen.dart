@@ -18,7 +18,7 @@ class Ev0100EventListScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        title: const Text('EV0100 イベント一覧'),
+        title: const Text('EV0100 イベントのいちらん'),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -26,7 +26,7 @@ class Ev0100EventListScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
-              '旅行や飲み会などのイベントごとに、誰がいくら立て替えたかをまとめて管理します。',
+              'りょこうやごはんかいなどのイベントごとに、だれがいくらたてかえたかをゆるくまとめます。',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.hintColor,
               ),
@@ -38,7 +38,7 @@ class Ev0100EventListScreen extends ConsumerWidget {
             const Card(
               child: Padding(
                 padding: EdgeInsets.all(16),
-                child: Text('まだイベントがありません。右下のボタンから作成できます（モック）。'),
+                child: Text('まだイベントがないよ。みぎしたのボタンからつくってみよう（モック）。'),
               ),
             )
           else
@@ -70,7 +70,7 @@ class Ev0100EventListScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '参加: ${e.memberCount}人 ／ 支払合計: ${_fmtYen(total)}',
+                        'さんか: ${e.memberCount}にん ／ みんなではらった: ${_fmtYen(total)}',
                         style: theme.textTheme.bodySmall,
                       ),
                     ],
@@ -90,11 +90,11 @@ class Ev0100EventListScreen extends ConsumerWidget {
                     itemBuilder: (_) => const [
                       PopupMenuItem(
                         value: 'detail',
-                        child: Text('詳細を開く(EV0200)'),
+                        child: Text('しょうさいをみる(EV0200)'),
                       ),
                       PopupMenuItem(
                         value: 'settlement',
-                        child: Text('精算へ(SV0100)'),
+                        child: Text('おかねをまとめる(SV0100)'),
                       ),
                     ],
                   ),
@@ -104,7 +104,7 @@ class Ev0100EventListScreen extends ConsumerWidget {
 
           const SizedBox(height: 16),
           Text(
-            '※ イベントの作成/編集は今後 EV0x00 系画面で実装予定（現在はモック一覧です）。',
+            '※ イベントのさくせい/へんしゅうはこれから EV0x00 でつくるよ（いまはモック）。',
             style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
           ),
         ],
@@ -112,7 +112,7 @@ class Ev0100EventListScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _Controller.onCreateEvent(context),
         icon: const Icon(Icons.add),
-        label: const Text('イベント作成（モック）'),
+        label: const Text('イベントをつくる（モック）'),
       ),
     );
   }
@@ -133,7 +133,7 @@ class _Controller {
     // TODO: EV0300 (イベント作成) などに繋げる。今はモック。
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('イベント作成画面は未実装です（モック）。')));
+    ).showSnackBar(const SnackBar(content: Text('イベントをつくるところはまだだよ（モック）。')));
   }
 }
 

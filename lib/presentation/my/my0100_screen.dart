@@ -52,7 +52,7 @@ class My0100Screen extends ConsumerWidget {
                   TextButton.icon(
                     onPressed: () => _Controller.onEditProfile(context),
                     icon: const Icon(Icons.edit),
-                    label: const Text('編集'),
+                    label: const Text('へんしゅう'),
                   ),
                 ],
               ),
@@ -61,14 +61,14 @@ class My0100Screen extends ConsumerWidget {
           const SizedBox(height: 12),
 
           // ── 基本設定
-          Text('基本設定', style: theme.textTheme.titleSmall),
+          Text('きほんせってい', style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           Card(
             child: Column(
               children: [
                 SwitchListTile(
-                  title: const Text('プッシュ通知'),
-                  subtitle: const Text('返済期限や清算結果などの通知を受け取る'),
+                  title: const Text('プッシュつうち'),
+                  subtitle: const Text('めやすのひやおかねまとめのおしらせをうけとる'),
                   value: notifOn,
                   onChanged: (v) =>
                       ref.read(_notifEnabledProvider.notifier).state = v,
@@ -76,8 +76,8 @@ class My0100Screen extends ConsumerWidget {
                 ),
                 const Divider(height: 1),
                 SwitchListTile(
-                  title: const Text('生体認証で起動ロック'),
-                  subtitle: const Text('Face/Touch ID（ダミー設定）'),
+                  title: const Text('せいたいにんしょうでロック'),
+                  subtitle: const Text('Face/Touch ID（ダミーせってい）'),
                   value: bioOn,
                   onChanged: (v) =>
                       ref.read(_biometricEnabledProvider.notifier).state = v,
@@ -89,22 +89,22 @@ class My0100Screen extends ConsumerWidget {
           const SizedBox(height: 12),
 
           // ── 表示設定
-          Text('表示', style: theme.textTheme.titleSmall),
+          Text('ひょうじ', style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           Card(
             child: Column(
               children: [
                 ListTile(
                   leading: const Icon(Icons.currency_yen),
-                  title: const Text('通貨'),
-                  subtitle: const Text('JPY（日本円）'),
+                  title: const Text('つうか'),
+                  subtitle: const Text('JPY（にほんえん）'),
                   onTap: () => _Controller.onChangeCurrency(context),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.palette_outlined),
                   title: const Text('テーマ'),
-                  subtitle: const Text('システムに合わせる'),
+                  subtitle: const Text('システムにあわせる'),
                   onTap: () => _Controller.onChangeTheme(context),
                 ),
               ],
@@ -120,13 +120,13 @@ class My0100Screen extends ConsumerWidget {
               children: [
                 ListTile(
                   leading: const Icon(Icons.file_download_outlined),
-                  title: const Text('データを書き出す（CSV）'),
+                  title: const Text('データをかきだす（CSV）'),
                   onTap: () => _Controller.onExportCsv(context),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.delete_sweep_outlined),
-                  title: const Text('キャッシュをクリア'),
+                  title: const Text('キャッシュをきれいにする'),
                   onTap: () => _Controller.onClearCache(context),
                 ),
               ],
@@ -135,7 +135,7 @@ class My0100Screen extends ConsumerWidget {
           const SizedBox(height: 12),
 
           // ── その他
-          Text('その他', style: theme.textTheme.titleSmall),
+          Text('そのほか', style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           Card(
             child: Column(
@@ -171,23 +171,23 @@ class _Controller {
   }
 
   static void onEditProfile(BuildContext context) {
-    _toast(context, 'プロフィール編集：未実装');
+    _toast(context, 'プロフィールへんしゅう: まだだよ');
   }
 
   static void onChangeCurrency(BuildContext context) {
-    _toast(context, '通貨選択：未実装（将来は JPY/USD/EUR など）');
+    _toast(context, 'つうかのせってい: まだだよ（しょうらいは JPY/USD/EUR など）');
   }
 
   static void onChangeTheme(BuildContext context) {
-    _toast(context, 'テーマ変更：未実装（ライト/ダーク/システム）');
+    _toast(context, 'テーマのきりかえ: まだだよ（ライト/ダーク/システム）');
   }
 
   static void onExportCsv(BuildContext context) {
-    _toast(context, 'CSVエクスポート：未実装');
+    _toast(context, 'CSVエクスポート: まだだよ');
   }
 
   static void onClearCache(BuildContext context) {
-    _toast(context, 'キャッシュクリア：未実装');
+    _toast(context, 'キャッシュのおそうじ: まだだよ');
   }
 
   static void onOpenAbout(BuildContext context) {
@@ -196,12 +196,12 @@ class _Controller {
       applicationName: 'しゃくよーしょ',
       applicationVersion: '0.1.0 (mock)',
       applicationIcon: const Icon(Icons.receipt_long_outlined),
-      children: const [Text('友人間・イベント単位の貸し借りをシンプルに記録・清算するアプリ。')],
+      children: const [Text('ともだちやイベントのおかねのかりかえを、かるくメモしてまとめられるアプリだよ。')],
     );
   }
 
   static void onSignOut(BuildContext context) {
-    _toast(context, 'サインアウト：未実装');
+    _toast(context, 'サインアウト: まだだよ');
   }
 }
 

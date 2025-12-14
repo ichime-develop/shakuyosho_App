@@ -17,17 +17,17 @@ class Fr0100FriendsScreen extends ConsumerWidget {
     AppLog.i('open screen', ctx: context, data: {'screen': 'FR0100'});
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FR0100 ともだち一覧'),
+        title: const Text('FR0100 ともだちリスト'),
         actions: [
           IconButton(
             onPressed: () => _Controller.onTapSearch(context),
             icon: const Icon(Icons.search),
-            tooltip: '検索',
+            tooltip: 'けんさく',
           ),
           IconButton(
             onPressed: () => _Controller.onTapAddFriend(context),
             icon: const Icon(Icons.person_add_alt_1),
-            tooltip: '友だちを追加',
+            tooltip: 'ともだちをついか',
           ),
         ],
       ),
@@ -43,17 +43,17 @@ class Fr0100FriendsScreen extends ConsumerWidget {
                 runSpacing: 8,
                 children: [
                   _KpiTile(
-                    label: '総人数',
+                    label: 'ぜんいんすう',
                     value: '${_mockFriends.length}',
                     icon: Icons.group_outlined,
                   ),
                   _KpiTile(
-                    label: '貸している合計',
+                    label: 'かしているごうけい',
                     value: _fmtYen(_sumLend()),
                     icon: Icons.trending_up,
                   ),
                   _KpiTile(
-                    label: '借りている合計',
+                    label: 'かりているごうけい',
                     value: _fmtYen(_sumBorrow().abs()),
                     icon: Icons.trending_down,
                   ),
@@ -65,7 +65,7 @@ class Fr0100FriendsScreen extends ConsumerWidget {
 
           // 期限が近い（上位）
           if (_mockFriends.any((f) => f.dueAt != null)) ...[
-            Text('期限が近い', style: theme.textTheme.titleSmall),
+            Text('きげんがちかい', style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),
             ...(_mockFriends.where((f) => f.dueAt != null).toList()
                   ..sort((a, b) => a.dueAt!.compareTo(b.dueAt!)))
@@ -89,10 +89,10 @@ class Fr0100FriendsScreen extends ConsumerWidget {
           // 一覧
           Row(
             children: [
-              Expanded(child: Text('友だち', style: theme.textTheme.titleSmall)),
+              Expanded(child: Text('ともだち', style: theme.textTheme.titleSmall)),
               TextButton(
                 onPressed: () => _Controller.onTapSort(context),
-                child: const Text('並び替え'),
+                child: const Text('ならびかえ'),
               ),
             ],
           ),
@@ -144,7 +144,7 @@ class _FriendRow extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
-          overdue ? '期限超過' : '期限 ${_fmtDate(data.dueAt!)}',
+          overdue ? 'きげんおくれ' : 'めやす ${_fmtDate(data.dueAt!)}',
           style: theme.textTheme.labelSmall?.copyWith(
             color: overdue ? Colors.red : Colors.orange,
           ),
@@ -170,7 +170,7 @@ class _FriendRow extends StatelessWidget {
                     Text(data.displayName, style: theme.textTheme.bodyLarge),
                     const SizedBox(height: 4),
                     Text(
-                      isPlus ? 'あなたが貸している' : 'あなたが借りている',
+                      isPlus ? 'かしている' : 'かりている',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.hintColor,
                       ),
@@ -180,7 +180,7 @@ class _FriendRow extends StatelessWidget {
               ),
               if (dueBadge != null) ...[dueBadge, const SizedBox(width: 12)],
               Text(
-                _fmtYen(data.netAmount.abs()) + (isPlus ? ' 貸' : ' 借'),
+                _fmtYen(data.netAmount.abs()) + (isPlus ? ' かし' : ' かり'),
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: color,
                   fontWeight: FontWeight.w700,
@@ -193,8 +193,8 @@ class _FriendRow extends StatelessWidget {
                   if (v == 'tx') onAddTx();
                 },
                 itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'lb', child: Text('借用書を作成')),
-                  PopupMenuItem(value: 'tx', child: Text('取引を追加')),
+                  PopupMenuItem(value: 'lb', child: Text('しゃくようしょをつくる')),
+                  PopupMenuItem(value: 'tx', child: Text('とりひきをついか')),
                 ],
                 icon: const Icon(Icons.more_horiz),
               ),
@@ -244,21 +244,21 @@ class _Controller {
     // TODO: 友だち追加導線（後日）
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('友だち追加：未実装')));
+    ).showSnackBar(const SnackBar(content: Text('ともだちついか: まだだよ')));
   }
 
   static void onTapSearch(BuildContext context) {
     // TODO: 検索導線（後日）
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('検索：未実装')));
+    ).showSnackBar(const SnackBar(content: Text('けんさく: まだだよ')));
   }
 
   static void onTapSort(BuildContext context) {
     // TODO: 並び替え（後日）
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('並び替え：未実装')));
+    ).showSnackBar(const SnackBar(content: Text('ならびかえ: まだだよ')));
   }
 
   static void onOpenFriendDetail(BuildContext context, String friendId) {

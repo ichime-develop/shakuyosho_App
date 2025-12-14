@@ -63,10 +63,15 @@ class App extends ConsumerWidget {
     // 5) ルータ注入（定義は router/app_router.dart 側）。
     final router = ref.watch(appRouterProvider);
 
+    final theme = ThemeData(
+      useMaterial3: true,
+      fontFamily: 'Yomogi',
+    );
+
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       routerConfig: router,
-      theme: ThemeData(useMaterial3: true),
+      theme: theme,
       // locale / localizationsDelegates / supportedLocales を追加する場合はここに記述。
     );
   }

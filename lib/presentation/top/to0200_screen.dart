@@ -53,14 +53,14 @@ class To0200GroupEntrySheet extends StatelessWidget {
 
             // タイトル
             Text(
-              'さあ、新しいイベントを始めよう！',
+              'さあ、あたらしいイベントをはじめよう！',
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              'グループを作成するか、既にあるグループに参加して\n'
-              'みんなとのお金のやりとりを記録できます。',
+              'グループをつくるか、もうあるグループにさんかして\n'
+              'みんなとのおかねのやりとりをのこしておけます。',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.hintColor,
@@ -71,14 +71,14 @@ class To0200GroupEntrySheet extends StatelessWidget {
             // グループ作成ボタン
             FilledButton(
               onPressed: onTapCreateGroup,
-              child: const Text('グループを作成する'),
+              child: const Text('グループをつくる'),
             ),
             const SizedBox(height: 8),
 
             // グループ参加ボタン
             OutlinedButton(
               onPressed: onTapJoinGroup,
-              child: const Text('グループに参加する'),
+              child: const Text('グループにさんかする'),
             ),
             const SizedBox(height: 8),
 

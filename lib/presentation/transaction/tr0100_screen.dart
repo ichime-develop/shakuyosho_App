@@ -91,13 +91,8 @@ class _Tr0100TransactionScreenState
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
-        title: const Text('TR0100 支払い入力'),
-        actions: [
-          TextButton(
-            onPressed: _onTapSave,
-            child: const Text('保存'),
-          ),
-        ],
+        title: const Text('TR0100 おしはらいメモ'),
+        actions: [TextButton(onPressed: _onTapSave, child: const Text('ほぞん'))],
       ),
       body: SafeArea(
         child: GestureDetector(
@@ -107,42 +102,30 @@ class _Tr0100TransactionScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 説明
-                Text(
-                  'イベント内の 1 件分の支払いを登録します。\n'
-                  '誰が何にいくら払い、誰の分を払ったかをメモしておくイメージです。',
-                  style:
-                      theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
-                ),
                 const SizedBox(height: 16),
 
                 // イベント名（取引名）
-                Text(
-                  'イベント名（取引名）',
-                  style: theme.textTheme.labelLarge,
-                ),
+                Text('イベントのなまえ（とりひき）', style: theme.textTheme.labelLarge),
                 const SizedBox(height: 4),
                 TextField(
                   controller: _titleController,
                   decoration: const InputDecoration(
-                    hintText: '例）岡山ホテル / 夜ご飯 など',
+                    hintText: 'イベントのなまえ',
                     border: OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 16),
 
                 // 支払い情報（合計金額）
-                Text(
-                  '支払い情報',
-                  style: theme.textTheme.labelLarge,
-                ),
+                Text('おしはらいのないよう', style: theme.textTheme.labelLarge),
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     Text(
                       '¥',
-                      style: theme.textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -150,7 +133,7 @@ class _Tr0100TransactionScreenState
                         controller: _amountController,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
-                          hintText: '合計金額を入力',
+                          hintText: 'きんがく',
                           border: OutlineInputBorder(),
                         ),
                         onChanged: (_) => _recalcShares(),
@@ -161,10 +144,7 @@ class _Tr0100TransactionScreenState
                 const SizedBox(height: 16),
 
                 // 支払った人ピッカー
-                Text(
-                  '支払った人',
-                  style: theme.textTheme.labelLarge,
-                ),
+                Text('はらったひと', style: theme.textTheme.labelLarge),
                 const SizedBox(height: 4),
                 DropdownButtonFormField<String>(
                   value: _payerUserId,
@@ -197,13 +177,9 @@ class _Tr0100TransactionScreenState
                       });
                     },
                     icon: Icon(
-                      _showBreakdown
-                          ? Icons.expand_less
-                          : Icons.expand_more,
+                      _showBreakdown ? Icons.expand_less : Icons.expand_more,
                     ),
-                    label: Text(
-                      _showBreakdown ? '内訳設定を閉じる' : '内訳設定を開く',
-                    ),
+                    label: Text(_showBreakdown ? 'ないようをとじる' : 'ないようをひらく'),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -211,13 +187,10 @@ class _Tr0100TransactionScreenState
                 if (_showBreakdown) ...[
                   Row(
                     children: [
-                      Text(
-                        '内訳設定',
-                        style: theme.textTheme.labelLarge,
-                      ),
+                      Text('ないようのわりふり', style: theme.textTheme.labelLarge),
                       const SizedBox(width: 6),
                       Tooltip(
-                        message: 'チェックした人で割り勘するイメージです。',
+                        message: 'チェックしたひとでわりかんするかんじだよ。',
                         child: const Icon(Icons.info_outline, size: 16),
                       ),
                     ],
@@ -233,7 +206,7 @@ class _Tr0100TransactionScreenState
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: _onTapSave,
-                    child: const Text('保存'),
+                    child: const Text('ほぞん'),
                   ),
                 ),
               ],
@@ -263,10 +236,7 @@ class _Tr0100TransactionScreenState
                   },
                 ),
                 Expanded(
-                  child: Text(
-                    s.name,
-                    style: theme.textTheme.bodyMedium,
-                  ),
+                  child: Text(s.name, style: theme.textTheme.bodyMedium),
                 ),
                 const SizedBox(width: 8),
                 SizedBox(
@@ -332,27 +302,29 @@ class _Tr0100TransactionScreenState
     final total = int.tryParse(_amountController.text) ?? 0;
 
     if (_payerUserId == null || _payerUserId!.isEmpty) {
-      _showError(context, '支払った人を選択してください。');
+      _showError(context, 'はらったひとをえらんでね。');
       return;
     }
     if (total <= 0) {
-      _showError(context, '合計金額を入力してください。');
+      _showError(context, 'ごうけいきんがくをいれてね。');
       return;
     }
     final included = _memberShares.where((s) => s.included).toList();
     if (included.isEmpty) {
-      _showError(context, '少なくとも 1 人は割り勘対象として選択してください。');
+      _showError(context, 'すくなくともひとりはわりかんメンバーにしてね。');
       return;
     }
 
     // TODO: EventTransaction モデルにマッピングして Repository / Usecase 経由で保存する想定。
     // 現時点ではダミーで SnackBar を出して戻る。
-    final payerName = _members.firstWhere((m) => m.id == _payerUserId).displayName;
+    final payerName = _members
+        .firstWhere((m) => m.id == _payerUserId)
+        .displayName;
     final snack = SnackBar(
       content: Text(
-        '支払いを登録しました（ダミー）。\n'
-        '支払った人: $payerName\n'
-        '合計: ${_fmtYen(total)}',
+        'おしはらいをのこしました（ダミー）。\n'
+        'はらったひと: $payerName\n'
+        'ごうけい: ${_fmtYen(total)}',
       ),
     );
     ScaffoldMessenger.of(context).showSnackBar(snack);

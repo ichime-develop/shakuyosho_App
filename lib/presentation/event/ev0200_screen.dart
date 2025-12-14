@@ -47,7 +47,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline),
-            tooltip: 'イベントを削除',
+            tooltip: 'イベントをけす',
             onPressed: () => _Controller.confirmAndDeleteEvent(
               context: context,
               eventId: event.eventId,
@@ -61,7 +61,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
             child: payments.isEmpty
                 ? Center(
                     child: Text(
-                      'このイベントの支払いはまだ登録されていません。\n「追加」ボタンから支払いを登録できます。',
+                      'このイベントのおしはらいはまだないよ。\n「ついか」ボタンからメモできるよ。',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium
                           ?.copyWith(color: theme.hintColor),
@@ -97,13 +97,13 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '記載日: ${_fmtDateTime(p.recordedAt)}',
+                                        'メモしたひ: ${_fmtDateTime(p.recordedAt)}',
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(color: theme.hintColor),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        '支払った人: ${p.payerName}',
+                                        'はらったひと: ${p.payerName}',
                                         style: theme.textTheme.bodySmall,
                                       ),
                                     ],
@@ -128,7 +128,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(),
                                       icon: const Icon(Icons.delete_outline),
-                                      tooltip: '支払いを削除',
+                                      tooltip: 'おしはらいをけす',
                                       onPressed: () => _onDeletePayment(context, p.id),
                                     ),
                                   ],
@@ -155,7 +155,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                       eventId: event.eventId,
                     ),
                     icon: const Icon(Icons.add),
-                    label: const Text('追加'),
+                    label: const Text('ついか'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -165,7 +165,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                       context: context,
                       eventId: event.eventId,
                     ),
-                    child: const Text('清算'),
+                    child: const Text('おかねをまとめる'),
                   ),
                 ),
               ],
@@ -180,10 +180,10 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('支払いを削除'),
+        title: const Text('おしはらいをけす'),
         content: const Text(
-          'この支払いを削除しますか？\n'
-          '元に戻すことはできません。（モック段階の文言）',
+          'このおしはらいをけしていい？\n'
+          'もとにもどせないよ。（モック）',
         ),
         actions: [
           TextButton(
@@ -192,7 +192,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('削除する'),
+            child: const Text('けす'),
           ),
         ],
       ),
@@ -209,7 +209,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
     (context as Element).markNeedsBuild();
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('支払いを削除しました（モック）')),
+      const SnackBar(content: Text('おしはらいをけしたよ（モック）')),
     );
   }
 }
@@ -267,10 +267,10 @@ class _Controller {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('イベントを削除'),
+        title: const Text('イベントをけす'),
         content: const Text(
-          'このイベントを削除しますか？\n'
-          '登録済みの支払いも含めて元に戻せません。（モック段階の文言）',
+          'このイベントをけしていい？\n'
+          'メモしたおしはらいももとにもどらないよ。（モック）',
         ),
         actions: [
           TextButton(
@@ -279,7 +279,7 @@ class _Controller {
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('削除する'),
+            child: const Text('けす'),
           ),
         ],
       ),
