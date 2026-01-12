@@ -16,6 +16,7 @@ import 'core/utils/app_logger.dart';
 // 実導入時は true にし、該当コードのコメントアウトを外すだけで接続できる。
 const bool kUseFirebase = false;
 const bool kUseSentry = false;
+const Color _appBgColor = Color(0xFFFFFBF5);
 
 void main() {
   // runZonedGuarded 内で binding 初期化〜runApp までを同じ Zone で実行し、
@@ -66,6 +67,12 @@ class App extends ConsumerWidget {
     final theme = ThemeData(
       useMaterial3: true,
       fontFamily: 'Yomogi',
+      scaffoldBackgroundColor: _appBgColor,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: _appBgColor,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+      ),
     );
 
     return MaterialApp.router(

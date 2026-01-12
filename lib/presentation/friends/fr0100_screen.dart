@@ -110,7 +110,7 @@ class Fr0100FriendsScreen extends ConsumerWidget {
           ),
         ],
       ),
-      bottomNavigationBar: const CommonBottomNavBar(currentIndex: 0),
+      bottomNavigationBar: const CommonBottomNavBar(currentIndex: 1),
     );
   }
 }

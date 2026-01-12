@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shakuyousho_app/data/mock/event_mock.dart' as event_mock;
 import 'package:shakuyousho_app/domain/models/event_models.dart';
 
 class EventState {
@@ -32,14 +33,26 @@ class EventStateNotifier extends StateNotifier<EventState> {
 
   List<EventSummary> get allEvents => state.events;
 
-  List<EventSummary> get ongoingEvents =>
-      state.events.where((e) => !e.isSettled).toList();
+  List<EventSummary> get ongoingEvents {
+    return state.events
+        .where((e) => !e.isSettled)
+        .toList()
+      ..sort((a, b) => b.lastUpdatedAt.compareTo(a.lastUpdatedAt));
+  }
 
-  List<EventSummary> get recentFinishedEvents =>
-      state.events.where((e) => e.isSettled).toList();
+  List<EventSummary> get recentFinishedEvents {
+    return state.events
+        .where((e) => e.isSettled)
+        .toList()
+      ..sort((a, b) => b.lastUpdatedAt.compareTo(a.lastUpdatedAt));
+  }
 
-  List<EventTransaction> getTransactionsByEvent(String eventId) =>
-      state.transactions.where((t) => t.eventId == eventId).toList();
+  List<EventTransaction> getTransactionsByEvent(String eventId) {
+    return state.transactions
+        .where((t) => t.eventId == eventId)
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
 
   void upsertTransaction(EventTransaction tx) {
     final txs = [...state.transactions];
@@ -49,13 +62,61 @@ class EventStateNotifier extends StateNotifier<EventState> {
     } else {
       txs[index] = tx;
     }
-    state = state.copyWith(transactions: txs);
+    final events = _recalculateEvent(tx.eventId, txs);
+    state = state.copyWith(events: events, transactions: txs);
   }
 
   void deleteTransaction(String txId) {
+    EventTransaction? target;
+    for (final t in state.transactions) {
+      if (t.id == txId) {
+        target = t;
+        break;
+      }
+    }
     final txs =
         state.transactions.where((t) => t.id != txId).toList(growable: false);
-    state = state.copyWith(transactions: txs);
+    final events =
+        target == null ? state.events : _recalculateEvent(target.eventId, txs);
+    state = state.copyWith(events: events, transactions: txs);
+  }
+
+  void upsertEvent(EventSummary event) {
+    final events = [...state.events];
+    final index = events.indexWhere((e) => e.id == event.id);
+    if (index == -1) {
+      events.add(event);
+    } else {
+      events[index] = event;
+    }
+    state = state.copyWith(events: events);
+  }
+
+  void deleteEvent(String eventId) {
+    final events =
+        state.events.where((e) => e.id != eventId).toList(growable: false);
+    final txs =
+        state.transactions.where((t) => t.eventId != eventId).toList(growable: false);
+    state = state.copyWith(events: events, transactions: txs);
+  }
+
+  List<EventSummary> _recalculateEvent(
+    String eventId,
+    List<EventTransaction> txs,
+  ) {
+    final events = [...state.events];
+    final idx = events.indexWhere((e) => e.id == eventId);
+    if (idx == -1) return events;
+    final txsForEvent =
+        txs.where((transaction) => transaction.eventId == eventId).toList();
+    final total =
+        txsForEvent.fold<int>(0, (sum, t) => sum + t.totalAmount);
+    final updatedSummary = events[idx].copyWith(
+      lastUpdatedAt: DateTime.now(),
+      totalUnsettledAmount: total,
+    );
+    events[idx] = updatedSummary;
+    return events;
   }
 }
 
@@ -64,50 +125,9 @@ final eventStateProvider =
   return EventStateNotifier();
 });
 
-final _mockEvents = <EventSummary>[
-  EventSummary(
-    id: 'ev-hakone-2025-01',
-    title: 'はこねりょこう',
-    isSettled: false,
-    members: ['A さん', 'B さん', 'C さん'],
-    lastUpdatedAt: DateTime(2025, 10, 20),
-    totalUnsettledAmount: 12000,
-  ),
-  EventSummary(
-    id: 'ev-onsen-2024-12',
-    title: 'おんせんかい',
-    isSettled: true,
-    members: ['A さん', 'D さん'],
-    lastUpdatedAt: DateTime(2024, 12, 5),
-    totalUnsettledAmount: 0,
-  ),
-];
+// イベントサマリー / 取引のモック
+final List<EventSummary> _mockEvents =
+    List<EventSummary>.from(event_mock.mockEvents);
 
-final _mockTxs = <EventTransaction>[
-  EventTransaction(
-    id: 'tx-1',
-    eventId: 'ev-hakone-2025-01',
-    title: 'よるごはん',
-    paidBy: 'A さん',
-    totalAmount: 8000,
-    shares: {
-      'A さん': 4000,
-      'B さん': 4000,
-      'C さん': 0,
-    },
-    createdAt: DateTime(2025, 10, 18, 19, 30),
-  ),
-  EventTransaction(
-    id: 'tx-2',
-    eventId: 'ev-hakone-2025-01',
-    title: 'あさごはん',
-    paidBy: 'B さん',
-    totalAmount: 4000,
-    shares: {
-      'A さん': 2000,
-      'B さん': 2000,
-      'C さん': 0,
-    },
-    createdAt: DateTime(2025, 10, 19, 8, 0),
-  ),
-];
+final List<EventTransaction> _mockTxs =
+    List<EventTransaction>.from(event_mock.mockTransactions);

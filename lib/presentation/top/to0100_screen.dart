@@ -112,7 +112,7 @@ class _To0100ScreenState extends ConsumerState<To0100Screen>
         children: const [_PersonalTabView(), _EventTabView()],
       ),
       floatingActionButton: _buildFab(context),
-      bottomNavigationBar: const CommonBottomNavBar(currentIndex: 1),
+      bottomNavigationBar: const CommonBottomNavBar(currentIndex: 0),
     );
   }
 }

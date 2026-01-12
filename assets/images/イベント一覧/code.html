@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html class="light" lang="ja"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>イベント一覧</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&amp;family=Spline+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec80",
+                        "background-light": "#f6f8f7",
+                        "background-dark": "#102219",
+                        "beige-soft": "#FFFBF5", // Custom override for the specific beige request
+                        "text-main": "#2D3436",
+                        "text-muted": "#636E72",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "M PLUS Rounded 1c", "sans-serif"],
+                        "body": ["M PLUS Rounded 1c", "sans-serif"], // Soft rounded font for Hiragana
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "1.5rem", "xl": "2rem", "2xl": "2.5rem", "full": "9999px"},
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'nav': '0 -4px 20px -2px rgba(0, 0, 0, 0.03)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body {
+            font-family: "M PLUS Rounded 1c", "Spline Sans", sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-beige-soft dark:bg-background-dark text-text-main antialiased selection:bg-primary/30">
+<div class="relative flex min-h-screen w-full flex-col mx-auto max-w-md bg-beige-soft dark:bg-background-dark overflow-x-hidden shadow-2xl">
+<header class="sticky top-0 z-30 flex items-center justify-between px-6 py-4 bg-beige-soft/90 dark:bg-background-dark/90 backdrop-blur-md">
+<div class="flex items-center gap-3">
+<div class="relative group cursor-pointer">
+<div class="flex items-center justify-center rounded-full size-10 shadow-sm border-2 border-white dark:border-gray-700 bg-emerald-100 text-emerald-700 text-lg font-bold">
+あ
+</div>
+<div class="absolute bottom-0 right-0 size-3 bg-primary rounded-full border-2 border-white dark:border-background-dark"></div>
+</div>
+<div class="flex flex-col">
+<span class="text-xs font-medium text-text-muted dark:text-gray-400">こんにちは</span>
+<h1 class="text-lg font-bold text-text-main dark:text-white leading-tight">あおいさん</h1>
+</div>
+</div>
+<button class="relative flex items-center justify-center size-10 rounded-full bg-white dark:bg-gray-800 shadow-soft hover:bg-gray-50 transition-colors">
+<span class="material-symbols-outlined text-text-main dark:text-white" style="font-size: 24px;">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-400 rounded-full"></span>
+</button>
+</header>
+<main class="flex-1 flex flex-col px-5 pb-24 pt-2 gap-8">
+<section>
+<div class="w-full bg-primary text-[#102219] rounded-2xl p-6 shadow-lg shadow-primary/20 relative overflow-hidden">
+<div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
+<div class="relative z-10">
+<p class="text-sm font-bold opacity-80 mb-1">いまの たてかえ ごうけい</p>
+<div class="flex items-baseline gap-1">
+<span class="text-4xl font-extrabold tracking-tight font-display">12,500</span>
+<span class="text-lg font-bold">えん</span>
+</div>
+<div class="mt-4 flex gap-2">
+<div class="bg-[#102219]/10 backdrop-blur-sm px-3 py-1.5 rounded-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" style="font-size: 16px;">arrow_upward</span>
+<span class="text-xs font-bold">うけとる: 15,000</span>
+</div>
+<div class="bg-[#102219]/10 backdrop-blur-sm px-3 py-1.5 rounded-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" style="font-size: 16px;">arrow_downward</span>
+<span class="text-xs font-bold">はらう: 2,500</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="flex flex-col gap-2">
+<div class="flex items-center justify-between px-1">
+<h2 class="text-lg font-bold text-text-main dark:text-white flex items-center gap-2">
+<span class="size-2 rounded-full bg-primary"></span>
+                        しんこうちゅう
+                    </h2>
+<button class="text-xs font-bold text-text-muted hover:text-primary transition-colors">すべてみる</button>
+</div>
+<div class="flex flex-col divide-y divide-stone-300 dark:divide-gray-700 border-y border-stone-300 dark:border-gray-700">
+<div class="group relative flex gap-4 p-4 hover:bg-stone-200/40 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
+<div class="w-20 h-20 shrink-0 rounded-xl bg-cover bg-center" data-alt="Group of friends eating dinner at a restaurant" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBoJ5N29DIBMrYmD_7WQYjwUOW54ySwzHSZnpjfpNmSLEAR9fcdU0iv0re66iyvHr_AMD3KTXcxXr6X-rH3T_ZAwgx1kxZ3yXhAYYu3ichPx8s8D5M_HtawoM-IF9Ib0_gX32TcoSHxDqx88ROO5VbZqlgQ50E1A7JNgQOGtG3KVfh9wgwifCkghiinzLn5yQkC4WOIWySZEfzpEjvPIFS71_Fuf8rm38WeBpu-aiizRltEvF5qDsicKjhkmiuF4kRFd0eJ-Iya5ZwW");'>
+</div>
+<div class="flex flex-col flex-1 justify-between py-0.5">
+<div>
+<div class="flex justify-between items-start mb-1">
+<span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">10/24 スタート</span>
+<span class="material-symbols-outlined text-gray-300" style="font-size: 20px;">more_horiz</span>
+</div>
+<h3 class="text-base font-bold text-text-main dark:text-white leading-tight mb-0.5">おんせんりょこう</h3>
+<p class="text-xs text-text-muted dark:text-gray-400">はこね • 4にん</p>
+</div>
+<div class="flex items-center justify-between mt-1">
+<div class="flex -space-x-2">
+<div class="flex items-center justify-center size-6 rounded-full border-2 border-white bg-orange-100 text-orange-600 text-[10px] font-bold">ゆ</div>
+<div class="flex items-center justify-center size-6 rounded-full border-2 border-white bg-blue-100 text-blue-600 text-[10px] font-bold">た</div>
+<div class="size-6 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[8px] font-bold text-gray-500">+2</div>
+</div>
+<span class="text-sm font-bold text-text-main dark:text-white font-display">32,000<span class="text-xs ml-0.5 font-normal">えん</span></span>
+</div>
+</div>
+</div>
+<div class="group relative flex gap-4 p-4 hover:bg-stone-200/40 dark:hover:bg-gray-700/50 transition-colors cursor-pointer">
+<div class="w-20 h-20 shrink-0 rounded-xl bg-cover bg-center" data-alt="Cozy home party with pizza and drinks" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC-EhN9zLOlbkrjlOfbBW3MGLyfi14wqfCY6JTUGdSVaoG5cugCGIsmk4zrqLBka36QfKUEyfQWQfOLMqvxIN2n97_Pq49ZA69ogyafsZpOLeLvWy8gUGnCbAlxurICXdLDs_3Kq5qDWsJ0sz79IuyfHWDUzO3eLckTEJ4EfNGCmGIExLJyBH-wzgxCkUzt40oRmhlhVhLs-Y-7kvu7k4cAHjYhKv1rby0Ph9Pk6o4N8X-JtGo9h_2zeIp6jy17Ue7PX8-1-bvjBUvQ");'>
+</div>
+<div class="flex flex-col flex-1 justify-between py-0.5">
+<div>
+<div class="flex justify-between items-start mb-1">
+<span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">11/02 ほんじつ</span>
+<span class="material-symbols-outlined text-gray-300" style="font-size: 20px;">more_horiz</span>
+</div>
+<h3 class="text-base font-bold text-text-main dark:text-white leading-tight mb-0.5">タコパ</h3>
+<p class="text-xs text-text-muted dark:text-gray-400">まゆのおうち • 6にん</p>
+</div>
+<div class="flex items-center justify-between mt-1">
+<div class="flex -space-x-2">
+<div class="flex items-center justify-center size-6 rounded-full border-2 border-white bg-rose-100 text-rose-600 text-[10px] font-bold">ま</div>
+<div class="flex items-center justify-center size-6 rounded-full border-2 border-white bg-purple-100 text-purple-600 text-[10px] font-bold">り</div>
+<div class="size-6 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[8px] font-bold text-gray-500">+4</div>
+</div>
+<span class="text-sm font-bold text-text-main dark:text-white font-display">4,500<span class="text-xs ml-0.5 font-normal">えん</span></span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="flex flex-col gap-2">
+<div class="flex items-center justify-between mt-2 px-1">
+<h2 class="text-lg font-bold text-text-main dark:text-white flex items-center gap-2">
+<span class="size-2 rounded-full bg-gray-300"></span>
+                        せいさんずみ
+                    </h2>
+</div>
+<div class="flex flex-col divide-y divide-stone-300 dark:divide-gray-700 border-y border-stone-300 dark:border-gray-700">
+<div class="group relative flex gap-4 p-4 hover:bg-stone-200/40 dark:hover:bg-gray-800/80 transition-colors cursor-pointer">
+<div class="w-20 h-20 shrink-0 rounded-xl bg-cover bg-center grayscale-[50%] opacity-80 group-hover:opacity-100 transition-all" data-alt="Colorful birthday cake with candles" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCubIS_Pu1hpI044Y-7wIq7D_3rbeCqVZYTo0Ing3pYmNa3yjtDA3S8iJRnSdYMxA-D6u65oyABbU3jCNaDMfMMEBQgnmasGyJVQwr5ga8rz0rMVKQoVrGsA83ZBu30d9REgpow96MPYrJFzugUbQZU7nh-9wLNHj-mD-Xmfj8Xf2Bd_VjbJu_76HI1qr3bTeU7_UGpamX1voS99T6qwRY0tTrt7bUxbfBldGci8JjSABu8PPhGuBVmrHh9AroN49UVRs7mKdXi7Muy");'>
+</div>
+<div class="flex flex-col flex-1 justify-between py-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
+<div>
+<div class="flex justify-between items-start mb-1">
+<span class="text-[10px] font-bold text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">9/15 おわり</span>
+</div>
+<h3 class="text-base font-bold text-text-main dark:text-white leading-tight mb-0.5">けんたのたんじょうび</h3>
+<p class="text-xs text-text-muted dark:text-gray-400">いざかや • 3にん</p>
+</div>
+<div class="flex items-center justify-end mt-1">
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-size: 16px;">check_circle</span>
+<span class="text-xs font-bold">せいさんOK</span>
+</div>
+</div>
+</div>
+</div>
+<div class="group relative flex gap-4 p-4 hover:bg-stone-200/40 dark:hover:bg-gray-800/80 transition-colors cursor-pointer">
+<div class="w-20 h-20 shrink-0 rounded-xl bg-cover bg-center grayscale-[50%] opacity-80 group-hover:opacity-100 transition-all" data-alt="Camping tent in the forest during day" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAQM7dtRNSgJhToD_mXZi5onaGeWW2cfF9_LBdDfWX4LrKRA2qC4V71IKDeM2IxSMAVepD1k9hq4KW7tlhDRFOPJLQbU5QYU0umlyB9SgSkZ8PWQZBpaNYPRMLoVAi4F5qfu29n0VinMUy7eX7m-3_Q1Cps3WEiypEh5eZzOAGn3Mwq7w40VgQr3vbZiDHkv5avqLYhyk2oCBUdJ25nxHcChl1m2ggwgohYrfxlaQ-fA-6fsDQsLvKY_RECoVfXiKD4LRRv02GB5fUK");'>
+</div>
+<div class="flex flex-col flex-1 justify-between py-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
+<div>
+<div class="flex justify-between items-start mb-1">
+<span class="text-[10px] font-bold text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">8/20 おわり</span>
+</div>
+<h3 class="text-base font-bold text-text-main dark:text-white leading-tight mb-0.5">サマーキャンプ</h3>
+<p class="text-xs text-text-muted dark:text-gray-400">かわら • 8にん</p>
+</div>
+<div class="flex items-center justify-end mt-1">
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-size: 16px;">check_circle</span>
+<span class="text-xs font-bold">せいさんOK</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<div class="fixed bottom-24 right-5 z-40">
+<button class="flex items-center justify-center h-14 pl-4 pr-6 bg-primary text-[#102219] rounded-full shadow-[0_8px_25px_-5px_rgba(19,236,128,0.5)] hover:bg-[#0fdc75] hover:scale-105 active:scale-95 transition-all duration-300">
+<span class="material-symbols-outlined mr-2" style="font-size: 28px;">add</span>
+<span class="text-base font-bold tracking-wide">あたらしくつくる</span>
+</button>
+</div>
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-background-dark/95 backdrop-blur-xl border-t border-gray-100 dark:border-gray-800 pb-safe pt-2 px-6 shadow-nav">
+<div class="flex items-center justify-around h-16 max-w-md mx-auto">
+<a class="flex flex-col items-center justify-center w-16 gap-1 text-gray-400 hover:text-text-main dark:hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-bold">ほーむ</span>
+</a>
+<a class="flex flex-col items-center justify-center w-16 gap-1 text-gray-400 hover:text-text-main dark:hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-[10px] font-bold">ともだち</span>
+</a>
+<a class="flex flex-col items-center justify-center w-16 gap-1 text-primary" href="#">
+<span class="material-symbols-outlined filled" style="font-variation-settings: 'FILL' 1;">event_note</span>
+<span class="text-[10px] font-bold">いべんと</span>
+</a>
+<a class="flex flex-col items-center justify-center w-16 gap-1 text-gray-400 hover:text-text-main dark:hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-bold">じぶん</span>
+</a>
+</div>
+</nav>
+<div class="h-6 bg-white dark:bg-background-dark"></div>
+</div>
+
+</body></html>

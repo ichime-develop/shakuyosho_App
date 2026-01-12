@@ -38,7 +38,8 @@ class _Tr0100TransactionScreenState
   String? _payerUserId;
 
   /// 内訳設定ゾーンを表示するかどうか
-  bool _showBreakdown = true;
+  bool _showBreakdown = false;
+  bool _payerExpanded = false;
 
   /// 各メンバーの割り勘設定（チェック状態＋個別金額）
   late List<_MemberShareState> _memberShares;
@@ -98,115 +99,182 @@ class _Tr0100TransactionScreenState
         child: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
-
-                // イベント名（取引名）
-                Text('イベントのなまえ（とりひき）', style: theme.textTheme.labelLarge),
-                const SizedBox(height: 4),
-                TextField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(
-                    hintText: 'イベントのなまえ',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // 支払い情報（合計金額）
-                Text('おしはらいのないよう', style: theme.textTheme.labelLarge),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(
-                      '¥',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: _amountController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          hintText: 'きんがく',
-                          border: OutlineInputBorder(),
-                        ),
-                        onChanged: (_) => _recalcShares(),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // 支払った人ピッカー
-                Text('はらったひと', style: theme.textTheme.labelLarge),
-                const SizedBox(height: 4),
-                DropdownButtonFormField<String>(
-                  value: _payerUserId,
-                  items: _members
-                      .map(
-                        (m) => DropdownMenuItem<String>(
-                          value: m.id,
-                          child: Text(m.displayName),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _payerUserId = value;
-                    });
-                  },
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // 内訳設定の開閉ボタン
-                Center(
-                  child: TextButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _showBreakdown = !_showBreakdown;
-                      });
-                    },
-                    icon: Icon(
-                      _showBreakdown ? Icons.expand_less : Icons.expand_more,
-                    ),
-                    label: Text(_showBreakdown ? 'ないようをとじる' : 'ないようをひらく'),
-                  ),
-                ),
+                const _SectionLabel(text: 'なんのおかね？'),
                 const SizedBox(height: 8),
-
-                if (_showBreakdown) ...[
-                  Row(
+                _SoftInputCard(
+                  child: Row(
                     children: [
-                      Text('ないようのわりふり', style: theme.textTheme.labelLarge),
-                      const SizedBox(width: 6),
-                      Tooltip(
-                        message: 'チェックしたひとでわりかんするかんじだよ。',
-                        child: const Icon(Icons.info_outline, size: 16),
+                      const _IconBadge(icon: Icons.edit_note),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _titleController,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          decoration: const InputDecoration(
+                            hintText: 'れい：ランチ、タクシー…',
+                            border: InputBorder.none,
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  _buildBreakdownCard(theme),
-                ],
-
+                ),
+                const SizedBox(height: 20),
+                const _SectionLabel(text: 'いくら？'),
+                const SizedBox(height: 8),
+                _SoftInputCard(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '¥',
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextField(
+                          controller: _amountController,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          decoration: const InputDecoration(
+                            hintText: '0',
+                            border: InputBorder.none,
+                          ),
+                          onChanged: (_) => _recalcShares(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 24),
-
-                // 保存ボタン（AppBar の保存と同じ挙動にしておく）
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _onTapSave,
-                    child: const Text('ほぞん'),
+                _AccordionCard(
+                  icon: Icons.payments,
+                  title: 'だれがはらった？',
+                  summary: _payerUserId == null
+                      ? 'えらんでね'
+                      : _members
+                          .firstWhere((m) => m.id == _payerUserId)
+                          .displayName,
+                  expanded: _payerExpanded,
+                  onToggle: (value) {
+                    setState(() => _payerExpanded = value);
+                  },
+                  child: Column(
+                    children: _members.map((m) {
+                      return RadioListTile<String>(
+                        value: m.id,
+                        groupValue: _payerUserId,
+                        onChanged: (value) {
+                          setState(() => _payerUserId = value);
+                        },
+                        title: Text(
+                          m.displayName,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _AccordionCard(
+                  icon: Icons.call_split,
+                  title: 'わりかんのせってい',
+                  summary: _memberShares.every((s) => s.included)
+                      ? 'ぜんいん'
+                      : 'いちぶ',
+                  expanded: _showBreakdown,
+                  onToggle: (value) {
+                    setState(() => _showBreakdown = value);
+                  },
+                  child: Column(
+                    children: _memberShares.map((s) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 4,
+                        ),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: s.included,
+                              onChanged: (v) {
+                                setState(() {
+                                  s.included = v ?? false;
+                                  if (!s.included) {
+                                    s.controller.text = '';
+                                  }
+                                  _recalcShares();
+                                });
+                              },
+                            ),
+                            const SizedBox(width: 4),
+                            _IconInitial(name: s.name),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                s.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 110,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: TextField(
+                                controller: s.controller,
+                                enabled: s.included,
+                                textAlign: TextAlign.right,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  prefixText: '¥ ',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                TextButton.icon(
+                  onPressed: _onDeleteRecord,
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('このきろくをけす'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.redAccent,
+                    textStyle: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -334,6 +402,199 @@ class _Tr0100TransactionScreenState
   void _showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
+    );
+  }
+
+  Future<void> _onDeleteRecord() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('おしはらいをけす'),
+        content: const Text(
+          'このおしはらいをけしていい？\n'
+          'もとにもどせないよ。（モック）',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('けす'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      context.pop();
+    }
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Text(
+      text,
+      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+    );
+  }
+}
+
+class _SoftInputCard extends StatelessWidget {
+  const _SoftInputCard({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: const [
+          BoxShadow(
+            color: Color.fromARGB(12, 0, 0, 0),
+            blurRadius: 20,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _IconBadge extends StatelessWidget {
+  const _IconBadge({required this.icon});
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      alignment: Alignment.center,
+      child: Icon(icon, color: Colors.grey.shade600),
+    );
+  }
+}
+
+class _AccordionCard extends StatelessWidget {
+  const _AccordionCard({
+    required this.icon,
+    required this.title,
+    required this.summary,
+    required this.expanded,
+    required this.onToggle,
+    required this.child,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? summary;
+  final bool expanded;
+  final ValueChanged<bool> onToggle;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: expanded ? theme.colorScheme.primary.withOpacity(0.4) : Colors.grey.shade200,
+          style: expanded ? BorderStyle.solid : BorderStyle.solid,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color.fromARGB(10, 0, 0, 0),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => onToggle(!expanded),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Icon(icon, color: theme.hintColor),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (summary != null)
+                          Text(
+                            summary!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.hintColor,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: expanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(Icons.expand_more),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            firstChild: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: child,
+            ),
+            secondChild: const SizedBox.shrink(),
+            crossFadeState:
+                expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IconInitial extends StatelessWidget {
+  const _IconInitial({required this.name});
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = name.isNotEmpty ? name.characters.first : '?';
+    return CircleAvatar(
+      radius: 18,
+      backgroundColor: Colors.grey.shade200,
+      child: Text(
+        initial,
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
     );
   }
 }

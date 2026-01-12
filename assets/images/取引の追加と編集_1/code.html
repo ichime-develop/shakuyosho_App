@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html class="light" lang="ja"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>取引の追加と編集</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;family=Noto+Sans+JP:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec80",
+                        "primary-dark": "#0eb560",
+                        "background-light": "#fdfbf7","background-dark": "#181a19",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#222523",
+                        "text-main": "#454545",
+                        "text-sub": "#8a8a8a",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "Noto Sans JP", "sans-serif"],
+                        "body": ["Spline Sans", "Noto Sans JP", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "1.5rem", "xl": "2rem", "2xl": "2.5rem", "full": "9999px"},
+                    boxShadow: {
+                        "soft": "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+                        "inner-soft": "inset 0 2px 4px 0 rgba(0, 0, 0, 0.03)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;scrollbar-width: none;
+        }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-white font-display antialiased selection:bg-primary selection:text-white">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden max-w-md mx-auto shadow-2xl bg-background-light dark:bg-background-dark">
+<header class="sticky top-0 z-50 flex items-center justify-between p-5 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md">
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors group">
+<span class="material-symbols-outlined text-text-main dark:text-white group-hover:scale-110 transition-transform">close</span>
+</button>
+<h1 class="text-lg font-bold text-text-main dark:text-white tracking-wide">とりひきをきろく</h1>
+<button class="flex items-center justify-center px-5 py-2 bg-primary hover:bg-primary-dark text-white text-sm font-bold rounded-full transition-all shadow-md active:scale-95">
+                ほぞん
+            </button>
+</header>
+<main class="flex flex-col gap-6 px-5 pb-10">
+<section class="flex flex-col gap-3">
+<h2 class="text-xl font-bold text-text-main dark:text-white pl-1">なんのおかね？</h2>
+<div class="flex flex-col gap-4">
+<div class="flex items-center w-full bg-surface-light dark:bg-surface-dark rounded-xl shadow-soft p-2 pr-4 border border-transparent focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-300">
+<div class="flex items-center justify-center w-14 h-14 rounded-lg bg-gray-100 dark:bg-gray-800 text-text-sub mr-3 shrink-0">
+<span class="material-symbols-outlined">edit_note</span>
+</div>
+<input class="w-full bg-transparent border-none p-0 text-lg font-medium text-text-main dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600 focus:ring-0 leading-normal h-12" placeholder="例：ランチ代、タクシー..." type="text"/>
+</div>
+</div>
+</section>
+<section class="flex flex-col gap-3">
+<h2 class="text-xl font-bold text-text-main dark:text-white pl-1">いくら？</h2>
+<div class="relative w-full">
+<div class="flex items-center w-full bg-surface-light dark:bg-surface-dark rounded-xl shadow-soft p-2 pr-6 border border-transparent focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-300">
+<div class="flex items-center justify-center w-16 h-16 rounded-lg bg-primary/10 mr-2 shrink-0">
+<span class="text-2xl font-bold text-primary">¥</span>
+</div>
+<input class="w-full bg-transparent border-none p-0 text-4xl font-bold text-text-main dark:text-white placeholder:text-gray-200 dark:placeholder:text-gray-700 focus:ring-0 leading-normal h-16 tracking-tight" inputmode="numeric" placeholder="0" type="number" value=""/>
+</div>
+</div>
+</section>
+<section class="mt-2">
+<details class="group bg-surface-light dark:bg-surface-dark rounded-xl border border-dashed border-gray-200 dark:border-gray-700 open:border-primary/40 open:ring-4 open:ring-primary/5 transition-all">
+<summary class="flex items-center justify-between p-4 cursor-pointer list-none [&amp;::-webkit-details-marker]:hidden text-text-sub hover:text-primary transition-colors select-none">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-bold text-sm">だれがはらった？</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="flex items-center gap-2 group-open:hidden">
+<div class="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">私</div>
+<span class="text-xs font-medium text-text-main dark:text-white">わたし</span>
+</div>
+<span class="material-symbols-outlined text-sm transition-transform duration-300 group-open:rotate-180">expand_more</span>
+</div>
+</summary>
+<div class="px-4 pb-4 pt-0 flex flex-col gap-2">
+<div class="h-px w-full bg-gray-100 dark:bg-gray-700/50 mb-2"></div>
+<label class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">私</div>
+<span class="font-bold text-sm text-text-main dark:text-white">わたし</span>
+</div>
+<input checked="" class="form-radio text-primary focus:ring-primary border-gray-300 dark:border-gray-600 bg-transparent" name="payer" type="radio"/>
+</label>
+<label class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center text-orange-500 text-xs font-bold">ゆ</div>
+<span class="font-bold text-sm text-text-main dark:text-white">ゆうき</span>
+</div>
+<input class="form-radio text-primary focus:ring-primary border-gray-300 dark:border-gray-600 bg-transparent" name="payer" type="radio"/>
+</label>
+<label class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center text-blue-500 text-xs font-bold">あ</div>
+<span class="font-bold text-sm text-text-main dark:text-white">あおい</span>
+</div>
+<input class="form-radio text-primary focus:ring-primary border-gray-300 dark:border-gray-600 bg-transparent" name="payer" type="radio"/>
+</label>
+</div>
+</details>
+</section>
+<section class="">
+<details class="group bg-surface-light dark:bg-surface-dark rounded-xl border border-dashed border-gray-200 dark:border-gray-700 open:border-primary/40 open:ring-4 open:ring-primary/5 transition-all">
+<summary class="flex items-center justify-between p-4 cursor-pointer list-none [&amp;::-webkit-details-marker]:hidden text-text-sub hover:text-primary transition-colors select-none">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">call_split</span>
+<span class="font-bold text-sm">わりかんの設定</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-medium text-text-sub/70 group-open:hidden">全員</span>
+<span class="material-symbols-outlined text-sm transition-transform duration-300 group-open:rotate-180">expand_more</span>
+</div>
+</summary>
+<div class="px-4 pb-4 pt-0 flex flex-col gap-4">
+<div class="h-px w-full bg-gray-100 dark:bg-gray-700/50"></div>
+<div class="flex items-center justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">私</div>
+<span class="font-bold text-sm text-text-main dark:text-white">わたし</span>
+</div>
+<div class="flex items-center bg-background-light dark:bg-background-dark/50 rounded-lg px-3 py-2 w-32 border border-transparent focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+<span class="text-xs font-bold text-text-sub mr-1">¥</span>
+<input class="w-full bg-transparent border-none p-0 text-right font-bold text-text-main dark:text-white focus:ring-0 text-sm" type="number" value=""/>
+</div>
+</div>
+<div class="flex items-center justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center text-orange-500 text-xs font-bold">ゆ</div>
+<span class="font-bold text-sm text-text-main dark:text-white">ゆうき</span>
+</div>
+<div class="flex items-center bg-background-light dark:bg-background-dark/50 rounded-lg px-3 py-2 w-32 border border-transparent focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+<span class="text-xs font-bold text-text-sub mr-1">¥</span>
+<input class="w-full bg-transparent border-none p-0 text-right font-bold text-text-main dark:text-white focus:ring-0 text-sm" placeholder="0" type="number"/>
+</div>
+</div>
+<div class="flex items-center justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center text-blue-500 text-xs font-bold">あ</div>
+<span class="font-bold text-sm text-text-main dark:text-white">あおい</span>
+</div>
+<div class="flex items-center bg-background-light dark:bg-background-dark/50 rounded-lg px-3 py-2 w-32 border border-transparent focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+<span class="text-xs font-bold text-text-sub mr-1">¥</span>
+<input class="w-full bg-transparent border-none p-0 text-right font-bold text-text-main dark:text-white focus:ring-0 text-sm" placeholder="0" type="number"/>
+</div>
+</div>
+</div>
+</details>
+</section>
+<div class="h-4"></div>
+<button class="flex items-center justify-center gap-2 w-full py-3 text-red-400 hover:text-red-500 font-bold text-sm transition-colors opacity-80 hover:opacity-100">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+<span>このきろくをけす</span>
+</button>
+</main>
+</div>
+
+</body></html>

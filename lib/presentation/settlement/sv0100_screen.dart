@@ -40,126 +40,48 @@ class _Sv0100SettlementScreenState
           onPressed: () => context.pop(),
         ),
         title: Text('SV0100 おかねまとめ：${ctx.event.title}'),
-        actions: [
-          IconButton(
-            tooltip: 'もういちどだす',
-            onPressed: () => setState(() {
-              /* netBalances は不変。UIリビルドのみ */
-            }),
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 140),
         children: [
-          // 概要
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('イベントのまとめ', style: theme.textTheme.titleSmall),
-                  const SizedBox(height: 8),
-                  _kvRow('イベント ID', ctx.event.eventId),
-                  _kvRow(
-                    'メンバー',
-                    ctx.members.map((m) => m.displayName).join(', '),
-                  ),
-                  _kvRow('ごうけい', _fmtYen(ctx.totalPaid)),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // 支払内訳
-          Text('はらったメモ', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 8),
-          ...ctx.members.map(
-            (m) => ListTile(
-              leading: CircleAvatar(child: Text(m.initial)),
-              title: Text(m.displayName),
-              subtitle: Text(
-                'はらい: ${_fmtYen(m.paidYen)} / のこり: ${_fmtYen(ctx.netBalances[m.userId] ?? 0)}',
-              ),
-              trailing: Text(
-                (ctx.netBalances[m.userId] ?? 0) >= 0 ? 'もらう' : 'はらう',
-                style: TextStyle(
-                  color: (ctx.netBalances[m.userId] ?? 0) >= 0
-                      ? Colors.teal
-                      : Colors.deepOrange,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // 最小送金案
-          Text('おかねのうごかしかた（かんたん）', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 8),
+          const _HeroSection(),
+          const SizedBox(height: 24),
           if (transfers.isEmpty)
-            const Card(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('とくにやることはないよ。'),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              alignment: Alignment.center,
+              child: Text(
+                'とくにやることはないよ。',
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: theme.hintColor),
               ),
             )
           else
-            ...transfers.map(
-              (t) => Card(
-                child: ListTile(
-                  leading: const Icon(Icons.swap_horiz),
-                  title: Text('${_nameOf(t.from)} → ${_nameOf(t.to)}'),
-                  subtitle: Text(_fmtYen(t.amountYen)),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (v) {
-                      if (v == 'lb') _goLb(t);
-                      if (v == 'tx') _goTx(t);
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(
-                        value: 'lb',
-                        child: Text('しゃくようしょをつくる(LB0100)'),
-                      ),
-                      PopupMenuItem(
-                        value: 'tx',
-                        child: Text('とりひきにすすむ(TR0100)'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            _TransferList(
+              transfers: transfers,
+              contextData: ctx,
             ),
-
-          const SizedBox(height: 16),
-          // 一括ボタン
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: transfers.isEmpty
-                      ? null
-                      : () => _goCreateAllLb(transfers),
-                  icon: const Icon(Icons.receipt_long_outlined),
-                  label: const Text('しゃくようしょをつくる'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: transfers.isEmpty
-                      ? null
-                      : () => _goApplySettlement(transfers),
-                  icon: const Icon(Icons.check_circle_outline),
-                  label: const Text('かくてい'),
-                ),
-              ),
-            ],
-          ),
         ],
+      ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: ElevatedButton.icon(
+          onPressed: transfers.isEmpty
+              ? null
+              : () => _goApplySettlement(transfers),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: const StadiumBorder(),
+            elevation: 6,
+          ),
+          icon: const Icon(Icons.check_circle, size: 20),
+          label: const Text(
+            'せいさんかんりょう',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
       ),
     );
   }
@@ -209,18 +131,201 @@ class _Sv0100SettlementScreenState
   }
 }
 
-Widget _kvRow(String k, String v) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 2),
-    child: Row(
+class _HeroSection extends StatelessWidget {
+  const _HeroSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
       children: [
-        SizedBox(width: 100, child: Text(k)),
-        Expanded(
-          child: Text(v, style: const TextStyle(fontWeight: FontWeight.w600)),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary.withOpacity(0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.handshake, color: theme.colorScheme.primary, size: 32),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'けっか',
+          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'だれがだれにいくらはらうか\nまとめておいたよ',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
         ),
       ],
-    ),
-  );
+    );
+  }
+}
+
+class _TransferList extends StatelessWidget {
+  const _TransferList({required this.transfers, required this.contextData});
+  final List<_Transfer> transfers;
+  final _EventSettleContext contextData;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: Colors.black.withOpacity(0.08)),
+          bottom: BorderSide(color: Colors.black.withOpacity(0.08)),
+        ),
+      ),
+      child: Column(
+        children: List.generate(transfers.length, (index) {
+          final t = transfers[index];
+          final from = contextData.members.firstWhere((m) => m.userId == t.from);
+          final to = contextData.members.firstWhere((m) => m.userId == t.to);
+          return Column(
+            children: [
+              _TransferRow(
+                amount: t.amountYen,
+                fromName: from.displayName,
+                toName: to.displayName,
+              ),
+              if (index != transfers.length - 1)
+                Divider(
+                  height: 1,
+                  thickness: 0.6,
+                  color: Colors.black.withOpacity(0.08),
+                ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _TransferRow extends StatelessWidget {
+  const _TransferRow({
+    required this.amount,
+    required this.fromName,
+    required this.toName,
+  });
+
+  final int amount;
+  final String fromName;
+  final String toName;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      child: Row(
+        children: [
+          _AvatarBadge(name: fromName, isReceiver: false),
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  _fmtYen(amount),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 2,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(Icons.arrow_forward_ios,
+                        size: 14, color: Colors.grey.withOpacity(0.7)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'へ はらう',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _AvatarBadge(name: toName, isReceiver: true),
+        ],
+      ),
+    );
+  }
+}
+
+class _AvatarBadge extends StatelessWidget {
+  const _AvatarBadge({required this.name, required this.isReceiver});
+  final String name;
+  final bool isReceiver;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final initial = name.isNotEmpty ? name.characters.first : '?';
+    final baseColor = isReceiver
+        ? theme.colorScheme.primary
+        : Colors.deepOrangeAccent;
+    return SizedBox(
+      width: 72,
+      child: Column(
+        children: [
+          Stack(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: baseColor.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  initial,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: baseColor,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: CircleAvatar(
+                  radius: 12,
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    isReceiver ? Icons.add : Icons.remove,
+                    size: 16,
+                    color: isReceiver ? baseColor : Colors.redAccent,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// ---------------------------

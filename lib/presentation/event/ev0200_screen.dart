@@ -37,6 +37,8 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
           ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // 新しい順
 
     final theme = Theme.of(context);
+    final totalAmount =
+        payments.fold<int>(0, (sum, p) => sum + p.totalAmount);
 
     return Scaffold(
       appBar: AppBar(
@@ -56,134 +58,58 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Column(
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 140),
         children: [
-          Expanded(
-            child: payments.isEmpty
-                ? Center(
-                    child: Text(
-                      'このイベントのおしはらいはまだないよ。\n「ついか」ボタンからメモできるよ。',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.hintColor,
-                      ),
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    itemCount: payments.length,
-                    itemBuilder: (context, index) {
-                      final p = payments[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        child: InkWell(
-                          onTap: () => _Controller.goEditEventTransaction(
-                            context: context,
-                            eventId: event.id,
-                            payment: p,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // 左側: タイトル + サブ情報
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        event.title,
-                                        style: theme.textTheme.titleMedium,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'メモしたひ: ${_fmtDateTime(p.createdAt)}',
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(color: theme.hintColor),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        'はらったひと: ${p.paidBy}',
-                                        style: theme.textTheme.bodySmall,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                // 右側: 金額 + 削除ボタン
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      _fmtYen(p.totalAmount),
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: theme.colorScheme.primary,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    IconButton(
-                                      iconSize: 20,
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(),
-                                      icon: const Icon(Icons.delete_outline),
-                                      tooltip: 'おしはらいをけす',
-                                      onPressed: () =>
-                                          _onDeletePayment(context, p.id),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+          _SummaryPanel(
+            theme: theme,
+            totalAmount: totalAmount,
+            unsettled: event.totalUnsettledAmount,
+            count: payments.length,
           ),
-
-          // 下部の操作ボタン
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 12.0,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _Controller.goAddEventTransaction(
-                      context: context,
-                      eventId: event.id,
-                    ),
-                    icon: const Icon(Icons.add),
-                    label: const Text('ついか'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => _Controller.goSettlement(
-                      context: context,
-                      eventId: event.id,
-                    ),
-                    child: const Text('おかねをまとめる'),
-                  ),
-                ),
-              ],
+          const SizedBox(height: 20),
+          _PrimaryButton(
+            onPressed: () =>
+                _Controller.goSettlement(context: context, eventId: event.id),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'きろく',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
             ),
           ),
+          const SizedBox(height: 8),
+          if (payments.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Text(
+                'このイベントのおしはらいはまだないよ。\n「＋」ボタンからメモできるよ。',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.hintColor,
+                ),
+              ),
+            )
+          else
+            _PaymentList(
+              payments: payments,
+              theme: theme,
+              onTap: (p) => _Controller.goEditEventTransaction(
+                context: context,
+                eventId: event.id,
+                payment: p,
+              ),
+              onDelete: (p) => _onDeletePayment(context, p.id),
+            ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _Controller.goAddEventTransaction(
+          context: context,
+          eventId: event.id,
+        ),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -319,3 +245,300 @@ String _fmtDateTime(DateTime d) {
       '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
   return '$date $time';
 }
+
+class _SummaryPanel extends StatelessWidget {
+  const _SummaryPanel({
+    required this.theme,
+    required this.totalAmount,
+    required this.unsettled,
+    required this.count,
+  });
+
+  final ThemeData theme;
+  final int totalAmount;
+  final int unsettled;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: const [
+          BoxShadow(
+            color: Color.fromARGB(20, 0, 0, 0),
+            blurRadius: 15,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SummaryRow(
+            label: 'ごうけい',
+            value: _fmtYen(totalAmount).replaceAll('¥', ''),
+            unit: 'えん',
+            labelStyle: theme.textTheme.bodySmall
+                ?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey),
+            valueStyle: theme.textTheme.displaySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          Divider(color: Colors.grey.shade200, height: 16),
+          _SummaryRow(
+            label: 'いまののこり',
+            value: _fmtYen(unsettled).replaceAll('¥', ''),
+            unit: 'えん',
+            labelStyle: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+            valueStyle: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'きろく $count 件',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.hintColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  const _SummaryRow({
+    required this.label,
+    required this.value,
+    required this.unit,
+    required this.labelStyle,
+    required this.valueStyle,
+  });
+
+  final String label;
+  final String value;
+  final String unit;
+  final TextStyle? labelStyle;
+  final TextStyle? valueStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: labelStyle),
+        Row(
+          children: [
+            Text(value, style: valueStyle),
+            const SizedBox(width: 4),
+            Text(
+              unit,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _PrimaryButton extends StatelessWidget {
+  const _PrimaryButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF111814),
+          foregroundColor: Colors.white,
+          shape: const StadiumBorder(),
+          elevation: 6,
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+        ),
+        icon: const Icon(Icons.payments, size: 18),
+        label: const Text(
+          'せいさんする',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+}
+
+class _PaymentList extends StatelessWidget {
+  const _PaymentList({
+    required this.payments,
+    required this.theme,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  final List<EventTransaction> payments;
+  final ThemeData theme;
+  final void Function(EventTransaction) onTap;
+  final void Function(EventTransaction) onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        children: List.generate(payments.length, (index) {
+          final p = payments[index];
+          return Column(
+            children: [
+              _PaymentRow(
+                transaction: p,
+                theme: theme,
+                onTap: () => onTap(p),
+                onDelete: () => onDelete(p),
+              ),
+              if (index != payments.length - 1)
+                Divider(
+                  height: 1,
+                  thickness: 0.8,
+                  color: Colors.grey.shade200,
+                ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _PaymentRow extends StatelessWidget {
+  const _PaymentRow({
+    required this.transaction,
+    required this.theme,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  final EventTransaction transaction;
+  final ThemeData theme;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    transaction.title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Colors.grey,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${transaction.paidBy} • ${_fmtMonthDay(transaction.createdAt)}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${transaction.totalAmount}円',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    _StatusChip(
+                      label: 'たてかえ',
+                      color: theme.colorScheme.primary,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      tooltip: 'おしはらいをけす',
+                      onPressed: onDelete,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+String _fmtMonthDay(DateTime d) =>
+    '${d.month}/${d.day.toString().padLeft(2, '0')}';

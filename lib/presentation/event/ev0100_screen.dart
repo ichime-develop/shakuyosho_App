@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shakuyousho_app/data/mock/event_mock.dart';
+import 'package:shakuyousho_app/application/providers/event_providers.dart';
+import 'package:shakuyousho_app/domain/models/event_models.dart';
+import 'package:shakuyousho_app/presentation/common/common_bottom_nav_bar.dart';
 
 /// EV0100: イベント一覧画面
 /// - 旅行・飲み会などのイベント単位で、貸し借りを管理する入り口
@@ -12,104 +14,71 @@ class Ev0100EventListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final eventState = ref.watch(eventStateProvider);
+    final ongoing = eventState.events.where((e) => !e.isSettled).toList()
+      ..sort((a, b) => b.lastUpdatedAt.compareTo(a.lastUpdatedAt));
+    final finished = eventState.events.where((e) => e.isSettled).toList()
+      ..sort((a, b) => b.lastUpdatedAt.compareTo(a.lastUpdatedAt));
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-        title: const Text('EV0100 イベントのいちらん'),
+        title: const Text('EV0100 イベント一覧'),
+        centerTitle: false,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              'りょこうやごはんかいなどのイベントごとに、だれがいくらたてかえたかをゆるくまとめます。',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-              ),
+          SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 32, 20, 140),
+              children: [
+                _SectionHeader(
+                  label: 'しんこうちゅう',
+                  accentColor: theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 8),
+                if (ongoing.isEmpty)
+                  _EmptyMessage(
+                    message: 'まだしんこうちゅうのイベントはないよ。',
+                    theme: theme,
+                  )
+                else
+                  _EventList(
+                    themes: theme,
+                    events: ongoing,
+                    onTap: (e) => _Controller.goDetail(context, e.id),
+                    onAction: (e) => _Controller.goSettlement(context, e.id),
+                  ),
+                const SizedBox(height: 24),
+                _SectionHeader(
+                  label: 'せいさんずみ',
+                  accentColor: Colors.grey.shade400,
+                ),
+                const SizedBox(height: 8),
+                if (finished.isEmpty)
+                  _EmptyMessage(
+                    message: 'せいさんずみのイベントはまだありません。',
+                    theme: theme,
+                  )
+                else
+                  _EventList(
+                    themes: theme,
+                    events: finished,
+                    isFinished: true,
+                    onTap: (e) => _Controller.goDetail(context, e.id),
+                  ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-
-          if (mockEvents.isEmpty)
-            const Card(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('まだイベントがないよ。みぎしたのボタンからつくってみよう（モック）。'),
-              ),
-            )
-          else
-            ...mockEvents.map((e) {
-              final total = e.totalUnsettledAmount;
-              return Card(
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  leading: CircleAvatar(
-                    child: Text(
-                      e.title.isNotEmpty ? e.title.characters.first : '?',
-                    ),
-                  ),
-                  title: Text(e.title),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_fmtDate(e.lastUpdatedAt)}',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'さんか: ${e.members.length}にん ／ みんなではらった: ${_fmtYen(total)}',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                  onTap: () => _Controller.goDetail(context, e.id),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (v) {
-                      switch (v) {
-                        case 'detail':
-                          _Controller.goDetail(context, e.id);
-                          break;
-                        case 'settlement':
-                          _Controller.goSettlement(context, e.id);
-                          break;
-                      }
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(
-                        value: 'detail',
-                        child: Text('しょうさいをみる(EV0200)'),
-                      ),
-                      PopupMenuItem(
-                        value: 'settlement',
-                        child: Text('おかねをまとめる(SV0100)'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-
-          const SizedBox(height: 16),
-          Text(
-            '※ イベントのさくせい/へんしゅうはこれから EV0x00 でつくるよ（いまはモック）。',
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+          Positioned(
+            bottom: 32,
+            right: 24,
+            child: _CreateFab(
+              onPressed: () => _Controller.onCreateEvent(context),
+            ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _Controller.onCreateEvent(context),
-        icon: const Icon(Icons.add),
-        label: const Text('イベントをつくる（モック）'),
-      ),
+      bottomNavigationBar: const CommonBottomNavBar(currentIndex: 2),
     );
   }
 }
@@ -148,3 +117,244 @@ String _fmtYen(int n) {
 
 String _fmtDate(DateTime d) =>
     '${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.label,
+    required this.accentColor,
+    this.actionLabel,
+    this.onTapAction,
+  });
+
+  final String label;
+  final Color accentColor;
+  final String? actionLabel;
+  final VoidCallback? onTapAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: accentColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        if (actionLabel != null)
+          TextButton(
+            onPressed: onTapAction,
+            child: Text(
+              actionLabel!,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _EventList extends StatelessWidget {
+  const _EventList({
+    required this.themes,
+    required this.events,
+    this.isFinished = false,
+    required this.onTap,
+    this.onAction,
+  });
+
+  final ThemeData themes;
+  final List<EventSummary> events;
+  final bool isFinished;
+  final void Function(EventSummary) onTap;
+  final void Function(EventSummary)? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(events.length, (index) {
+        final event = events[index];
+        return Column(
+          children: [
+            _EventRow(
+              summary: event,
+              theme: themes,
+              isFinished: isFinished,
+              onTap: () => onTap(event),
+              onAction: isFinished ? null : () => onAction?.call(event),
+            ),
+            if (index != events.length - 1)
+              Divider(
+                height: 1,
+                thickness: 0.8,
+                color: Colors.grey.shade200,
+              ),
+          ],
+        );
+      }),
+    );
+  }
+}
+
+class _EventRow extends StatelessWidget {
+  const _EventRow({
+    required this.summary,
+    required this.theme,
+    required this.onTap,
+    this.onAction,
+    this.isFinished = false,
+  });
+
+  final EventSummary summary;
+  final ThemeData theme;
+  final VoidCallback onTap;
+  final VoidCallback? onAction;
+  final bool isFinished;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        _fmtDate(summary.lastUpdatedAt),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.hintColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (isFinished)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.check_circle,
+                                  size: 14, color: Colors.green),
+                              SizedBox(width: 4),
+                              Text(
+                                'せいさんOK',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    summary.title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'さんか ${summary.members.length} にん',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  _fmtYen(summary.totalUnsettledAmount),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (!isFinished && onAction != null)
+                  IconButton(
+                    onPressed: onAction,
+                    icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyMessage extends StatelessWidget {
+  const _EmptyMessage({required this.message, required this.theme});
+  final String message;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Text(
+        message,
+        style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
+      ),
+    );
+  }
+}
+
+class _CreateFab extends StatelessWidget {
+  const _CreateFab({required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF13EC80),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: const StadiumBorder(),
+        elevation: 8,
+      ),
+      icon: const Icon(Icons.add, size: 28, color: Color(0xFF102219)),
+      label: const Text(
+        'あたらしくつくる',
+        style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF102219)),
+      ),
+    );
+  }
+}

@@ -157,7 +157,7 @@ class My0100Screen extends ConsumerWidget {
           ),
         ],
       ),
-      bottomNavigationBar: const CommonBottomNavBar(currentIndex: 2),
+      bottomNavigationBar: const CommonBottomNavBar(currentIndex: 3),
     );
   }
 }

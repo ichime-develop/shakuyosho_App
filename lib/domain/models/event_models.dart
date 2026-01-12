@@ -14,6 +14,25 @@ class EventSummary {
   final List<String> members;
   final DateTime lastUpdatedAt;
   final int totalUnsettledAmount;
+
+  EventSummary copyWith({
+    String? id,
+    String? title,
+    bool? isSettled,
+    List<String>? members,
+    DateTime? lastUpdatedAt,
+    int? totalUnsettledAmount,
+  }) {
+    return EventSummary(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      isSettled: isSettled ?? this.isSettled,
+      members: members ?? this.members,
+      lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
+      totalUnsettledAmount:
+          totalUnsettledAmount ?? this.totalUnsettledAmount,
+    );
+  }
 }
 
 class EventTransaction {
