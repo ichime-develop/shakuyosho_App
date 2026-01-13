@@ -19,10 +19,7 @@ const List<MockUser> mockUsers = [
 ];
 
 String displayNameOf(String userId) {
-  return mockUsers
-      .firstWhere(
-        (u) => u.userId == userId,
-        orElse: () => const MockUser(userId: 'unknown', displayName: '???'),
-      )
-      .displayName;
+  final users = mockUsers.where((u) => u.userId == userId).toList();
+  assert(users.isNotEmpty, 'Unknown userId referenced in mock data: $userId');
+  return users.isNotEmpty ? users.first.displayName : '???';
 }

@@ -41,14 +41,14 @@ List<MockEvent> _buildMockEvents() {
     required bool isSettled,
   }) {
     final txs = byEvent[eventId] ?? [];
-    final eventTxs = txs.map(_convertToEventTransaction).toList();
+    final eventTxs = List<EventTransaction>.unmodifiable(txs.map(_convertToEventTransaction));
     final lastUpdated = _latestDate(eventTxs);
     final unsettled = _calcUnsettled(eventTxs);
     final summary = EventSummary(
       id: eventId,
       title: title,
       isSettled: isSettled,
-      members: memberUserIds.map(displayNameOf).toList(),
+      members: memberUserIds.map((id) => displayNameOf(id)).toList(growable: false),
       lastUpdatedAt: lastUpdated,
       totalUnsettledAmount: unsettled,
     );
@@ -142,9 +142,12 @@ EventTransaction _convertToEventTransaction(MockAppTransaction tx) {
 }
 
 DateTime _latestDate(List<EventTransaction> txs) {
-  if (txs.isEmpty) return DateTime.now();
-  txs.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-  return txs.first.createdAt;
+  if (txs.isEmpty) return DateTime(2000, 1, 1);
+  var latest = txs.first.createdAt;
+  for (final tx in txs.skip(1)) {
+    if (tx.createdAt.isAfter(latest)) latest = tx.createdAt;
+  }
+  return latest;
 }
 
 int _calcUnsettled(List<EventTransaction> txs) {
