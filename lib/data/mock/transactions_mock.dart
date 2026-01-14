@@ -1,3 +1,6 @@
+import 'package:shakuyousho_app/domain/models/transaction_model.dart'
+    as domain_tx;
+
 enum MockTransactionType { expense, repayment }
 
 class ExpenseDetail {
@@ -55,6 +58,37 @@ class MockAppTransaction {
   final ExpenseDetail? expenseDetail;
   final RepaymentDetail? repaymentDetail;
 }
+
+domain_tx.Transaction toDomainTransaction(MockAppTransaction tx) {
+  final expense = tx.expenseDetail;
+  final repayment = tx.repaymentDetail;
+  return domain_tx.Transaction(
+    id: tx.txId,
+    eventId: tx.eventId,
+    type: tx.txType == MockTransactionType.expense
+        ? domain_tx.TxType.expense
+        : domain_tx.TxType.repayment,
+    title: tx.title,
+    date: tx.date,
+    currency: tx.currency,
+    totalAmount: tx.totalAmount,
+    participantIds: tx.participantIds,
+    paidBy: expense?.paidBy,
+    shares: expense?.shares,
+    fromUserId: repayment?.fromUserId,
+    toUserId: repayment?.toUserId,
+    repaymentAmount: repayment?.amount,
+    createdBy: tx.createdBy,
+    createdAt: tx.createdAt,
+    updatedAt: tx.updatedAt,
+    deletedAt: tx.deletedAt,
+  );
+}
+
+final List<domain_tx.Transaction> mockDomainTransactions =
+    List<domain_tx.Transaction>.unmodifiable(
+  mockAllTransactions.map(toDomainTransaction).toList(growable: false),
+);
 
 
 const _jpy = 'JPY';

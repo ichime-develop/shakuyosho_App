@@ -17,11 +17,13 @@ class MockEvent {
 
 final List<MockEvent> _mockEventData = _buildMockEvents();
 
-final List<EventSummary> mockEvents =
-    _mockEventData.map((e) => e.summary).toList(growable: false);
+final List<EventSummary> mockEvents = _mockEventData
+    .map((e) => e.summary)
+    .toList(growable: false);
 
-final List<EventTransaction> mockTransactions =
-    _mockEventData.expand((e) => e.transactions).toList(growable: false);
+final List<EventTransaction> mockTransactions = _mockEventData
+    .expand((e) => e.transactions)
+    .toList(growable: false);
 
 final Map<String, List<String>> mockEventMemberUserIds = {
   for (final e in _mockEventData) e.summary.id: e.memberUserIds,
@@ -30,7 +32,8 @@ final Map<String, List<String>> mockEventMemberUserIds = {
 List<MockEvent> _buildMockEvents() {
   final Map<String, List<MockAppTransaction>> byEvent = {};
   for (final tx in mockAllTransactions) {
-    if (tx.eventId == null || tx.txType != MockTransactionType.expense) continue;
+    if (tx.eventId == null || tx.txType != MockTransactionType.expense)
+      continue;
     byEvent.putIfAbsent(tx.eventId!, () => []).add(tx);
   }
 
@@ -41,14 +44,16 @@ List<MockEvent> _buildMockEvents() {
     required bool isSettled,
   }) {
     final txs = byEvent[eventId] ?? [];
-    final eventTxs = List<EventTransaction>.unmodifiable(txs.map(_convertToEventTransaction));
+    final eventTxs = List<EventTransaction>.unmodifiable(
+      txs.map(_convertToEventTransaction),
+    );
     final lastUpdated = _latestDate(eventTxs);
     final unsettled = _calcUnsettled(eventTxs);
     final summary = EventSummary(
       id: eventId,
       title: title,
       isSettled: isSettled,
-      members: memberUserIds.map((id) => displayNameOf(id)).toList(growable: false),
+      participantIds: List<String>.unmodifiable(memberUserIds),
       lastUpdatedAt: lastUpdated,
       totalUnsettledAmount: unsettled,
     );
@@ -154,11 +159,17 @@ int _calcUnsettled(List<EventTransaction> txs) {
   if (txs.isEmpty) return 0;
   final Map<String, int> balances = {};
   for (final tx in txs) {
-    balances.update(tx.paidBy, (value) => value - tx.totalAmount,
-        ifAbsent: () => -tx.totalAmount);
+    balances.update(
+      tx.paidBy,
+      (value) => value - tx.totalAmount,
+      ifAbsent: () => -tx.totalAmount,
+    );
     tx.shares.forEach((userId, amount) {
-      balances.update(userId, (value) => value + amount,
-          ifAbsent: () => amount);
+      balances.update(
+        userId,
+        (value) => value + amount,
+        ifAbsent: () => amount,
+      );
     });
   }
   int sumPositive = 0;

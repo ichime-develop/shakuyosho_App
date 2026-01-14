@@ -3,7 +3,7 @@ class EventSummary {
     required this.id,
     required this.title,
     required this.isSettled,
-    required this.members,
+    required this.participantIds,
     required this.lastUpdatedAt,
     required this.totalUnsettledAmount,
   });
@@ -11,7 +11,8 @@ class EventSummary {
   final String id;
   final String title;
   final bool isSettled;
-  final List<String> members;
+  // participantIds: list of userId strings
+  final List<String> participantIds;
   final DateTime lastUpdatedAt;
   final int totalUnsettledAmount;
 
@@ -19,7 +20,7 @@ class EventSummary {
     String? id,
     String? title,
     bool? isSettled,
-    List<String>? members,
+    List<String>? participantIds,
     DateTime? lastUpdatedAt,
     int? totalUnsettledAmount,
   }) {
@@ -27,7 +28,7 @@ class EventSummary {
       id: id ?? this.id,
       title: title ?? this.title,
       isSettled: isSettled ?? this.isSettled,
-      members: members ?? this.members,
+      participantIds: participantIds ?? this.participantIds,
       lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
       totalUnsettledAmount:
           totalUnsettledAmount ?? this.totalUnsettledAmount,

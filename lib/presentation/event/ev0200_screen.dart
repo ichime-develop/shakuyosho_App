@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shakuyousho_app/data/mock/event_mock.dart';
-import 'package:shakuyousho_app/domain/models/event_models.dart';
+import 'package:shakuyousho_app/application/providers/event_providers.dart';
+import 'package:shakuyousho_app/data/mock/users_mock.dart';
+import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 
 /// EV0200: イベント詳細（支払い一覧）
 ///
@@ -23,22 +24,37 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final eventState = ref.watch(eventStateProvider);
+    if (eventState.events.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
+          title: const Text('EV0200'),
+        ),
+        body: const Center(child: Text('イベントがありません。')),
+      );
+    }
     final qp = Uri.base.queryParameters;
-    final eventId = qp['eventId'] ?? mockEvents.first.id;
+    final eventId = qp['eventId'] ??
+        (eventState.events.isEmpty ? '' : eventState.events.first.id);
 
-    final event = mockEvents.firstWhere(
+    final event = eventState.events.firstWhere(
       (e) => e.id == eventId,
-      orElse: () => mockEvents.first,
+      orElse: () => eventState.events.first,
     );
 
-    // 本来は eventId に紐づく支払い一覧を Provider から取得する想定
-    final payments =
-        mockTransactions.where((p) => p.eventId == event.id).toList()
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // 新しい順
+    final payments = eventState.transactions
+        .where((p) => p.eventId == event.id && p.deletedAt == null)
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date)); // 新しい順
 
     final theme = Theme.of(context);
-    final totalAmount =
-        payments.fold<int>(0, (sum, p) => sum + p.totalAmount);
+    final totalAmount = payments
+        .where((p) => p.type == TxType.expense)
+        .fold<int>(0, (sum, p) => sum + p.totalAmount);
 
     return Scaffold(
       appBar: AppBar(
@@ -100,7 +116,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                 eventId: event.id,
                 payment: p,
               ),
-              onDelete: (p) => _onDeletePayment(context, p.id),
+              onDelete: (p) => _onDeletePayment(ref, context, p.id),
             ),
         ],
       ),
@@ -114,7 +130,11 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _onDeletePayment(BuildContext context, String paymentId) async {
+  Future<void> _onDeletePayment(
+    WidgetRef ref,
+    BuildContext context,
+    String paymentId,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -139,18 +159,12 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
     if (confirmed != true) {
       return;
     }
-
-    // Mock deletion
-    // In mock file this would remove, but shared mock is immutable here; rebuild not required.
-    // If desired, modify mockTransactions in memory for testing.
-    // _mockPayments.removeWhere((p) => p.id == paymentId);
-
-    // Rebuild UI (force refresh)
-    (context as Element).markNeedsBuild();
+    // Delete via provider so other screens update
+    ref.read(eventStateProvider.notifier).deleteTransaction(paymentId);
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('おしはらいをけしたよ（モック）')));
+    ).showSnackBar(const SnackBar(content: Text('おしはらいをけしたよ')));
   }
 }
 
@@ -177,7 +191,7 @@ class _Controller {
   static void goEditEventTransaction({
     required BuildContext context,
     required String eventId,
-    required EventTransaction payment,
+    required Transaction payment,
   }) {
     final uri = Uri(
       path: '/tr0100',
@@ -281,8 +295,10 @@ class _SummaryPanel extends StatelessWidget {
             label: 'ごうけい',
             value: _fmtYen(totalAmount).replaceAll('¥', ''),
             unit: 'えん',
-            labelStyle: theme.textTheme.bodySmall
-                ?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey),
+            labelStyle: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
             valueStyle: theme.textTheme.displaySmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: Colors.black,
@@ -305,9 +321,7 @@ class _SummaryPanel extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'きろく $count 件',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.hintColor,
-            ),
+            style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
           ),
         ],
       ),
@@ -390,10 +404,10 @@ class _PaymentList extends StatelessWidget {
     required this.onDelete,
   });
 
-  final List<EventTransaction> payments;
+  final List<Transaction> payments;
   final ThemeData theme;
-  final void Function(EventTransaction) onTap;
-  final void Function(EventTransaction) onDelete;
+  final void Function(Transaction) onTap;
+  final void Function(Transaction) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -414,11 +428,7 @@ class _PaymentList extends StatelessWidget {
                 onDelete: () => onDelete(p),
               ),
               if (index != payments.length - 1)
-                Divider(
-                  height: 1,
-                  thickness: 0.8,
-                  color: Colors.grey.shade200,
-                ),
+                Divider(height: 1, thickness: 0.8, color: Colors.grey.shade200),
             ],
           );
         }),
@@ -435,13 +445,23 @@ class _PaymentRow extends StatelessWidget {
     required this.onDelete,
   });
 
-  final EventTransaction transaction;
+  final Transaction transaction;
   final ThemeData theme;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
+    final isExpense = transaction.type == TxType.expense;
+    final fromName = transaction.fromUserId == null
+        ? '???'
+        : displayNameOf(transaction.fromUserId!);
+    final toName = transaction.toUserId == null
+        ? '???'
+        : displayNameOf(transaction.toUserId!);
+    final payerName = transaction.paidBy == null
+        ? '???'
+        : displayNameOf(transaction.paidBy!);
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -471,7 +491,9 @@ class _PaymentRow extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '${transaction.paidBy} • ${_fmtMonthDay(transaction.createdAt)}',
+                        isExpense
+                            ? '$payerName • ${_fmtMonthDay(transaction.date)}'
+                            : '$fromName → $toName • ${_fmtMonthDay(transaction.date)}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.hintColor,
                         ),
@@ -495,8 +517,10 @@ class _PaymentRow extends StatelessWidget {
                 Row(
                   children: [
                     _StatusChip(
-                      label: 'たてかえ',
-                      color: theme.colorScheme.primary,
+                      label: isExpense ? 'たてかえ' : 'へんさい',
+                      color: isExpense
+                          ? theme.colorScheme.primary
+                          : Colors.orangeAccent,
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete_outline, size: 20),

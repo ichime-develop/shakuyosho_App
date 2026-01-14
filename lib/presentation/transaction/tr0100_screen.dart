@@ -1,6 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shakuyousho_app/data/mock/users_mock.dart';
+import 'package:shakuyousho_app/application/providers/event_providers.dart';
+import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 import '../../application/usecases/event_share_service.dart';
 
 /// TR0100: イベント内の 1 つの支払い（取引）を入力・編集する画面
@@ -30,12 +35,17 @@ class _Tr0100TransactionScreenState
   late final TextEditingController _titleController;
   late final TextEditingController _amountController;
   final _eventShareService = EventShareService();
+  bool _initialized = false;
 
-  /// 仮のイベント参加者（本来は eventId から取得）
-  final List<_EventMember> _members = _mockMembers;
+  /// イベント参加者（本来は eventId から取得）
+  late final List<_EventMember> _members;
 
   /// 誰が払ったか
   String? _payerUserId;
+
+  String? _eventTitle;
+  String? _eventId;
+  Transaction? _editingTransaction;
 
   /// 内訳設定ゾーンを表示するかどうか
   bool _showBreakdown = false;
@@ -47,29 +57,65 @@ class _Tr0100TransactionScreenState
   @override
   void initState() {
     super.initState();
+  }
 
-    // TODO: eventId / transactionId を使って初期値を差し込む想定
-    // final eventId = Uri.base.queryParameters['eventId'];
-    // final transactionId = Uri.base.queryParameters['transactionId'];
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    final routerParams = GoRouterState.of(context).uri.queryParameters;
+    final baseParams = Uri.base.queryParameters;
+    final qp = {...baseParams, ...routerParams};
+    _initFromParams(qp);
+    _initialized = true;
+  }
 
-    _titleController = TextEditingController();
-    _amountController = TextEditingController();
+  void _initFromParams(Map<String, String> qp) {
+    final eventIdParam = qp['eventId'];
+    final transactionId = qp['transactionId'];
 
-    // デフォルトでは全員を割り勘対象にしておく
-    _memberShares = _members
-        .map(
-          (m) => _MemberShareState(
-            memberId: m.id,
-            name: m.displayName,
-            included: true,
-            controller: TextEditingController(),
-          ),
-        )
-        .toList();
+    _editingTransaction = _findTransaction(transactionId);
+    _eventId = _editingTransaction?.eventId ?? eventIdParam;
+    _eventTitle = _findEventTitle(_eventId);
+
+    _members = _resolveMembers(_eventId, _editingTransaction);
+    _titleController = TextEditingController(
+      text: _editingTransaction?.title ?? '',
+    );
+    _amountController = TextEditingController(
+      text: _editingTransaction == null
+          ? ''
+          : _editingTransaction!.totalAmount.toString(),
+    );
+
+    _memberShares = _members.map((m) {
+      final shares = _editingTransaction?.shares;
+      final amount = shares == null ? null : shares[m.id];
+      final included = _editingTransaction == null ? true : amount != null;
+      final amountText = amount?.toString() ?? '';
+      return _MemberShareState(
+        memberId: m.id,
+        name: m.displayName,
+        included: included,
+        controller: TextEditingController(text: amountText),
+      );
+    }).toList();
 
     if (_members.isNotEmpty) {
-      _payerUserId = _members.first.id;
+      _payerUserId = _editingTransaction?.paidBy ?? _members.first.id;
     }
+  }
+
+  String _generateTxId(String? eventId) {
+    final e = (eventId == null || eventId.isEmpty)
+        ? 'personal'
+        : eventId.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+    final ts = DateTime.now().toUtc().toIso8601String().replaceAll(
+      RegExp(r'[^0-9]'),
+      '',
+    );
+    final rnd = Random().nextInt(1000).toString().padLeft(3, '0');
+    return 'tx_${e}_$ts$rnd';
   }
 
   @override
@@ -92,7 +138,9 @@ class _Tr0100TransactionScreenState
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
-        title: const Text('TR0100 おしはらいメモ'),
+        title: Text(
+          _eventTitle == null ? 'TR0100 おしはらいメモ' : 'TR0100 $_eventTitle',
+        ),
         actions: [TextButton(onPressed: _onTapSave, child: const Text('ほぞん'))],
       ),
       body: SafeArea(
@@ -175,8 +223,8 @@ class _Tr0100TransactionScreenState
                   summary: _payerUserId == null
                       ? 'えらんでね'
                       : _members
-                          .firstWhere((m) => m.id == _payerUserId)
-                          .displayName,
+                            .firstWhere((m) => m.id == _payerUserId)
+                            .displayName,
                   expanded: _payerExpanded,
                   onToggle: (value) {
                     setState(() => _payerExpanded = value);
@@ -241,7 +289,7 @@ class _Tr0100TransactionScreenState
                               ),
                             ),
                             Container(
-                              width: 110,
+                              width: 100,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
                                 vertical: 6,
@@ -257,6 +305,8 @@ class _Tr0100TransactionScreenState
                                 keyboardType: TextInputType.number,
                                 decoration: const InputDecoration(
                                   border: InputBorder.none,
+                                  hintText: '0',
+                                  isDense: true,
                                   prefixText: '¥ ',
                                 ),
                               ),
@@ -332,18 +382,17 @@ class _Tr0100TransactionScreenState
   /// 各メンバーの TextField に反映する。
   void _recalcShares() {
     final total = int.tryParse(_amountController.text) ?? 0;
-    final targetIds = _memberShares
-        .where((s) => s.included)
-        .map((s) => s.memberId)
-        .toList();
+    final includedShares = _memberShares.where((s) => s.included).toList();
 
-    if (total <= 0 || targetIds.isEmpty) {
-      // 金額または対象がない場合はクリアだけする
+    if (includedShares.isEmpty) {
+      return;
+    }
+
+    if (total <= 0) {
+      // 金額がない場合は金額入力だけクリアする
       setState(() {
-        for (final s in _memberShares) {
-          if (s.included) {
-            s.controller.text = '';
-          }
+        for (final s in includedShares) {
+          s.controller.text = '';
         }
       });
       return;
@@ -351,18 +400,89 @@ class _Tr0100TransactionScreenState
 
     final result = _eventShareService.calcEqualShares(
       totalAmount: total,
-      beneficiaryUserIds: targetIds,
+      beneficiaryUserIds: includedShares.map((s) => s.memberId).toList(),
     );
 
     setState(() {
-      for (final s in _memberShares) {
-        if (result.containsKey(s.memberId)) {
-          s.controller.text = result[s.memberId]!.toString();
-        } else if (s.included) {
-          s.controller.text = '';
+      for (final s in includedShares) {
+        final value = result[s.memberId];
+        if (value != null) {
+          s.controller.text = value.toString();
         }
       }
     });
+  }
+
+  Transaction? _findTransaction(String? transactionId) {
+    if (transactionId == null || transactionId.isEmpty) {
+      return null;
+    }
+    final txs = ref.read(eventStateProvider).transactions;
+    for (final tx in txs) {
+      if (tx.id == transactionId && tx.deletedAt == null) return tx;
+    }
+    return null;
+  }
+
+  String? _findEventTitle(String? eventId) {
+    if (eventId == null || eventId.isEmpty) {
+      return null;
+    }
+    final events = ref.read(eventStateProvider).events;
+    for (final event in events) {
+      if (event.id == eventId) return event.title;
+    }
+    return null;
+  }
+
+  List<_EventMember> _resolveMembers(
+    String? eventId,
+    Transaction? transaction,
+  ) {
+    final memberIds = <String>[];
+    final seen = <String>{};
+    void addIfMissing(String id) {
+      if (seen.add(id)) {
+        memberIds.add(id);
+      }
+    }
+
+    if (eventId != null && eventId.isNotEmpty) {
+      final events = ref.read(eventStateProvider).events;
+      for (final event in events) {
+        if (event.id != eventId) continue;
+        for (final id in event.participantIds) {
+          addIfMissing(id);
+        }
+        break;
+      }
+    }
+
+    if (transaction != null) {
+      if (transaction.type == TxType.expense) {
+        final paidBy = transaction.paidBy;
+        if (paidBy != null) {
+          addIfMissing(paidBy);
+        }
+        final shares = transaction.shares;
+        if (shares != null) {
+          for (final id in shares.keys) {
+            addIfMissing(id);
+          }
+        }
+      } else {
+        if (transaction.fromUserId != null) {
+          addIfMissing(transaction.fromUserId!);
+        }
+        if (transaction.toUserId != null) {
+          addIfMissing(transaction.toUserId!);
+        }
+      }
+    }
+
+    return memberIds
+        .map((id) => _EventMember(id: id, displayName: displayNameOf(id)))
+        .toList();
   }
 
   void _onTapSave() {
@@ -383,19 +503,76 @@ class _Tr0100TransactionScreenState
       return;
     }
 
-    // TODO: EventTransaction モデルにマッピングして Repository / Usecase 経由で保存する想定。
-    // 現時点ではダミーで SnackBar を出して戻る。
-    final payerName = _members
-        .firstWhere((m) => m.id == _payerUserId)
-        .displayName;
-    final snack = SnackBar(
-      content: Text(
-        'おしはらいをのこしました（ダミー）。\n'
-        'はらったひと: $payerName\n'
-        'ごうけい: ${_fmtYen(total)}',
-      ),
+    // Map UI -> Transaction and save via EventStateNotifier
+    final id = _editingTransaction?.id ?? _generateTxId(_eventId);
+    final createdAt = _editingTransaction?.createdAt ?? DateTime.now();
+
+    // Build shares: prefer explicit inputs, otherwise split equally
+    final shares = <String, int>{};
+    if (included.isEmpty) return;
+    // parse explicit amounts if provided
+    int sumShares = 0;
+    for (final s in included) {
+      final text = s.controller.text.trim();
+      final v = int.tryParse(text) ?? 0;
+      if (v > 0) {
+        shares[s.memberId] = v;
+        sumShares += v;
+      }
+    }
+    final diffTarget = included.any((s) => s.memberId == _payerUserId)
+        ? _payerUserId!
+        : included.first.memberId;
+    if (sumShares == 0) {
+      // equal split
+      final base = total ~/ included.length;
+      final rem = total - base * included.length;
+      for (final s in included) {
+        shares[s.memberId] = base;
+      }
+      if (rem > 0) {
+        shares[diffTarget] = (shares[diffTarget] ?? 0) + rem;
+      }
+    } else if (sumShares != total) {
+      // adjust first included to absorb diff
+      final diff = total - sumShares;
+      shares[diffTarget] = (shares[diffTarget] ?? 0) + diff;
+    }
+
+    final eventId = (_eventId == null || _eventId!.isEmpty) ? null : _eventId;
+    final participantIds = <String>{...shares.keys};
+    if (_payerUserId != null) {
+      participantIds.add(_payerUserId!);
+    }
+    final tx = Transaction(
+      id: id,
+      eventId: eventId,
+      type: TxType.expense,
+      title: _titleController.text.trim().isEmpty
+          ? 'メモ'
+          : _titleController.text.trim(),
+      date: _editingTransaction?.date ?? DateTime.now(),
+      currency: 'JPY',
+      totalAmount: total,
+      participantIds: participantIds.toList(growable: false),
+      paidBy: _payerUserId ?? included.first.memberId,
+      shares: Map<String, int>.unmodifiable(shares),
+      fromUserId: null,
+      toUserId: null,
+      repaymentAmount: null,
+      createdBy: _editingTransaction?.createdBy ??
+          (_payerUserId ?? included.first.memberId),
+      createdAt: createdAt,
+      updatedAt: DateTime.now(),
+      deletedAt: _editingTransaction?.deletedAt,
     );
-    ScaffoldMessenger.of(context).showSnackBar(snack);
+
+    // Persist to state
+    ref.read(eventStateProvider.notifier).upsertTransaction(tx);
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('おしはらいをほぞんしました')));
     context.pop();
   }
 
@@ -427,6 +604,11 @@ class _Tr0100TransactionScreenState
       ),
     );
     if (confirmed == true && mounted) {
+      if (_editingTransaction != null) {
+        ref
+            .read(eventStateProvider.notifier)
+            .deleteTransaction(_editingTransaction!.id);
+      }
       context.pop();
     }
   }
@@ -514,7 +696,9 @@ class _AccordionCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: expanded ? theme.colorScheme.primary.withOpacity(0.4) : Colors.grey.shade200,
+          color: expanded
+              ? theme.colorScheme.primary.withOpacity(0.4)
+              : Colors.grey.shade200,
           style: expanded ? BorderStyle.solid : BorderStyle.solid,
         ),
         boxShadow: const [
@@ -542,9 +726,7 @@ class _AccordionCard extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         if (summary != null)
                           Text(
@@ -571,8 +753,9 @@ class _AccordionCard extends StatelessWidget {
               child: child,
             ),
             secondChild: const SizedBox.shrink(),
-            crossFadeState:
-                expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+            crossFadeState: expanded
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
             duration: const Duration(milliseconds: 200),
           ),
         ],
@@ -591,10 +774,7 @@ class _IconInitial extends StatelessWidget {
     return CircleAvatar(
       radius: 18,
       backgroundColor: Colors.grey.shade200,
-      child: Text(
-        initial,
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
+      child: Text(initial, style: const TextStyle(fontWeight: FontWeight.bold)),
     );
   }
 }
@@ -622,13 +802,6 @@ class _MemberShareState {
   bool included;
   final TextEditingController controller;
 }
-
-/// 仮メンバー（本来は eventId から取得）
-const List<_EventMember> _mockMembers = [
-  _EventMember(id: 'user_a', displayName: 'A さん'),
-  _EventMember(id: 'user_b', displayName: 'B さん'),
-  _EventMember(id: 'user_c', displayName: 'C さん'),
-];
 
 String _fmtYen(int n) {
   final s = n.abs().toString();

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shakuyousho_app/application/providers/event_providers.dart';
+import 'package:shakuyousho_app/data/mock/users_mock.dart';
+import 'package:shakuyousho_app/domain/models/event_models.dart';
+import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 
 /// SV0100: イベント精算画面
 /// - メンバーの支払総額と負担割合からネット残高を算出
@@ -17,20 +21,19 @@ class Sv0100SettlementScreen extends ConsumerStatefulWidget {
 class _Sv0100SettlementScreenState
     extends ConsumerState<Sv0100SettlementScreen> {
   late final String eventId;
-  late _EventSettleContext ctx;
 
   @override
   void initState() {
     super.initState();
     final q = Uri.base.queryParameters;
     eventId = q['eventId'] ?? 'ev_001';
-    // 本来は eventId からAPI/Repositoryで取得。今はモック。
-    ctx = _buildContextFor(eventId);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final eventState = ref.watch(eventStateProvider);
+    final ctx = _buildContextFromState(eventState, eventId);
     final transfers = _minTransfers(ctx.netBalances);
 
     return Scaffold(
@@ -52,15 +55,13 @@ class _Sv0100SettlementScreenState
               alignment: Alignment.center,
               child: Text(
                 'とくにやることはないよ。',
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: theme.hintColor),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.hintColor,
+                ),
               ),
             )
           else
-            _TransferList(
-              transfers: transfers,
-              contextData: ctx,
-            ),
+            _TransferList(transfers: transfers, contextData: ctx),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -86,32 +87,31 @@ class _Sv0100SettlementScreenState
     );
   }
 
-  String _nameOf(String userId) =>
-      ctx.members.firstWhere((m) => m.userId == userId).displayName;
-
   void _goLb(_Transfer t) {
     // 個人借用書の作成パラメータで LB0100 へ（モック）
     final friendId = t.to; // 受け取り側が相手
+    final eventTitle = _currentEventTitle();
     final uri = Uri(
       path: '/lb0100',
       queryParameters: {
         'mode': 'personal',
         'friendId': friendId,
         'amount': t.amountYen.toString(),
-        'memo': 'イベントのおかねまとめ(${ctx.event.title})',
+        'memo': 'イベントのおかねまとめ($eventTitle)',
       },
     );
     context.push(uri.toString());
   }
 
   void _goTx(_Transfer t) {
+    final eventTitle = _currentEventTitle();
     final uri = Uri(
       path: '/tr0100',
       queryParameters: {
         'mode': 'personal',
         'friendId': t.to,
         'amount': t.amountYen.toString(),
-        'memo': 'イベントのおかねまとめ(${ctx.event.title})',
+        'memo': 'イベントのおかねまとめ($eventTitle)',
       },
     );
     context.push(uri.toString());
@@ -129,6 +129,15 @@ class _Sv0100SettlementScreenState
     ).showSnackBar(const SnackBar(content: Text('かくてい')));
     context.go('/to0100/event');
   }
+
+  String _currentEventTitle() {
+    final state = ref.read(eventStateProvider);
+    final event = state.events.firstWhere(
+      (e) => e.id == eventId,
+      orElse: () => state.events.first,
+    );
+    return event.title;
+  }
 }
 
 class _HeroSection extends StatelessWidget {
@@ -145,12 +154,18 @@ class _HeroSection extends StatelessWidget {
             color: theme.colorScheme.primary.withOpacity(0.12),
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.handshake, color: theme.colorScheme.primary, size: 32),
+          child: Icon(
+            Icons.handshake,
+            color: theme.colorScheme.primary,
+            size: 32,
+          ),
         ),
         const SizedBox(height: 12),
         Text(
           'けっか',
-          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 6),
         Text(
@@ -180,7 +195,9 @@ class _TransferList extends StatelessWidget {
       child: Column(
         children: List.generate(transfers.length, (index) {
           final t = transfers[index];
-          final from = contextData.members.firstWhere((m) => m.userId == t.from);
+          final from = contextData.members.firstWhere(
+            (m) => m.userId == t.from,
+          );
           final to = contextData.members.firstWhere((m) => m.userId == t.to);
           return Column(
             children: [
@@ -244,8 +261,11 @@ class _TransferRow extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Icon(Icons.arrow_forward_ios,
-                        size: 14, color: Colors.grey.withOpacity(0.7)),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: Colors.grey.withOpacity(0.7),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -408,43 +428,76 @@ class _EventSettleContext {
   });
 }
 
-_EventSettleContext _buildContextFor(String eventId) {
-  // モック：イベントとメンバー
-  final event = _mockEvents.firstWhere(
-    (e) => e.eventId == eventId,
-    orElse: () => const _EventLite('ev_001', '箱根旅行(2024/05)'),
+_EventSettleContext _buildContextFromState(EventState state, String eventId) {
+  final event = state.events.firstWhere(
+    (e) => e.id == eventId,
+    orElse: () => state.events.first,
   );
-  final members = _mockMembers[event.eventId] ?? const <_Member>[];
-  final total = members.fold<int>(0, (p, e) => p + e.paidYen);
-  final each = members.isEmpty ? 0 : (total / members.length).round();
-  final net = <String, int>{
-    for (final m in members) m.userId: m.paidYen - each,
-  };
+  final txs = state.transactions
+      .where((t) => t.eventId == eventId && t.deletedAt == null)
+      .toList(growable: false);
+
+  final memberIds = _resolveMemberIds(event, txs);
+  final Map<String, int> paidMap = {for (final id in memberIds) id: 0};
+  final Map<String, int> net = {for (final id in memberIds) id: 0};
+
+  for (final tx in txs) {
+    if (tx.type == TxType.expense) {
+      final paidBy = tx.paidBy;
+      final shares = tx.shares;
+      if (paidBy == null || shares == null) continue;
+      net.update(paidBy, (v) => v + tx.totalAmount,
+          ifAbsent: () => tx.totalAmount);
+      paidMap.update(paidBy, (v) => v + tx.totalAmount,
+          ifAbsent: () => tx.totalAmount);
+      shares.forEach((userId, amount) {
+        net.update(userId, (v) => v - amount, ifAbsent: () => -amount);
+      });
+    } else {
+      final fromUserId = tx.fromUserId;
+      final toUserId = tx.toUserId;
+      if (fromUserId == null || toUserId == null) continue;
+      final amount = tx.repaymentAmount ?? tx.totalAmount;
+      net.update(fromUserId, (v) => v + amount, ifAbsent: () => amount);
+      net.update(toUserId, (v) => v - amount, ifAbsent: () => -amount);
+    }
+  }
+
+  final members = memberIds
+      .map(
+        (id) => _Member(
+          userId: id,
+          displayName: displayNameOf(id),
+          paidYen: paidMap[id] ?? 0,
+        ),
+      )
+      .toList(growable: false);
+  final total = paidMap.values.fold<int>(0, (p, e) => p + e);
+  final eachShare = members.isEmpty ? 0 : (total / members.length).round();
+
   return _EventSettleContext(
-    event: event,
+    event: _EventLite(event.id, event.title),
     members: members,
     totalPaid: total,
-    eachShare: each,
+    eachShare: eachShare,
     netBalances: net,
   );
 }
 
-final _mockEvents = <_EventLite>[
-  const _EventLite('ev_001', '箱根旅行(2024/05)'),
-  const _EventLite('ev_002', '夏フェス(2024/08)'),
-];
-
-final Map<String, List<_Member>> _mockMembers = {
-  'ev_001': const [
-    _Member(userId: 'u_ayaka', displayName: 'あやか', paidYen: 12000),
-    _Member(userId: 'u_sakaguchi', displayName: 'さかぐち', paidYen: 6000),
-    _Member(userId: 'u_kenta', displayName: 'けんた', paidYen: 0),
-  ],
-  'ev_002': const [
-    _Member(userId: 'u_ayaka', displayName: 'あやか', paidYen: 3000),
-    _Member(userId: 'u_miki', displayName: 'みき', paidYen: 9000),
-  ],
-};
+List<String> _resolveMemberIds(EventSummary event, List<Transaction> txs) {
+  final ids = <String>{...event.participantIds};
+  for (final tx in txs) {
+    if (tx.type == TxType.expense) {
+      if (tx.paidBy != null) ids.add(tx.paidBy!);
+      final shares = tx.shares;
+      if (shares != null) ids.addAll(shares.keys);
+    } else {
+      if (tx.fromUserId != null) ids.add(tx.fromUserId!);
+      if (tx.toUserId != null) ids.add(tx.toUserId!);
+    }
+  }
+  return ids.toList(growable: false);
+}
 
 String _fmtYen(int n) {
   final s = n.abs().toString();

@@ -21,10 +21,7 @@ class Ev0100EventListScreen extends ConsumerWidget {
       ..sort((a, b) => b.lastUpdatedAt.compareTo(a.lastUpdatedAt));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('EV0100 イベント一覧'),
-        centerTitle: false,
-      ),
+      appBar: AppBar(title: const Text('EV0100 イベント一覧'), centerTitle: false),
       body: Stack(
         children: [
           SafeArea(
@@ -37,10 +34,7 @@ class Ev0100EventListScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 if (ongoing.isEmpty)
-                  _EmptyMessage(
-                    message: 'まだしんこうちゅうのイベントはないよ。',
-                    theme: theme,
-                  )
+                  _EmptyMessage(message: 'まだしんこうちゅうのイベントはないよ。', theme: theme)
                 else
                   _EventList(
                     themes: theme,
@@ -55,10 +49,7 @@ class Ev0100EventListScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 if (finished.isEmpty)
-                  _EmptyMessage(
-                    message: 'せいさんずみのイベントはまだありません。',
-                    theme: theme,
-                  )
+                  _EmptyMessage(message: 'せいさんずみのイベントはまだありません。', theme: theme)
                 else
                   _EventList(
                     themes: theme,
@@ -201,11 +192,7 @@ class _EventList extends StatelessWidget {
               onAction: isFinished ? null : () => onAction?.call(event),
             ),
             if (index != events.length - 1)
-              Divider(
-                height: 1,
-                thickness: 0.8,
-                color: Colors.grey.shade200,
-              ),
+              Divider(height: 1, thickness: 0.8, color: Colors.grey.shade200),
           ],
         );
       }),
@@ -264,8 +251,11 @@ class _EventRow extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: const [
-                              Icon(Icons.check_circle,
-                                  size: 14, color: Colors.green),
+                              Icon(
+                                Icons.check_circle,
+                                size: 14,
+                                color: Colors.green,
+                              ),
                               SizedBox(width: 4),
                               Text(
                                 'せいさんOK',
@@ -288,7 +278,7 @@ class _EventRow extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'さんか ${summary.members.length} にん',
+                    'さんか ${summary.participantIds.length} にん',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.hintColor,
                     ),
