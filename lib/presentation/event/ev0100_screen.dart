@@ -14,10 +14,10 @@ class Ev0100EventListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final eventState = ref.watch(eventStateProvider);
-    final ongoing = eventState.events.where((e) => !e.isSettled).toList()
+    final summaries = ref.watch(eventSummariesProvider);
+    final ongoing = summaries.where((e) => !e.isSettled).toList()
       ..sort((a, b) => b.lastUpdatedAt.compareTo(a.lastUpdatedAt));
-    final finished = eventState.events.where((e) => e.isSettled).toList()
+    final finished = summaries.where((e) => e.isSettled).toList()
       ..sort((a, b) => b.lastUpdatedAt.compareTo(a.lastUpdatedAt));
 
     return Scaffold(

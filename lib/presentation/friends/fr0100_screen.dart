@@ -67,22 +67,18 @@ class Fr0100FriendsScreen extends ConsumerWidget {
           if (_mockFriends.any((f) => f.dueAt != null)) ...[
             Text('きげんがちかい', style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),
-            ...(_mockFriends.where((f) => f.dueAt != null).toList()
-                  ..sort((a, b) => a.dueAt!.compareTo(b.dueAt!)))
-                .take(3)
-                .map(
-                  (f) => _FriendRow(
-                    data: f,
-                    onOpenDetail: () =>
-                        _Controller.onOpenFriendDetail(context, f.friendId),
-                    onCreateLb: () =>
-                        _Controller.onCreatePersonalLbFor(context, f.friendId),
-                    onAddTx: () => _Controller.onAddPersonalTransactionFor(
-                      context,
-                      f.friendId,
-                    ),
-                  ),
-                ),
+            _FriendList(
+              friends: (_mockFriends.where((f) => f.dueAt != null).toList()
+                    ..sort((a, b) => a.dueAt!.compareTo(b.dueAt!)))
+                  .take(3)
+                  .toList(growable: false),
+              onOpenDetail: (f) =>
+                  _Controller.onOpenFriendDetail(context, f.friendId),
+              onCreateLb: (f) =>
+                  _Controller.onCreatePersonalLbFor(context, f.friendId),
+              onAddTx: (f) =>
+                  _Controller.onAddPersonalTransactionFor(context, f.friendId),
+            ),
             const SizedBox(height: 12),
           ],
 
@@ -97,20 +93,51 @@ class Fr0100FriendsScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 8),
-          ..._mockFriends.map(
-            (f) => _FriendRow(
-              data: f,
-              onOpenDetail: () =>
-                  _Controller.onOpenFriendDetail(context, f.friendId),
-              onCreateLb: () =>
-                  _Controller.onCreatePersonalLbFor(context, f.friendId),
-              onAddTx: () =>
-                  _Controller.onAddPersonalTransactionFor(context, f.friendId),
-            ),
+          _FriendList(
+            friends: _mockFriends,
+            onOpenDetail: (f) =>
+                _Controller.onOpenFriendDetail(context, f.friendId),
+            onCreateLb: (f) =>
+                _Controller.onCreatePersonalLbFor(context, f.friendId),
+            onAddTx: (f) =>
+                _Controller.onAddPersonalTransactionFor(context, f.friendId),
           ),
         ],
       ),
       bottomNavigationBar: const CommonBottomNavBar(currentIndex: 1),
+    );
+  }
+}
+
+class _FriendList extends StatelessWidget {
+  const _FriendList({
+    required this.friends,
+    required this.onOpenDetail,
+    required this.onCreateLb,
+    required this.onAddTx,
+  });
+
+  final List<FriendBalance> friends;
+  final void Function(FriendBalance) onOpenDetail;
+  final void Function(FriendBalance) onCreateLb;
+  final void Function(FriendBalance) onAddTx;
+
+  @override
+  Widget build(BuildContext context) {
+    if (friends.isEmpty) return const SizedBox.shrink();
+    return Column(
+      children: List.generate(friends.length * 2 - 1, (index) {
+        if (index.isOdd) {
+          return Divider(height: 1, color: Colors.grey.shade200);
+        }
+        final friend = friends[index ~/ 2];
+        return _FriendRow(
+          data: friend,
+          onOpenDetail: () => onOpenDetail(friend),
+          onCreateLb: () => onCreateLb(friend),
+          onAddTx: () => onAddTx(friend),
+        );
+      }),
     );
   }
 }
@@ -152,54 +179,50 @@ class _FriendRow extends StatelessWidget {
       );
     }
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onOpenDetail,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              CircleAvatar(child: Text(data.displayName.characters.first)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(data.displayName, style: theme.textTheme.bodyLarge),
-                    const SizedBox(height: 4),
-                    Text(
-                      isPlus ? 'かしている' : 'かりている',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.hintColor,
-                      ),
+    return InkWell(
+      onTap: onOpenDetail,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        child: Row(
+          children: [
+            CircleAvatar(child: Text(data.displayName.characters.first)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(data.displayName, style: theme.textTheme.bodyLarge),
+                  const SizedBox(height: 4),
+                  Text(
+                    isPlus ? 'かしている' : 'かりている',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
                     ),
-                  ],
-                ),
-              ),
-              if (dueBadge != null) ...[dueBadge, const SizedBox(width: 12)],
-              Text(
-                _fmtYen(data.netAmount.abs()) + (isPlus ? ' かし' : ' かり'),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(width: 8),
-              PopupMenuButton<String>(
-                onSelected: (v) {
-                  if (v == 'lb') onCreateLb();
-                  if (v == 'tx') onAddTx();
-                },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'lb', child: Text('しゃくようしょをつくる')),
-                  PopupMenuItem(value: 'tx', child: Text('とりひきをついか')),
+                  ),
                 ],
-                icon: const Icon(Icons.more_horiz),
               ),
-            ],
-          ),
+            ),
+            if (dueBadge != null) ...[dueBadge, const SizedBox(width: 12)],
+            Text(
+              _fmtYen(data.netAmount.abs()) + (isPlus ? ' かし' : ' かり'),
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: 8),
+            PopupMenuButton<String>(
+              onSelected: (v) {
+                if (v == 'lb') onCreateLb();
+                if (v == 'tx') onAddTx();
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'lb', child: Text('しゃくようしょをつくる')),
+                PopupMenuItem(value: 'tx', child: Text('とりひきをついか')),
+              ],
+              icon: const Icon(Icons.more_horiz),
+            ),
+          ],
         ),
       ),
     );

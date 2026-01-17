@@ -24,108 +24,125 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final eventState = ref.watch(eventStateProvider);
-    if (eventState.events.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
+    final summaries = ref.watch(eventSummariesProvider);
+    if (summaries.isEmpty) {
+      return WillPopScope(
+        onWillPop: () async {
+          context.go('/ev0100');
+          return false;
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => context.go('/ev0100'),
+            ),
+            title: const Text('EV0200'),
           ),
-          title: const Text('EV0200'),
+          body: const Center(child: Text('イベントがありません。')),
         ),
-        body: const Center(child: Text('イベントがありません。')),
       );
     }
     final qp = Uri.base.queryParameters;
-    final eventId = qp['eventId'] ??
-        (eventState.events.isEmpty ? '' : eventState.events.first.id);
+    final eventIdParam = qp['eventId'];
+    final fallbackId = summaries.first.id;
+    final activeEventId =
+        (eventIdParam != null && summaries.any((e) => e.id == eventIdParam))
+        ? eventIdParam
+        : fallbackId;
 
-    final event = eventState.events.firstWhere(
-      (e) => e.id == eventId,
-      orElse: () => eventState.events.first,
+    final eventSummary = summaries.firstWhere(
+      (e) => e.id == activeEventId,
+      orElse: () => summaries.first,
     );
+    final eventMeta = ref.watch(eventMetaByIdProvider(eventSummary.id));
+    final eventTitle = eventMeta?.title ?? eventSummary.title;
 
-    final payments = eventState.transactions
-        .where((p) => p.eventId == event.id && p.deletedAt == null)
-        .toList()
-      ..sort((a, b) => b.date.compareTo(a.date)); // 新しい順
+    final payments = ref.watch(transactionsByEventIdProvider(eventSummary.id));
 
     final theme = Theme.of(context);
     final totalAmount = payments
         .where((p) => p.type == TxType.expense)
         .fold<int>(0, (sum, p) => sum + p.totalAmount);
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-        title: Text('EV0200 ${event.title}'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            tooltip: 'イベントをけす',
-            onPressed: () => _Controller.confirmAndDeleteEvent(
-              context: context,
-              eventId: event.id,
-            ),
+    return WillPopScope(
+      onWillPop: () async {
+        context.go('/ev0100');
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.go('/ev0100'),
           ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 140),
-        children: [
-          _SummaryPanel(
-            theme: theme,
-            totalAmount: totalAmount,
-            unsettled: event.totalUnsettledAmount,
-            count: payments.length,
-          ),
-          const SizedBox(height: 20),
-          _PrimaryButton(
-            onPressed: () =>
-                _Controller.goSettlement(context: context, eventId: event.id),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'きろく',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (payments.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Text(
-                'このイベントのおしはらいはまだないよ。\n「＋」ボタンからメモできるよ。',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.hintColor,
-                ),
-              ),
-            )
-          else
-            _PaymentList(
-              payments: payments,
-              theme: theme,
-              onTap: (p) => _Controller.goEditEventTransaction(
+          title: Text('EV0200 $eventTitle'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: 'イベントをけす',
+              onPressed: () => _Controller.confirmAndDeleteEvent(
                 context: context,
-                eventId: event.id,
-                payment: p,
+                eventId: eventSummary.id,
               ),
-              onDelete: (p) => _onDeletePayment(ref, context, p.id),
             ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _Controller.goAddEventTransaction(
-          context: context,
-          eventId: event.id,
+          ],
         ),
-        child: const Icon(Icons.add),
+        body: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 140),
+          children: [
+            _SummaryPanel(
+              theme: theme,
+              totalAmount: totalAmount,
+              unsettled: eventSummary.totalUnsettledAmount,
+              count: payments.length,
+            ),
+            const SizedBox(height: 20),
+            _PrimaryButton(
+              onPressed: () => _Controller.goSettlement(
+                context: context,
+                eventId: eventSummary.id,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'きろく',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (payments.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Text(
+                  'このイベントのおしはらいはまだないよ。\n「＋」ボタンからメモできるよ。',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
+              )
+            else
+              _PaymentList(
+                payments: payments,
+                theme: theme,
+                onTap: (p) => _Controller.goEditEventTransaction(
+                  context: context,
+                  eventId: eventSummary.id,
+                  payment: p,
+                ),
+                onDelete: (p) => _onDeletePayment(ref, context, p.id),
+              ),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => _Controller.goAddEventTransaction(
+            context: context,
+            eventId: eventSummary.id,
+          ),
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
@@ -306,7 +323,7 @@ class _SummaryPanel extends StatelessWidget {
           ),
           Divider(color: Colors.grey.shade200, height: 16),
           _SummaryRow(
-            label: 'いまののこり',
+            label: 'あなたがうけとる',
             value: _fmtYen(unsettled).replaceAll('¥', ''),
             unit: 'えん',
             labelStyle: theme.textTheme.bodySmall?.copyWith(

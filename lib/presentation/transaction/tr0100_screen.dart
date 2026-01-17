@@ -428,11 +428,8 @@ class _Tr0100TransactionScreenState
     if (eventId == null || eventId.isEmpty) {
       return null;
     }
-    final events = ref.read(eventStateProvider).events;
-    for (final event in events) {
-      if (event.id == eventId) return event.title;
-    }
-    return null;
+    final meta = ref.read(eventMetaByIdProvider(eventId));
+    return meta?.title;
   }
 
   List<_EventMember> _resolveMembers(
@@ -448,13 +445,11 @@ class _Tr0100TransactionScreenState
     }
 
     if (eventId != null && eventId.isNotEmpty) {
-      final events = ref.read(eventStateProvider).events;
-      for (final event in events) {
-        if (event.id != eventId) continue;
-        for (final id in event.participantIds) {
+      final meta = ref.read(eventMetaByIdProvider(eventId));
+      if (meta != null) {
+        for (final id in meta.participantIds) {
           addIfMissing(id);
         }
-        break;
       }
     }
 

@@ -33,6 +33,10 @@ class MockTransactionRepository implements TransactionRepository {
 
   @override
   void deleteTransaction(String txId) {
-    _txs.removeWhere((t) => t.id == txId);
+    final now = DateTime.now();
+    final index = _txs.indexWhere((t) => t.id == txId);
+    if (index == -1) return;
+    final current = _txs[index];
+    _txs[index] = current.copyWith(deletedAt: now, updatedAt: now);
   }
 }
