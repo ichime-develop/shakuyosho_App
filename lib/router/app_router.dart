@@ -14,7 +14,6 @@ import 'package:shakuyousho_app/presentation/settlement/sv0100_screen.dart';
 
 import '../presentation/splash/st0100_screen.dart';
 import '../presentation/group_make/gr0100_screen.dart';
-import '../presentation/group_make/gr0200_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -57,11 +56,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/gr0100',
         name: 'GR0100',
         builder: (_, __) => const Gr0100GroupCreateScreen(),
-      ),
-      GoRoute(
-        path: '/gr0200',
-        name: 'GR0200',
-        builder: (_, __) => const Gr0200GroupJoinScreen(),
       ),
       GoRoute(
         path: '/tr0100',
