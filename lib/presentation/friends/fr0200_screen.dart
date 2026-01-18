@@ -3,12 +3,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class Fr0200FriendDetailScreen extends ConsumerWidget {
-  const Fr0200FriendDetailScreen({super.key});
+  const Fr0200FriendDetailScreen({super.key, required this.friendId});
+
+  final String? friendId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final friendId = Uri.base.queryParameters['friendId'] ?? '';
-    final friend = _mockFriends[friendId] ?? _mockFriends.values.first;
+    if (friendId == null || friendId!.isEmpty) {
+      return _FriendErrorView(
+        message: 'friendIdが未指定です。',
+        onBack: () => context.go('/fr0100'),
+      );
+    }
+
+    final friend = _mockFriends[friendId!];
+    if (friend == null) {
+      return _FriendErrorView(
+        message: 'ともだちが見つかりません。',
+        onBack: () => context.go('/fr0100'),
+      );
+    }
     final transactions =
         _mockTransactions.where((t) => t.friendId == friend.id).toList()
           ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
@@ -230,6 +244,48 @@ class _Controller {
       },
     );
     context.push(uri.toString());
+  }
+}
+
+class _FriendErrorView extends StatelessWidget {
+  const _FriendErrorView({
+    required this.message,
+    required this.onBack,
+  });
+
+  final String message;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        onBack();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: onBack,
+          ),
+          title: const Text('FR0200'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(message),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: onBack,
+                child: const Text('FR0100にもどる'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

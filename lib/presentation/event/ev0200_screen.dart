@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/data/mock/users_mock.dart';
+import 'package:shakuyousho_app/domain/models/event_models.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 
 /// EV0200: イベント詳細（支払い一覧）
@@ -20,45 +21,50 @@ import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 ///    - 「清算」: SV0100 へ遷移
 /// ※ この画面から借用書(LB0100)には遷移しない
 class Ev0200EventDetailScreen extends ConsumerWidget {
-  const Ev0200EventDetailScreen({super.key});
+  const Ev0200EventDetailScreen({super.key, required this.eventId});
+
+  final String? eventId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final summaries = ref.watch(eventSummariesProvider);
-    if (summaries.isEmpty) {
-      return WillPopScope(
-        onWillPop: () async {
-          context.go('/ev0100');
-          return false;
-        },
-        child: Scaffold(
-          appBar: AppBar(
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.go('/ev0100'),
-            ),
-            title: const Text('EV0200'),
-          ),
-          body: const Center(child: Text('イベントがありません。')),
-        ),
+    if (eventId == null || eventId!.isEmpty) {
+      return _EventErrorView(
+        title: 'EV0200',
+        message: 'eventIdが未指定です。',
+        onBack: () => context.go('/ev0100'),
       );
     }
-    final qp = Uri.base.queryParameters;
-    final eventIdParam = qp['eventId'];
-    final fallbackId = summaries.first.id;
-    final activeEventId =
-        (eventIdParam != null && summaries.any((e) => e.id == eventIdParam))
-        ? eventIdParam
-        : fallbackId;
 
-    final eventSummary = summaries.firstWhere(
-      (e) => e.id == activeEventId,
-      orElse: () => summaries.first,
-    );
-    final eventMeta = ref.watch(eventMetaByIdProvider(eventSummary.id));
-    final eventTitle = eventMeta?.title ?? eventSummary.title;
+    final summaries = ref.watch(eventSummariesProvider);
+    if (summaries.isEmpty) {
+      return _EventErrorView(
+        title: 'EV0200',
+        message: 'イベントがありません。',
+        onBack: () => context.go('/ev0100'),
+      );
+    }
 
-    final payments = ref.watch(transactionsByEventIdProvider(eventSummary.id));
+    EventSummary? eventSummary;
+    for (final summary in summaries) {
+      if (summary.id == eventId) {
+        eventSummary = summary;
+        break;
+      }
+    }
+    final eventSummaryResolved = eventSummary;
+    if (eventSummaryResolved == null) {
+      return _EventErrorView(
+        title: 'EV0200',
+        message: 'イベントが見つかりません。',
+        onBack: () => context.go('/ev0100'),
+      );
+    }
+    final eventMeta =
+        ref.watch(eventMetaByIdProvider(eventSummaryResolved.id));
+    final eventTitle = eventMeta?.title ?? eventSummaryResolved.title;
+
+    final payments =
+        ref.watch(transactionsByEventIdProvider(eventSummaryResolved.id));
 
     final theme = Theme.of(context);
     final totalAmount = payments
@@ -83,7 +89,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
               tooltip: 'イベントをけす',
               onPressed: () => _Controller.confirmAndDeleteEvent(
                 context: context,
-                eventId: eventSummary.id,
+                eventId: eventSummaryResolved.id,
               ),
             ),
           ],
@@ -94,14 +100,14 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
             _SummaryPanel(
               theme: theme,
               totalAmount: totalAmount,
-              unsettled: eventSummary.totalUnsettledAmount,
+              unsettled: eventSummaryResolved.totalUnsettledAmount,
               count: payments.length,
             ),
             const SizedBox(height: 20),
             _PrimaryButton(
               onPressed: () => _Controller.goSettlement(
                 context: context,
-                eventId: eventSummary.id,
+                eventId: eventSummaryResolved.id,
               ),
             ),
             const SizedBox(height: 24),
@@ -129,7 +135,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                 theme: theme,
                 onTap: (p) => _Controller.goEditEventTransaction(
                   context: context,
-                  eventId: eventSummary.id,
+                  eventId: eventSummaryResolved.id,
                   payment: p,
                 ),
                 onDelete: (p) => _onDeletePayment(ref, context, p.id),
@@ -139,7 +145,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
         floatingActionButton: FloatingActionButton(
           onPressed: () => _Controller.goAddEventTransaction(
             context: context,
-            eventId: eventSummary.id,
+            eventId: eventSummaryResolved.id,
           ),
           child: const Icon(Icons.add),
         ),
@@ -575,6 +581,50 @@ class _StatusChip extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.bold,
           color: color,
+        ),
+      ),
+    );
+  }
+}
+
+class _EventErrorView extends StatelessWidget {
+  const _EventErrorView({
+    required this.title,
+    required this.message,
+    required this.onBack,
+  });
+
+  final String title;
+  final String message;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        onBack();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: onBack,
+          ),
+          title: Text(title),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(message),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: onBack,
+                child: const Text('EV0100にもどる'),
+              ),
+            ],
+          ),
         ),
       ),
     );

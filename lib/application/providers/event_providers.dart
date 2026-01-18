@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakuyousho_app/data/mock/event_meta_mock.dart'
     as event_meta_mock;
@@ -31,8 +33,10 @@ class EventStateNotifier extends StateNotifier<EventState> {
   EventStateNotifier({
     required EventRepository eventRepository,
     required TransactionRepository transactionRepository,
+    String Function()? eventIdGenerator,
   })  : _eventRepository = eventRepository,
         _transactionRepository = transactionRepository,
+        _eventIdGenerator = eventIdGenerator,
         super(
           EventState(
             metas: eventRepository.getAllEventMetas(),
@@ -42,6 +46,17 @@ class EventStateNotifier extends StateNotifier<EventState> {
 
   final EventRepository _eventRepository;
   final TransactionRepository _transactionRepository;
+  final String Function()? _eventIdGenerator;
+
+  String _generateEventId() {
+    if (_eventIdGenerator != null) {
+      return _eventIdGenerator!();
+    }
+    final now = DateTime.now().toUtc();
+    final timestamp = now.toIso8601String().replaceAll(RegExp(r'[^0-9]'), '');
+    final rand = Random().nextInt(1000).toString().padLeft(3, '0');
+    return 'ev_$timestamp$rand';
+  }
 
   Future<void> load() async {
     final metas = _eventRepository.getAllEventMetas();
@@ -67,6 +82,44 @@ class EventStateNotifier extends StateNotifier<EventState> {
         .where((meta) => meta.id != eventId)
         .toList(growable: false);
     state = state.copyWith(metas: metas);
+  }
+
+  Future<String> createEventMeta({
+    required String title,
+    required List<String> participantIds,
+    String? threadId,
+  }) async {
+    final now = DateTime.now();
+    final id = _generateEventId();
+    final ids = {...participantIds};
+    final meta = EventMeta(
+      id: id,
+      title: title,
+      participantIds: ids.toList(growable: false),
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+      threadId: threadId,
+    );
+    await upsertEventMeta(meta);
+    return id;
+  }
+
+  Future<String> joinEvent({
+    required String eventId,
+    required String participantId,
+  }) async {
+    final meta = _eventRepository.getEventMetaById(eventId);
+    if (meta == null || meta.deletedAt != null) {
+      throw StateError('Event not found: $eventId');
+    }
+    final ids = {...meta.participantIds, participantId};
+    final updated = meta.copyWith(
+      participantIds: ids.toList(growable: false),
+      updatedAt: DateTime.now(),
+    );
+    await upsertEventMeta(updated);
+    return eventId;
   }
 
   Future<void> upsertTransaction(Transaction tx) async {
@@ -161,7 +214,7 @@ List<EventSummary> _deriveEventSummaries(
         final net = _calcNetBalances(eventTxs, participantIds);
         final totalUnsettled =
             net.values.where((v) => v > 0).fold<int>(0, (p, v) => p + v);
-        final isSettled = totalUnsettled == 0;
+        final isSettled = eventTxs.isNotEmpty && totalUnsettled == 0;
         return EventSummary(
           id: meta.id,
           title: meta.title,

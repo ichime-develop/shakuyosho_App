@@ -78,15 +78,13 @@ class CreateGroupUsecase {
       );
     }
 
-    final eventMeta = EventMeta(
-      id: 'ev_$token',
+    final eventId = await _eventStateNotifier.createEventMeta(
       title: '${group.title} のイベント',
       participantIds: List<String>.unmodifiable(memberIds),
-      createdAt: createdAt,
-      updatedAt: createdAt,
-      deletedAt: null,
     );
-    await _eventStateNotifier.upsertEventMeta(eventMeta);
+    final eventMeta = _eventStateNotifier.state.metas.firstWhere(
+      (meta) => meta.id == eventId,
+    );
 
     return CreateGroupResult(group: group, eventMeta: eventMeta);
   }

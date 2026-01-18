@@ -10,7 +10,9 @@ import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 /// - "誰が誰へいくら払うか" の最小送金案（ヒューリスティック）を提示
 /// - 各提案から「借用書発行(LB0100)」「取引へ(TR0100)」へ遷移（モック）
 class Sv0100SettlementScreen extends ConsumerStatefulWidget {
-  const Sv0100SettlementScreen({super.key});
+  const Sv0100SettlementScreen({super.key, required this.eventId});
+
+  final String? eventId;
 
   @override
   ConsumerState<Sv0100SettlementScreen> createState() =>
@@ -19,18 +21,18 @@ class Sv0100SettlementScreen extends ConsumerStatefulWidget {
 
 class _Sv0100SettlementScreenState
     extends ConsumerState<Sv0100SettlementScreen> {
-  late final String eventId;
-
-  @override
-  void initState() {
-    super.initState();
-    final q = Uri.base.queryParameters;
-    eventId = q['eventId'] ?? 'ev_001';
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final eventId = widget.eventId;
+    if (eventId == null || eventId.isEmpty) {
+      return _EventErrorView(
+        title: 'SV0100 おかねまとめ',
+        message: 'eventIdが未指定です。',
+        onBack: () => context.go('/ev0100'),
+      );
+    }
+
     final summaries = ref.watch(eventSummariesProvider);
     if (summaries.isEmpty) {
       return Scaffold(
@@ -45,14 +47,20 @@ class _Sv0100SettlementScreenState
       );
     }
 
-    final activeEventId =
-        summaries.any((e) => e.id == eventId) ? eventId : summaries.first.id;
-    final eventMeta = ref.watch(eventMetaByIdProvider(activeEventId));
-    final settlement = ref.watch(settlementProvider(activeEventId));
+    if (!summaries.any((e) => e.id == eventId)) {
+      return _EventErrorView(
+        title: 'SV0100 おかねまとめ',
+        message: 'イベントが見つかりません。',
+        onBack: () => context.go('/ev0100'),
+      );
+    }
+
+    final eventMeta = ref.watch(eventMetaByIdProvider(eventId));
+    final settlement = ref.watch(settlementProvider(eventId));
     final transfers =
         settlement?.instructions ?? const <SettlementInstruction>[];
-    final eventTitle = eventMeta?.title ??
-        summaries.firstWhere((e) => e.id == activeEventId).title;
+    final eventTitle =
+        eventMeta?.title ?? summaries.firstWhere((e) => e.id == eventId).title;
 
     return Scaffold(
       appBar: AppBar(
@@ -149,12 +157,16 @@ class _Sv0100SettlementScreenState
   }
 
   String _currentEventTitle() {
-    final meta = ref.read(eventMetaByIdProvider(eventId));
+    final activeEventId = widget.eventId;
+    if (activeEventId == null || activeEventId.isEmpty) {
+      return 'イベント';
+    }
+    final meta = ref.read(eventMetaByIdProvider(activeEventId));
     if (meta != null) return meta.title;
     final summaries = ref.read(eventSummariesProvider);
     if (summaries.isEmpty) return 'イベント';
     final event = summaries.firstWhere(
-      (e) => e.id == eventId,
+      (e) => e.id == activeEventId,
       orElse: () => summaries.first,
     );
     return event.title;
@@ -361,6 +373,50 @@ class _AvatarBadge extends StatelessWidget {
             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _EventErrorView extends StatelessWidget {
+  const _EventErrorView({
+    required this.title,
+    required this.message,
+    required this.onBack,
+  });
+
+  final String title;
+  final String message;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        onBack();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: onBack,
+          ),
+          title: Text(title),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(message),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: onBack,
+                child: const Text('EV0100にもどる'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

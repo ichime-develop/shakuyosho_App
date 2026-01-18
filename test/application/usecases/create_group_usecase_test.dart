@@ -133,6 +133,7 @@ void main() {
     final eventNotifier = EventStateNotifier(
       eventRepository: eventRepo,
       transactionRepository: txRepo,
+      eventIdGenerator: () => 'ev_test_001',
     );
     final inviteService = _FakeInviteService();
     final now = DateTime(2025, 1, 2, 3, 4);
@@ -154,7 +155,7 @@ void main() {
     );
 
     expect(result.group.id, 'grp_Trip_202501020304007');
-    expect(result.eventMeta.id, 'ev_Trip_202501020304007');
+    expect(result.eventMeta.id, 'ev_test_001');
     expect(result.group.memberIds.toSet(), {'u_001', 'u_002'});
     expect(eventRepo.getAllEventMetas().length, 1);
     expect(eventNotifier.state.metas.length, 1);

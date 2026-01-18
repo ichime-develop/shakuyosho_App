@@ -23,7 +23,14 @@ import '../../application/usecases/event_share_service.dart';
 /// application/usecases/event_share_service.dart の EventShareService を使って
 /// 均等割り額を自動で振り分ける簡易ロジックを入れている。
 class Tr0100TransactionScreen extends ConsumerStatefulWidget {
-  const Tr0100TransactionScreen({super.key});
+  const Tr0100TransactionScreen({
+    super.key,
+    required this.eventId,
+    this.transactionId,
+  });
+
+  final String? eventId;
+  final String? transactionId;
 
   @override
   ConsumerState<Tr0100TransactionScreen> createState() =>
@@ -36,6 +43,7 @@ class _Tr0100TransactionScreenState
   late final TextEditingController _amountController;
   final _eventShareService = EventShareService();
   bool _initialized = false;
+  bool _missingEventId = false;
 
   /// イベント参加者（本来は eventId から取得）
   late final List<_EventMember> _members;
@@ -63,21 +71,34 @@ class _Tr0100TransactionScreenState
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_initialized) return;
-    final routerParams = GoRouterState.of(context).uri.queryParameters;
-    final baseParams = Uri.base.queryParameters;
-    final qp = {...baseParams, ...routerParams};
-    _initFromParams(qp);
+    _initFromParams(widget.eventId, widget.transactionId);
     _initialized = true;
   }
 
-  void _initFromParams(Map<String, String> qp) {
-    final eventIdParam = qp['eventId'];
-    final transactionId = qp['transactionId'];
-
+  void _initFromParams(String? eventIdParam, String? transactionId) {
     _editingTransaction = _findTransaction(transactionId);
     _eventId = _editingTransaction?.eventId ?? eventIdParam;
-    _eventTitle = _findEventTitle(_eventId);
 
+    if (_eventId == null || _eventId!.isEmpty) {
+      _missingEventId = true;
+      _members = [];
+      _titleController = TextEditingController(text: '');
+      _amountController = TextEditingController(text: '');
+      _memberShares = [];
+      return;
+    }
+
+    final meta = ref.read(eventMetaByIdProvider(_eventId!));
+    if (meta == null) {
+      _missingEventId = true;
+      _members = [];
+      _titleController = TextEditingController(text: '');
+      _amountController = TextEditingController(text: '');
+      _memberShares = [];
+      return;
+    }
+
+    _eventTitle = meta.title;
     _members = _resolveMembers(_eventId, _editingTransaction);
     _titleController = TextEditingController(
       text: _editingTransaction?.title ?? '',
@@ -130,6 +151,14 @@ class _Tr0100TransactionScreenState
 
   @override
   Widget build(BuildContext context) {
+    if (_missingEventId) {
+      return _EventErrorView(
+        title: 'TR0100',
+        message: 'eventIdが未指定です。',
+        onBack: () => context.go('/ev0100'),
+      );
+    }
+
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -424,14 +453,6 @@ class _Tr0100TransactionScreenState
     return null;
   }
 
-  String? _findEventTitle(String? eventId) {
-    if (eventId == null || eventId.isEmpty) {
-      return null;
-    }
-    final meta = ref.read(eventMetaByIdProvider(eventId));
-    return meta?.title;
-  }
-
   List<_EventMember> _resolveMembers(
     String? eventId,
     Transaction? transaction,
@@ -662,6 +683,50 @@ class _IconBadge extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Icon(icon, color: Colors.grey.shade600),
+    );
+  }
+}
+
+class _EventErrorView extends StatelessWidget {
+  const _EventErrorView({
+    required this.title,
+    required this.message,
+    required this.onBack,
+  });
+
+  final String title;
+  final String message;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        onBack();
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: onBack,
+          ),
+          title: Text(title),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(message),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: onBack,
+                child: const Text('EV0100にもどる'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
