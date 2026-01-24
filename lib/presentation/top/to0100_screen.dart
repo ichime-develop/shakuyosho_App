@@ -615,7 +615,7 @@ class _Controller {
 
   static void onOpenFriends(BuildContext context) => context.go('/fr0100');
   static void onOpenFriendDetail(BuildContext context, String friendId) =>
-      context.push('/fr0200?friendId=$friendId');
+      context.push('/fr0200/$friendId');
 
   // note: onOpenMy removed (unused). Use CommonBottomNavBar navigation instead.
 
@@ -626,22 +626,30 @@ class _Controller {
   // 個人タブアクション
   static void onAddPersonalTransaction(BuildContext context) {
     // 相手選択モーダル→ TR0100 へ、ここはダミー
-    context.push('/tr0100?mode=personal');
+    // TODO: friendId必須のためモーダル実装が必要
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('取引を追加するには友だちを選択してください')));
   }
 
   static void onCreatePersonalLb(BuildContext context) {
-    context.push('/lb0100?mode=create');
+    // friendId必須のため、先に友だち選択が必要
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('借用書を発行するには友だちを選択してください')));
   }
 
   static void onCreatePersonalLbFor(BuildContext context, String friendId) {
-    context.push('/lb0100?mode=create&friendId=$friendId');
+    context.push('/lb0100/$friendId');
   }
 
   static void onAddPersonalTransactionFor(
     BuildContext context,
     String friendId,
   ) {
-    context.push('/tr0100?mode=personal&friendId=$friendId');
+    // 個人取引はイベントID不要のため、専用ルートが必要
+    // TODO: 個人取引用のルート実装
+    context.push('/fr0200/$friendId');
   }
 
   // イベントタブアクション
@@ -650,15 +658,18 @@ class _Controller {
   }
 
   static void onComputeSettlement(BuildContext context) {
-    context.push('/sv0100'); // 直近イベントを仮定（実装時は選択）
+    // eventId必須のため、先にイベント選択が必要
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('清算するイベントを選択してください')));
   }
 
   static void onAddEventTransaction(BuildContext context, String eventId) {
-    context.push('/tr0100?mode=event&eventId=$eventId');
+    context.push('/tr0100/$eventId?mode=event');
   }
 
   static void onComputeSettlementFor(BuildContext context, String eventId) {
-    context.push('/sv0100?eventId=$eventId');
+    context.push('/sv0100/$eventId');
   }
 }
 

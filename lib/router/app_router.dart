@@ -58,11 +58,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const Ev0101EventCreateScreen(),
       ),
       GoRoute(
-        path: '/tr0100',
+        path: '/tr0100/:eventId',
         name: 'TR0100',
         builder: (context, state) {
-          final eventId = state.uri.queryParameters['eventId'] ?? '';
+          final eventId = state.pathParameters['eventId'];
+          if (eventId == null || eventId.isEmpty) {
+            return const _MissingParamScreen(
+              param: 'eventId',
+              screen: 'TR0100',
+            );
+          }
           final transactionId = state.uri.queryParameters['transactionId'];
+          final mode = state.uri.queryParameters['mode'];
           return Tr0100TransactionScreen(
             eventId: eventId,
             transactionId: transactionId,
@@ -70,9 +77,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/lb0100',
+        path: '/lb0100/:friendId',
         name: 'LB0100',
-        builder: (_, __) => const Lb0100IouScreen(),
+        builder: (context, state) {
+          final friendId = state.pathParameters['friendId'];
+          if (friendId == null || friendId.isEmpty) {
+            return const _MissingParamScreen(
+              param: 'friendId',
+              screen: 'LB0100',
+            );
+          }
+          return Lb0100IouScreen(friendId: friendId);
+        },
       ),
 
       // ───── プレースホルダルート（未実装画面のための暫定。後で正式Screenに差し替え）
@@ -82,10 +98,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const Fr0100FriendsScreen(),
       ),
       GoRoute(
-        path: '/fr0200',
+        path: '/fr0200/:friendId',
         name: 'FR0200',
         builder: (context, state) {
-          final friendId = state.uri.queryParameters['friendId'];
+          final friendId = state.pathParameters['friendId'];
+          if (friendId == null || friendId.isEmpty) {
+            return const _MissingParamScreen(
+              param: 'friendId',
+              screen: 'FR0200',
+            );
+          }
           return Fr0200FriendDetailScreen(friendId: friendId);
         },
       ),
@@ -108,15 +130,53 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/sv0100',
+        path: '/sv0100/:eventId',
         name: 'SV0100',
         builder: (context, state) {
-          final eventId = state.uri.queryParameters['eventId'] ?? '';
+          final eventId = state.pathParameters['eventId'];
+          if (eventId == null || eventId.isEmpty) {
+            return const _MissingParamScreen(
+              param: 'eventId',
+              screen: 'SV0100',
+            );
+          }
           return Sv0100SettlementScreen(eventId: eventId);
         },
       ),
     ],
   );
 });
+
+/// パラメータ未指定時のエラー画面
+class _MissingParamScreen extends StatelessWidget {
+  const _MissingParamScreen({required this.param, required this.screen});
+  final String param;
+  final String screen;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('$screen エラー')),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              '必須パラメータ「$param」が指定されていません',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => context.go('/to0100/personal'),
+              child: const Text('ホームへ戻る'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 // Note: placeholder scaffold removed — routes now point to real screens or placeholders in presentation/.

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// LB0100: 借用書（個人/イベント）作成・編集・プレビュー（モック）
-/// - 1対1（個人）またはイベント内の清算結果から借用書を作る前提の最小実装
+/// LB0100: 借用書（個人起点のみ）作成・編集・プレビュー（モック）
+/// - 1対1（個人）の借用書を作る。イベント起点からは遷移しない。
 /// - 将来：共有リンク発行、PDF化、署名フローを Infrastructure 層で置き換え
 class Lb0100IouScreen extends ConsumerStatefulWidget {
-  const Lb0100IouScreen({super.key});
+  const Lb0100IouScreen({super.key, required this.friendId});
+
+  final String friendId;
 
   @override
   ConsumerState<Lb0100IouScreen> createState() => _Lb0100IouScreenState();
@@ -15,14 +17,18 @@ class Lb0100IouScreen extends ConsumerStatefulWidget {
 class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // 入力モデル（最小）
-  String _mode = 'personal'; // 'personal' | 'event'
-  String? _friendId; // 個人モード時に必須
-  String? _eventId; // イベントモード時に必須
+  // 入力モデル（個人モード固定）
+  late String _friendId;
   final _amountCtrl = TextEditingController();
   DateTime? _dueAt;
   final _memoCtrl = TextEditingController();
   bool _requireSignature = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _friendId = widget.friendId;
+  }
 
   @override
   void dispose() {
@@ -61,60 +67,23 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
-            // モード切替
-            SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(
-                  value: 'personal',
-                  icon: Icon(Icons.person_outline),
-                  label: Text('こじん'),
-                ),
-                ButtonSegment(
-                  value: 'event',
-                  icon: Icon(Icons.event_note),
-                  label: Text('イベント'),
-                ),
-              ],
-              selected: {_mode},
-              onSelectionChanged: (s) => setState(() => _mode = s.first),
+            // 個人モード固定のため、モード切替は削除
+            _Labeled(
+              label: 'あいて（ひっす）',
+              child: DropdownButtonFormField<String>(
+                value: _friendId,
+                items: _mockFriends
+                    .map(
+                      (f) => DropdownMenuItem(
+                        value: f.friendId,
+                        child: Text(f.displayName),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _friendId = v ?? _friendId),
+                validator: (v) => v == null ? 'あいてをえらんでね' : null,
+              ),
             ),
-            const SizedBox(height: 12),
-
-            if (_mode == 'personal') ...[
-              _Labeled(
-                label: 'あいて（ひっす）',
-                child: DropdownButtonFormField<String>(
-                  value: _friendId,
-                  items: _mockFriends
-                      .map(
-                        (f) => DropdownMenuItem(
-                          value: f.friendId,
-                          child: Text(f.displayName),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setState(() => _friendId = v),
-                  validator: (v) => v == null ? 'あいてをえらんでね' : null,
-                ),
-              ),
-            ] else ...[
-              _Labeled(
-                label: 'イベント（ひっす）',
-                child: DropdownButtonFormField<String>(
-                  value: _eventId,
-                  items: _mockEvents
-                      .map(
-                        (e) => DropdownMenuItem(
-                          value: e.eventId,
-                          child: Text(e.title),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setState(() => _eventId = v),
-                  validator: (v) => v == null ? 'イベントをえらんでね' : null,
-                ),
-              ),
-            ],
             const SizedBox(height: 8),
 
             _Labeled(
@@ -242,9 +211,9 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
   _IouInput _collect() {
     final amount = int.parse(_amountCtrl.text.replaceAll(',', ''));
     return _IouInput(
-      mode: _mode,
+      mode: 'personal',
       friendId: _friendId,
-      eventId: _eventId,
+      eventId: null,
       amountYen: amount,
       dueAt: _dueAt,
       memo: _memoCtrl.text.trim().isEmpty ? null : _memoCtrl.text.trim(),
@@ -329,7 +298,9 @@ void _showPreviewSheet(BuildContext context, _IouInput data) {
                         const Text('めやすのひ：'),
                         Expanded(
                           child: Text(
-                            data.dueAt == null ? 'まだきめてない' : _fmtDate(data.dueAt!),
+                            data.dueAt == null
+                                ? 'まだきめてない'
+                                : _fmtDate(data.dueAt!),
                           ),
                         ),
                       ],

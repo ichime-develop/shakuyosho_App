@@ -5,18 +5,18 @@ import 'package:go_router/go_router.dart';
 class Fr0200FriendDetailScreen extends ConsumerWidget {
   const Fr0200FriendDetailScreen({super.key, required this.friendId});
 
-  final String? friendId;
+  final String friendId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (friendId == null || friendId!.isEmpty) {
+    if (friendId.isEmpty) {
       return _FriendErrorView(
         message: 'friendIdが未指定です。',
         onBack: () => context.go('/fr0100'),
       );
     }
 
-    final friend = _mockFriends[friendId!];
+    final friend = _mockFriends[friendId];
     if (friend == null) {
       return _FriendErrorView(
         message: 'ともだちが見つかりません。',
@@ -235,23 +235,13 @@ class _Controller {
     String friendId,
     _FriendTransaction tx,
   ) {
-    final uri = Uri(
-      path: '/lb0100',
-      queryParameters: <String, String>{
-        'mode': 'personal',
-        'friendId': friendId,
-        'transactionId': tx.id,
-      },
-    );
-    context.push(uri.toString());
+    // 借用書画面へ遷移（friendIdはパスパラメータ）
+    context.push('/lb0100/$friendId?transactionId=${tx.id}');
   }
 }
 
 class _FriendErrorView extends StatelessWidget {
-  const _FriendErrorView({
-    required this.message,
-    required this.onBack,
-  });
+  const _FriendErrorView({required this.message, required this.onBack});
 
   final String message;
   final VoidCallback onBack;
@@ -277,10 +267,7 @@ class _FriendErrorView extends StatelessWidget {
             children: [
               Text(message),
               const SizedBox(height: 12),
-              TextButton(
-                onPressed: onBack,
-                child: const Text('FR0100にもどる'),
-              ),
+              TextButton(onPressed: onBack, child: const Text('FR0100にもどる')),
             ],
           ),
         ),

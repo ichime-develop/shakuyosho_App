@@ -14,15 +14,15 @@
 | TO0100 | ホーム（個人/イベント） | `/to0100` | 互換用。redirectで `/to0100/personal` へ |
 | TO0100_PERSONAL | ホーム（個人タブ） | `/to0100/personal` | `initialTab=0` |
 | TO0100_EVENT | ホーム（イベントタブ） | `/to0100/event` | `initialTab=1` |
-| FR0100 | スレッド一覧 | `/fr0100` | Thread一覧（グループ） |
-| FR0200 | ともだち詳細 | `/fr0200?friendId=...` | 相手別の貸借履歴 |
+| FR0100 | 友達一覧 | `/fr0100` | ユーザー一覧（自分以外） |
+| FR0200 | ともだち詳細 | `/fr0200/:friendId` | 相手別の貸借履歴 |
 | MY0100 | じぶん（設定） | `/my0100` | プロフィール/通知設定等 |
 | EV0101 | イベント新規作成 | `/ev0101` | イベント作成画面 |
 | EV0100 | イベント一覧（履歴） | `/ev0100` | 過去含む全一覧 |
 | EV0200 | イベント詳細 | `/ev0200/:eventId` | 取引/清算の中心 |
-| TR0100 | 取引入力 | `/tr0100?...` | 個人/イベント兼用（mode param） |
-| SV0100 | 清算結果 | `/sv0100?eventId=...` | 最終支払い案内 |
-| LB0100 | 借用書（個人/イベント） | `/lb0100?...` | 発行/閲覧/編集 |
+| TR0100 | 取引入力 | `/tr0100/:eventId` | eventId必須。`?mode=create\|edit&txId=...` |
+| SV0100 | 清算結果 | `/sv0100/:eventId` | 最終支払い案内 |
+| LB0100 | 借用書（個人） | `/lb0100/:friendId` | friendId必須。個人起点のみ |
 
 ---
 
@@ -37,7 +37,7 @@ ST0100        -> TO0100_PERSONAL
 # 個人タブの導線
 TO0100_PERSONAL -> FR0100           # 「すべて見る」
 TO0100_PERSONAL -> FR0200           # 友だちカード
-TO0100_PERSONAL -> LB0100           # 借用書発行
+TO0100_PERSONAL -> LB0100           # 借用書発行（friendId必須）
 TO0100_PERSONAL -> TR0100           # 取引追加
 
 # イベントタブの導線
@@ -47,10 +47,17 @@ TO0100_EVENT   -> EV0101            # イベント作成
 TO0100_EVENT   -> SV0100            # 清算を計算
 EV0100         -> EV0101            # 新しく作る
 
+# 友だち詳細からの導線
+FR0200         -> LB0100            # 借用書発行・閲覧（friendId必須）
+FR0200         -> TR0100            # 取引追加
+
 # フッター
 ANY            -> FR0100            # ともだち
 ANY            -> MY0100            # じぶん
 ANY            -> TO0100_PERSONAL   # ホーム
+
+# ※ イベント起点から借用書（LB0100）への遷移は行わない
+# ※ EV0200, SV0100 から LB0100 へは遷移しない
 ```
 
 ---
@@ -59,6 +66,24 @@ ANY            -> TO0100_PERSONAL   # ホーム
 - 2文字プレフィクス＋4桁番号：例 `TO0100`, `EV0200`
 - 個人/イベントなどの **タブURL** は `/to0100/personal`, `/to0100/event` で固定
 - ルーターは `lib/router/app_router.dart`、ホームは `To0100Screen(initialTab: X)`
+
+## 📐 ルーティング設計原則
+
+### パスパラメータ vs クエリパラメータ
+- **必須パラメータ** → パスパラメータ（例：`/ev0200/:eventId`）
+- **任意パラメータ** → クエリパラメータ（例：`?mode=edit&txId=...`）
+
+### 各画面のパラメータ取得方法
+- 画面側は `Uri.base.queryParameters` を使用禁止
+- 必ず `GoRouterState` から取得する：
+  - `state.pathParameters['eventId']`
+  - `state.uri.queryParameters['mode']`
+- パラメータ未指定時はエラーUIを表示（フォールバック禁止）
+
+### 借用書（LB0100）の遷移制限
+- LB0100 は **個人（友だち）起点のみ**
+- イベント詳細（EV0200）や清算結果（SV0100）から LB0100 へは遷移しない
+- friendId は必須パスパラメータ
 
 ---
 

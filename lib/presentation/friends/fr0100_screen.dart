@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/core/utils/app_logger.dart';
-import 'package:shakuyousho_app/domain/models/thread_model.dart';
+import 'package:shakuyousho_app/data/mock/users_mock.dart';
 import '../common/common_bottom_nav_bar.dart';
 
-/// FR0100: スレッド一覧（グループ）
-/// - Thread 一覧を表示
+/// FR0100: 友達一覧
+/// - MockUser 一覧を表示
 /// - 下部は共通の `CommonBottomNavBar`
 class Fr0100FriendsScreen extends ConsumerWidget {
   const Fr0100FriendsScreen({super.key});
@@ -15,10 +14,10 @@ class Fr0100FriendsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     AppLog.i('open screen', ctx: context, data: {'screen': 'FR0100'});
-    final threads = ref.watch(threadListProvider);
+    final users = mockUsers.where((u) => u.userId != currentUserId).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('FR0100 スレッド一覧')),
+      appBar: AppBar(title: const Text('FR0100 友達一覧')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         children: [
@@ -30,20 +29,20 @@ class Fr0100FriendsScreen extends ConsumerWidget {
                 runSpacing: 8,
                 children: [
                   _KpiTile(
-                    label: 'グループすう',
-                    value: '${threads.length}',
-                    icon: Icons.group_outlined,
+                    label: '友達の数',
+                    value: '${users.length}',
+                    icon: Icons.people_outlined,
                   ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 12),
-          if (threads.isEmpty)
+          if (users.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Text(
-                'グループはまだありません。',
+                '友達はまだいません。',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.hintColor,
@@ -51,7 +50,7 @@ class Fr0100FriendsScreen extends ConsumerWidget {
               ),
             )
           else
-            _ThreadList(threads: threads),
+            _UserList(users: users),
         ],
       ),
       bottomNavigationBar: const CommonBottomNavBar(currentIndex: 1),
@@ -59,27 +58,23 @@ class Fr0100FriendsScreen extends ConsumerWidget {
   }
 }
 
-class _ThreadList extends StatelessWidget {
-  const _ThreadList({required this.threads});
+class _UserList extends StatelessWidget {
+  const _UserList({required this.users});
 
-  final List<Thread> threads;
+  final List<MockUser> users;
 
   @override
   Widget build(BuildContext context) {
-    final sorted = [...threads]
-      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     return Column(
-      children: List.generate(sorted.length * 2 - 1, (index) {
+      children: List.generate(users.length * 2 - 1, (index) {
         if (index.isOdd) {
           return Divider(height: 1, color: Colors.grey.shade200);
         }
-        final thread = sorted[index ~/ 2];
+        final user = users[index ~/ 2];
         return ListTile(
-          leading: const Icon(Icons.group),
-          title: Text(thread.title),
-          subtitle: Text(
-            'メンバー ${thread.participantIds.length}人 ・ ${_fmtDate(thread.updatedAt)}',
-          ),
+          leading: CircleAvatar(child: Text(user.displayName[0])),
+          title: Text(user.displayName),
+          subtitle: Text(user.userId),
         );
       }),
     );
@@ -120,8 +115,4 @@ class _KpiTile extends StatelessWidget {
       ],
     );
   }
-}
-
-String _fmtDate(DateTime d) {
-  return '${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
 }

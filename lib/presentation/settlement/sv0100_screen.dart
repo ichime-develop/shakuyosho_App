@@ -8,7 +8,8 @@ import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 /// SV0100: イベント精算画面
 /// - メンバーの支払総額と負担割合からネット残高を算出
 /// - "誰が誰へいくら払うか" の最小送金案（ヒューリスティック）を提示
-/// - 各提案から「借用書発行(LB0100)」「取引へ(TR0100)」へ遷移（モック）
+/// - 各提案から「取引へ(TR0100)」へ遷移（モック）
+/// - ※ この画面から借用書(LB0100)には遷移しない
 class Sv0100SettlementScreen extends ConsumerStatefulWidget {
   const Sv0100SettlementScreen({super.key, required this.eventId});
 
@@ -98,40 +99,20 @@ class _Sv0100SettlementScreenState
     );
   }
 
-  void _goLb(SettlementInstruction t) {
-    // 個人借用書の作成パラメータで LB0100 へ（モック）
-    final friendId = t.toUserId; // 受け取り側が相手
-    final eventTitle = _currentEventTitle();
-    final uri = Uri(
-      path: '/lb0100',
-      queryParameters: {
-        'mode': 'personal',
-        'friendId': friendId,
-        'amount': t.amount.toString(),
-        'memo': 'イベントのおかねまとめ($eventTitle)',
-      },
-    );
-    context.push(uri.toString());
-  }
+  // _goLb は削除（借用書はイベント起点では発行しない）
 
   void _goTx(SettlementInstruction t) {
-    final eventTitle = _currentEventTitle();
-    final uri = Uri(
-      path: '/tr0100',
-      queryParameters: {
-        'mode': 'personal',
-        'friendId': t.toUserId,
-        'amount': t.amount.toString(),
-        'memo': 'イベントのおかねまとめ($eventTitle)',
-      },
+    final eventId = widget.eventId;
+    context.push(
+      '/tr0100/$eventId?mode=repayment&toUserId=${t.toUserId}&amount=${t.amount}',
     );
-    context.push(uri.toString());
   }
 
   void _goCreateAllLb(List<SettlementInstruction> list) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('しゃくようしょを${list.length}けんつくったよ（モック）')),
-    );
+    // 借用書は個人起点のみのため、この機能は廃止
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('借用書は友だち詳細画面から発行してください')));
   }
 
   void _goApplySettlement(List<SettlementInstruction> list) {
@@ -388,10 +369,7 @@ class _EventErrorView extends StatelessWidget {
             children: [
               Text(message),
               const SizedBox(height: 12),
-              TextButton(
-                onPressed: onBack,
-                child: const Text('EV0100にもどる'),
-              ),
+              TextButton(onPressed: onBack, child: const Text('EV0100にもどる')),
             ],
           ),
         ),
