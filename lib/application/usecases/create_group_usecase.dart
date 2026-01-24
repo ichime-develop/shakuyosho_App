@@ -1,9 +1,9 @@
 import 'dart:math';
 
-import 'package:shakuyousho_app/application/providers/event_providers.dart';
-import 'package:shakuyousho_app/data/repository/group_repository.dart';
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
-import 'package:shakuyousho_app/domain/models/group_model.dart';
+import 'package:shakuyousho_app/domain/models/thread_model.dart';
+import 'package:shakuyousho_app/domain/repositories/event_repository.dart';
+import 'package:shakuyousho_app/domain/repositories/thread_repository.dart';
 
 class CreateGroupRequest {
   CreateGroupRequest({
@@ -20,9 +20,9 @@ class CreateGroupRequest {
 }
 
 class CreateGroupResult {
-  CreateGroupResult({required this.group, required this.eventMeta});
+  CreateGroupResult({required this.thread, required this.eventMeta});
 
-  final Group group;
+  final Thread thread;
   final EventMeta eventMeta;
 }
 
@@ -38,19 +38,19 @@ class InviteService {
 
 class CreateGroupUsecase {
   CreateGroupUsecase({
-    required GroupRepository groupRepository,
-    required EventStateNotifier eventStateNotifier,
+    required ThreadRepository threadRepository,
+    required EventRepository eventRepository,
     required InviteService inviteService,
     DateTime Function()? now,
     int Function(int max)? randomInt,
-  })  : _groupRepository = groupRepository,
-        _eventStateNotifier = eventStateNotifier,
-        _inviteService = inviteService,
-        _now = now ?? DateTime.now,
-        _randomInt = randomInt ?? ((max) => Random().nextInt(max));
+  }) : _threadRepository = threadRepository,
+       _eventRepository = eventRepository,
+       _inviteService = inviteService,
+       _now = now ?? DateTime.now,
+       _randomInt = randomInt ?? ((max) => Random().nextInt(max));
 
-  final GroupRepository _groupRepository;
-  final EventStateNotifier _eventStateNotifier;
+  final ThreadRepository _threadRepository;
+  final EventRepository _eventRepository;
   final InviteService _inviteService;
   final DateTime Function() _now;
   final int Function(int max) _randomInt;
@@ -59,34 +59,37 @@ class CreateGroupUsecase {
     final createdAt = _now();
     final token = _buildToken(input.title, createdAt);
     final memberIds = _mergeMembers(input.memberIds, input.createdBy);
-    final group = Group(
-      id: 'grp_$token',
+    final thread = Thread(
+      id: 'th_$token',
+      type: 'group',
       title: input.title,
-      memberIds: memberIds,
-      createdBy: input.createdBy,
+      participantIds: memberIds,
       createdAt: createdAt,
+      updatedAt: createdAt,
     );
 
-    _groupRepository.create(group);
+    _threadRepository.upsert(thread);
 
     for (final memberId in memberIds) {
       if (memberId == input.createdBy) continue;
       await _inviteService.sendInvite(
-        groupId: group.id,
+        groupId: thread.id,
         memberId: memberId,
         message: input.inviteMessage,
       );
     }
 
-    final eventId = await _eventStateNotifier.createEventMeta(
-      title: '${group.title} のイベント',
+    final eventMeta = EventMeta(
+      id: 'ev_$token',
+      title: input.title,
       participantIds: List<String>.unmodifiable(memberIds),
+      createdAt: createdAt,
+      updatedAt: createdAt,
+      deletedAt: null,
     );
-    final eventMeta = _eventStateNotifier.state.metas.firstWhere(
-      (meta) => meta.id == eventId,
-    );
+    _eventRepository.upsertEventMeta(eventMeta);
 
-    return CreateGroupResult(group: group, eventMeta: eventMeta);
+    return CreateGroupResult(thread: thread, eventMeta: eventMeta);
   }
 
   List<String> _mergeMembers(List<String> members, String createdBy) {

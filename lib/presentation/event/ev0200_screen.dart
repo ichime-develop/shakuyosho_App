@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/data/mock/users_mock.dart';
-import 'package:shakuyousho_app/domain/models/event_models.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 
 /// EV0200: イベント詳細（支払い一覧）
@@ -23,11 +22,11 @@ import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 class Ev0200EventDetailScreen extends ConsumerWidget {
   const Ev0200EventDetailScreen({super.key, required this.eventId});
 
-  final String? eventId;
+  final String eventId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (eventId == null || eventId!.isEmpty) {
+    if (eventId.isEmpty) {
       return _EventErrorView(
         title: 'EV0200',
         message: 'eventIdが未指定です。',
@@ -35,36 +34,18 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
       );
     }
 
-    final summaries = ref.watch(eventSummariesProvider);
-    if (summaries.isEmpty) {
-      return _EventErrorView(
-        title: 'EV0200',
-        message: 'イベントがありません。',
-        onBack: () => context.go('/ev0100'),
-      );
-    }
-
-    EventSummary? eventSummary;
-    for (final summary in summaries) {
-      if (summary.id == eventId) {
-        eventSummary = summary;
-        break;
-      }
-    }
-    final eventSummaryResolved = eventSummary;
-    if (eventSummaryResolved == null) {
+    final detail = ref.watch(eventDetailProvider(eventId));
+    if (detail == null) {
       return _EventErrorView(
         title: 'EV0200',
         message: 'イベントが見つかりません。',
         onBack: () => context.go('/ev0100'),
       );
     }
-    final eventMeta =
-        ref.watch(eventMetaByIdProvider(eventSummaryResolved.id));
-    final eventTitle = eventMeta?.title ?? eventSummaryResolved.title;
+    final eventMeta = detail.meta;
+    final eventTitle = eventMeta.title;
 
-    final payments =
-        ref.watch(transactionsByEventIdProvider(eventSummaryResolved.id));
+    final payments = detail.transactions;
 
     final theme = Theme.of(context);
     final totalAmount = payments
@@ -89,7 +70,8 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
               tooltip: 'イベントをけす',
               onPressed: () => _Controller.confirmAndDeleteEvent(
                 context: context,
-                eventId: eventSummaryResolved.id,
+                ref: ref,
+                eventId: eventId,
               ),
             ),
           ],
@@ -100,15 +82,12 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
             _SummaryPanel(
               theme: theme,
               totalAmount: totalAmount,
-              unsettled: eventSummaryResolved.totalUnsettledAmount,
               count: payments.length,
             ),
             const SizedBox(height: 20),
             _PrimaryButton(
-              onPressed: () => _Controller.goSettlement(
-                context: context,
-                eventId: eventSummaryResolved.id,
-              ),
+              onPressed: () =>
+                  _Controller.goSettlement(context: context, eventId: eventId),
             ),
             const SizedBox(height: 24),
             Text(
@@ -135,7 +114,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                 theme: theme,
                 onTap: (p) => _Controller.goEditEventTransaction(
                   context: context,
-                  eventId: eventSummaryResolved.id,
+                  eventId: eventId,
                   payment: p,
                 ),
                 onDelete: (p) => _onDeletePayment(ref, context, p.id),
@@ -145,7 +124,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
         floatingActionButton: FloatingActionButton(
           onPressed: () => _Controller.goAddEventTransaction(
             context: context,
-            eventId: eventSummaryResolved.id,
+            eventId: eventId,
           ),
           child: const Icon(Icons.add),
         ),
@@ -183,7 +162,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
       return;
     }
     // Delete via provider so other screens update
-    ref.read(eventStateProvider.notifier).deleteTransaction(paymentId);
+    ref.read(transactionRepositoryProvider).delete(paymentId);
 
     ScaffoldMessenger.of(
       context,
@@ -226,6 +205,7 @@ class _Controller {
   /// イベント削除（確認ダイアログ付き）
   static Future<void> confirmAndDeleteEvent({
     required BuildContext context,
+    required WidgetRef ref,
     required String eventId,
   }) async {
     final confirmed = await showDialog<bool>(
@@ -250,10 +230,7 @@ class _Controller {
     );
 
     if (confirmed != true) return;
-
-    // モックデータから削除
-    // Note: shared mock lists are static fixtures. In integration tests you'd replace providers.
-    // Leaving them as-is for now.
+    ref.read(eventMetaListProvider.notifier).deleteEventMeta(eventId);
 
     // 詳細画面を閉じて前の画面に戻る
     if (context.mounted) {
@@ -261,8 +238,6 @@ class _Controller {
     }
   }
 }
-
-// Using shared mock lists from lib/data/mock/event_mock.dart
 
 String _fmtYen(int n) {
   final s = n.abs().toString();
@@ -275,25 +250,15 @@ String _fmtYen(int n) {
   return '¥${buf.toString()}';
 }
 
-String _fmtDateTime(DateTime d) {
-  final date =
-      '${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
-  final time =
-      '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-  return '$date $time';
-}
-
 class _SummaryPanel extends StatelessWidget {
   const _SummaryPanel({
     required this.theme,
     required this.totalAmount,
-    required this.unsettled,
     required this.count,
   });
 
   final ThemeData theme;
   final int totalAmount;
-  final int unsettled;
   final int count;
 
   @override
@@ -328,20 +293,6 @@ class _SummaryPanel extends StatelessWidget {
             ),
           ),
           Divider(color: Colors.grey.shade200, height: 16),
-          _SummaryRow(
-            label: 'あなたがうけとる',
-            value: _fmtYen(unsettled).replaceAll('¥', ''),
-            unit: 'えん',
-            labelStyle: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
-            ),
-            valueStyle: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 4),
           Text(
             'きろく $count 件',
             style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
@@ -619,10 +570,7 @@ class _EventErrorView extends StatelessWidget {
             children: [
               Text(message),
               const SizedBox(height: 12),
-              TextButton(
-                onPressed: onBack,
-                child: const Text('EV0100にもどる'),
-              ),
+              TextButton(onPressed: onBack, child: const Text('EV0100にもどる')),
             ],
           ),
         ),

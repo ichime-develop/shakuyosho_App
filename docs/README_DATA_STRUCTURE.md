@@ -1,13 +1,25 @@
 # データ構造 README
 
 ## 1. 全体像（概要）
-- このアプリでは以下の 3 つを一次データとする
-  - Thread
-  - EventMeta
-  - Transaction
-- Event は必ず Thread に属する（EventMeta.threadId）
+- このアプリでは以下の 4 つを一次データとする
+  - User（人物マスタ）
+  - Thread（会話・友達関係）
+  - EventMeta（イベント・貸し借り計算の単位）
+  - Transaction（支出・返済）
 
-※ EventSummary や Settlement は保存しない派生データとする。
+### 重要：Event と Thread の完全分離
+
+Event と Thread は **完全に独立した概念** として扱う：
+- Event は Thread を参照しない
+- Thread は Event を参照しない
+- それぞれ独立して作成・削除可能
+
+この設計により：
+- 将来の仕様変更に強い
+- Firebase 移行時のデータ設計がシンプル
+- 責務が明確
+
+※ EventSummary や Settlement は保存しない派生データとする（Provider で算出）。
 
 ## 2. データツリー構造
 
@@ -31,7 +43,6 @@ app
 
 ### EventMeta
 - id
-- threadId
 - title
 - participantIds
 - createdAt
@@ -39,6 +50,8 @@ app
 - status: 'active' | 'closed' // 進行中/完了
 - memo?: string               // イベント補足
 - deletedAt?: DateTime        // 論理削除
+
+※ threadId は保持しない（Event と Thread は完全分離）
 
 ### Transaction
 - id
@@ -74,7 +87,13 @@ app
 - group_mock.dart
 - event_mock.dart
 - events_mock.dart
+- contacts_mock.dart
 
+### self の扱い（モック方針）
+
+- `self` は User データに保存しない
+- `currentUserId`（セッション/認証）から **導出** する
+- 友達一覧は `users_mock.dart` から `currentUserId` を除外して表示する
 
 ### Users の扱い（重要）
 

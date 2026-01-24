@@ -3,234 +3,290 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakuyousho_app/data/mock/event_meta_mock.dart'
     as event_meta_mock;
-import 'package:shakuyousho_app/data/mock/event_mock.dart' as event_mock;
-import 'package:shakuyousho_app/data/mock/transactions_mock.dart'
-    as transactions_mock;
-import 'package:shakuyousho_app/data/repository/event_repository.dart';
-import 'package:shakuyousho_app/data/repository/transaction_repository.dart';
+import 'package:shakuyousho_app/data/mock/threads_mock.dart' as threads_mock;
+import 'package:shakuyousho_app/core/utils/transactions_mock_mapper.dart'
+    as transactions_mock_mapper;
+import 'package:shakuyousho_app/data/repository/mock_event_repository.dart';
+import 'package:shakuyousho_app/data/repository/mock_thread_repository.dart';
+import 'package:shakuyousho_app/data/repository/mock_transaction_repository.dart';
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
-import 'package:shakuyousho_app/domain/models/event_models.dart';
+import 'package:shakuyousho_app/domain/models/thread_model.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
+import 'package:shakuyousho_app/domain/repositories/event_repository.dart';
+import 'package:shakuyousho_app/domain/repositories/thread_repository.dart';
+import 'package:shakuyousho_app/domain/repositories/transaction_repository.dart';
 
-class EventState {
-  EventState({required this.metas, required this.transactions});
-
-  final List<EventMeta> metas;
+class EventDetail {
+  const EventDetail({required this.meta, required this.transactions});
+  final EventMeta meta;
   final List<Transaction> transactions;
-
-  EventState copyWith({
-    List<EventMeta>? metas,
-    List<Transaction>? transactions,
-  }) {
-    return EventState(
-      metas: metas ?? this.metas,
-      transactions: transactions ?? this.transactions,
-    );
-  }
 }
 
-class EventStateNotifier extends StateNotifier<EventState> {
-  EventStateNotifier({
+class EventDerivedSummary {
+  const EventDerivedSummary({
+    required this.participantIds,
+    required this.lastUpdatedAt,
+    required this.isSettled,
+  });
+
+  final List<String> participantIds;
+  final DateTime lastUpdatedAt;
+  final bool isSettled;
+}
+
+class EventMetaListNotifier extends StateNotifier<List<EventMeta>>
+    implements EventRepository {
+  EventMetaListNotifier({
     required EventRepository eventRepository,
-    required TransactionRepository transactionRepository,
-    String Function()? eventIdGenerator,
-  })  : _eventRepository = eventRepository,
-        _transactionRepository = transactionRepository,
-        _eventIdGenerator = eventIdGenerator,
-        super(
-          EventState(
-            metas: eventRepository.getAllEventMetas(),
-            transactions: transactionRepository.getAllTransactions(),
-          ),
-        );
+    required List<EventMeta> initialMetas,
+  }) : _eventRepository = eventRepository,
+       super(List<EventMeta>.from(initialMetas));
 
   final EventRepository _eventRepository;
-  final TransactionRepository _transactionRepository;
-  final String Function()? _eventIdGenerator;
 
-  String _generateEventId() {
-    if (_eventIdGenerator != null) {
-      return _eventIdGenerator!();
+  @override
+  List<EventMeta> getAllEventMetas() => List.unmodifiable(state);
+
+  @override
+  EventMeta? getEventMetaById(String eventId) {
+    for (final meta in state) {
+      if (meta.id == eventId) return meta;
     }
-    final now = DateTime.now().toUtc();
-    final timestamp = now.toIso8601String().replaceAll(RegExp(r'[^0-9]'), '');
-    final rand = Random().nextInt(1000).toString().padLeft(3, '0');
-    return 'ev_$timestamp$rand';
+    return null;
   }
 
-  Future<void> load() async {
-    final metas = _eventRepository.getAllEventMetas();
-    final txs = _transactionRepository.getAllTransactions();
-    state = state.copyWith(metas: metas, transactions: txs);
-  }
-
-  Future<void> upsertEventMeta(EventMeta meta) async {
+  @override
+  void upsertEventMeta(EventMeta meta) {
     _eventRepository.upsertEventMeta(meta);
-    final metas = [...state.metas];
-    final index = metas.indexWhere((m) => m.id == meta.id);
+    final updated = [...state];
+    final index = updated.indexWhere((m) => m.id == meta.id);
     if (index == -1) {
-      metas.add(meta);
+      updated.add(meta);
     } else {
-      metas[index] = meta;
+      updated[index] = meta;
     }
-    state = state.copyWith(metas: metas);
+    state = updated;
   }
 
-  Future<void> deleteEventMeta(String eventId) async {
+  @override
+  void deleteEventMeta(String eventId) {
     _eventRepository.deleteEventMeta(eventId);
-    final metas = state.metas
-        .where((meta) => meta.id != eventId)
-        .toList(growable: false);
-    state = state.copyWith(metas: metas);
-  }
-
-  Future<String> createEventMeta({
-    required String title,
-    required List<String> participantIds,
-    String? threadId,
-  }) async {
-    final now = DateTime.now();
-    final id = _generateEventId();
-    final ids = {...participantIds};
-    final meta = EventMeta(
-      id: id,
-      title: title,
-      participantIds: ids.toList(growable: false),
-      createdAt: now,
-      updatedAt: now,
-      deletedAt: null,
-      threadId: threadId,
-    );
-    await upsertEventMeta(meta);
-    return id;
-  }
-
-  Future<String> joinEvent({
-    required String eventId,
-    required String participantId,
-  }) async {
-    final meta = _eventRepository.getEventMetaById(eventId);
-    if (meta == null || meta.deletedAt != null) {
-      throw StateError('Event not found: $eventId');
-    }
-    final ids = {...meta.participantIds, participantId};
-    final updated = meta.copyWith(
-      participantIds: ids.toList(growable: false),
-      updatedAt: DateTime.now(),
-    );
-    await upsertEventMeta(updated);
-    return eventId;
-  }
-
-  Future<void> upsertTransaction(Transaction tx) async {
-    final now = DateTime.now();
-    final updatedTx = tx.updatedAt == null ? tx.copyWith(updatedAt: now) : tx;
-    _transactionRepository.upsertTransaction(updatedTx);
-    final txs = [...state.transactions];
-    final index = txs.indexWhere((t) => t.id == updatedTx.id);
-    if (index == -1) {
-      txs.add(updatedTx);
-    } else {
-      txs[index] = updatedTx;
-    }
-    state = state.copyWith(transactions: txs);
-  }
-
-  Future<void> deleteTransaction(String txId) async {
-    _transactionRepository.deleteTransaction(txId);
-    final now = DateTime.now();
-    final txs = state.transactions.map((t) {
-      if (t.id != txId) return t;
-      return t.copyWith(deletedAt: now, updatedAt: now);
-    }).toList(growable: false);
-    state = state.copyWith(transactions: txs);
+    state = state.where((meta) => meta.id != eventId).toList(growable: false);
   }
 }
 
-final eventStateProvider =
-    StateNotifierProvider<EventStateNotifier, EventState>((ref) {
-  return EventStateNotifier(
-    eventRepository: ref.read(eventRepositoryProvider),
-    transactionRepository: ref.read(transactionRepositoryProvider),
-  );
-});
+class TransactionListNotifier extends StateNotifier<List<Transaction>>
+    implements TransactionRepository {
+  TransactionListNotifier({
+    required TransactionRepository transactionRepository,
+    required List<Transaction> initialTransactions,
+  }) : _transactionRepository = transactionRepository,
+       super(List<Transaction>.from(initialTransactions));
 
-final eventRepositoryProvider = Provider<EventRepository>((ref) => _eventRepo);
-final transactionRepositoryProvider =
-    Provider<TransactionRepository>((ref) => _txRepo);
+  final TransactionRepository _transactionRepository;
+
+  @override
+  List<Transaction> getByEventId(String eventId) {
+    return _transactionRepository.getByEventId(eventId);
+  }
+
+  @override
+  void upsert(Transaction tx) {
+    _transactionRepository.upsert(tx);
+    final updated = [...state];
+    final index = updated.indexWhere((t) => t.id == tx.id);
+    if (index == -1) {
+      updated.add(tx);
+    } else {
+      updated[index] = tx;
+    }
+    state = updated;
+  }
+
+  @override
+  void delete(String txId) {
+    _transactionRepository.delete(txId);
+    final now = DateTime.now();
+    final updated = state
+        .map((t) {
+          if (t.id != txId) return t;
+          return t.copyWith(deletedAt: now, updatedAt: now);
+        })
+        .toList(growable: false);
+    state = updated;
+  }
+}
+
+class ThreadListNotifier extends StateNotifier<List<Thread>>
+    implements ThreadRepository {
+  ThreadListNotifier({
+    required ThreadRepository threadRepository,
+    required List<Thread> initialThreads,
+  }) : _threadRepository = threadRepository,
+       super(List<Thread>.from(initialThreads));
+
+  final ThreadRepository _threadRepository;
+
+  @override
+  List<Thread> getAll() => List.unmodifiable(state);
+
+  @override
+  Thread? getById(String threadId) {
+    for (final thread in state) {
+      if (thread.id == threadId) return thread;
+    }
+    return null;
+  }
+
+  @override
+  void upsert(Thread thread) {
+    _threadRepository.upsert(thread);
+    final updated = [...state];
+    final index = updated.indexWhere((t) => t.id == thread.id);
+    if (index == -1) {
+      updated.add(thread);
+    } else {
+      updated[index] = thread;
+    }
+    state = updated;
+  }
+}
+
+final List<EventMeta> _initialEventMetas = List<EventMeta>.from(
+  event_meta_mock.mockEventMetas,
+);
+final List<Transaction> _initialTransactions = List<Transaction>.from(
+  transactions_mock_mapper.mockDomainTransactions,
+);
+final List<Thread> _initialThreads = List<Thread>.from(
+  threads_mock.mockThreads,
+);
 
 final EventRepository _eventRepo = MockEventRepository(
-  initialEvents: List<EventSummary>.from(event_mock.mockEvents),
-  initialMetas: List<EventMeta>.from(event_meta_mock.mockEventMetas),
+  initialMetas: _initialEventMetas,
 );
-
 final TransactionRepository _txRepo = MockTransactionRepository(
-  List<Transaction>.from(transactions_mock.mockDomainTransactions),
+  _initialTransactions,
 );
+final ThreadRepository _threadRepo = MockThreadRepository(_initialThreads);
 
-final eventSummariesProvider = Provider<List<EventSummary>>((ref) {
-  final state = ref.watch(eventStateProvider);
-  return _deriveEventSummaries(state.metas, state.transactions);
+// Repository providers
+final eventRepositoryProvider = Provider<EventRepository>((ref) {
+  return ref.read(eventMetaListProvider.notifier);
 });
 
-final eventMetaByIdProvider = Provider.family<EventMeta?, String>((ref, eventId) {
-  final metas = ref.watch(eventStateProvider.select((s) => s.metas));
+final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
+  return ref.read(transactionListProvider.notifier);
+});
+
+final threadRepositoryProvider = Provider<ThreadRepository>((ref) {
+  return ref.read(threadListProvider.notifier);
+});
+
+// State providers
+final eventMetaListProvider =
+    StateNotifierProvider<EventMetaListNotifier, List<EventMeta>>((ref) {
+      return EventMetaListNotifier(
+        eventRepository: _eventRepo,
+        initialMetas: _initialEventMetas,
+      );
+    });
+
+final transactionListProvider =
+    StateNotifierProvider<TransactionListNotifier, List<Transaction>>((ref) {
+      return TransactionListNotifier(
+        transactionRepository: _txRepo,
+        initialTransactions: _initialTransactions,
+      );
+    });
+
+final threadListProvider =
+    StateNotifierProvider<ThreadListNotifier, List<Thread>>((ref) {
+      return ThreadListNotifier(
+        threadRepository: _threadRepo,
+        initialThreads: _initialThreads,
+      );
+    });
+
+// Derived providers
+final eventMetaProvider = Provider.family<EventMeta?, String>((ref, eventId) {
+  final metas = ref.watch(eventMetaListProvider);
   for (final meta in metas) {
     if (meta.id == eventId && meta.deletedAt == null) return meta;
   }
   return null;
 });
 
-final transactionsByEventIdProvider =
-    Provider.family<List<Transaction>, String>((ref, eventId) {
-  final txs = ref.watch(eventStateProvider.select((s) => s.transactions));
+final transactionsByEventProvider = Provider.family<List<Transaction>, String>((
+  ref,
+  eventId,
+) {
+  final txs = ref.watch(transactionListProvider);
   final filtered = txs
       .where((t) => t.eventId == eventId && t.deletedAt == null)
-      .toList();
-  filtered.sort((a, b) => b.date.compareTo(a.date));
-  return filtered;
-});
-
-final settlementProvider =
-    Provider.family<SettlementSummary?, String>((ref, eventId) {
-  final meta = ref.watch(eventMetaByIdProvider(eventId));
-  if (meta == null) return null;
-  final txs = ref.watch(transactionsByEventIdProvider(eventId));
-  return _buildSettlementSummary(meta, txs);
-});
-
-List<EventSummary> _deriveEventSummaries(
-  List<EventMeta> metas,
-  List<Transaction> txs,
-) {
-  return metas
-      .where((meta) => meta.deletedAt == null)
-      .map((meta) {
-        final eventTxs = txs
-            .where((t) => t.eventId == meta.id && t.deletedAt == null)
-            .toList(growable: false);
-        final participantIds = _mergeParticipantIds(meta.participantIds, eventTxs);
-        final lastUpdatedAt = _latestUpdatedAt(meta.updatedAt, eventTxs);
-        final net = _calcNetBalances(eventTxs, participantIds);
-        final totalUnsettled =
-            net.values.where((v) => v > 0).fold<int>(0, (p, v) => p + v);
-        final isSettled = eventTxs.isNotEmpty && totalUnsettled == 0;
-        return EventSummary(
-          id: meta.id,
-          title: meta.title,
-          isSettled: isSettled,
-          participantIds: participantIds,
-          lastUpdatedAt: lastUpdatedAt,
-          totalUnsettledAmount: totalUnsettled,
-        );
-      })
       .toList(growable: false);
+  final sorted = List<Transaction>.from(filtered)
+    ..sort((a, b) => b.date.compareTo(a.date));
+  return sorted;
+});
+
+final eventDetailProvider = Provider.family<EventDetail?, String>((
+  ref,
+  eventId,
+) {
+  final meta = ref.watch(eventMetaProvider(eventId));
+  if (meta == null) return null;
+
+  // Watch transaction state so detail updates after writes.
+  ref.watch(transactionListProvider);
+  final txs = List<Transaction>.from(
+    ref.read(transactionRepositoryProvider).getByEventId(eventId),
+  )..sort((a, b) => b.date.compareTo(a.date));
+  return EventDetail(meta: meta, transactions: txs);
+});
+
+final settlementProvider = Provider.family<SettlementSummary?, String>((
+  ref,
+  eventId,
+) {
+  final detail = ref.watch(eventDetailProvider(eventId));
+  if (detail == null) return null;
+  return computeSettlement(
+    detail.transactions,
+    eventId: eventId,
+    participantIds: detail.meta.participantIds,
+  );
+});
+
+EventDerivedSummary deriveEventSummary(EventMeta meta, List<Transaction> txs) {
+  final participantIds = _mergeParticipantIds(meta.participantIds, txs);
+  final lastUpdatedAt = _latestUpdatedAt(meta.updatedAt, txs);
+  final net = _calcNetBalances(txs, participantIds);
+  final isSettled = txs.isNotEmpty && net.values.every((v) => v == 0);
+  return EventDerivedSummary(
+    participantIds: participantIds,
+    lastUpdatedAt: lastUpdatedAt,
+    isSettled: isSettled,
+  );
 }
 
-List<String> _mergeParticipantIds(
-  List<String> base,
-  List<Transaction> txs,
-) {
+SettlementSummary computeSettlement(
+  List<Transaction> txs, {
+  required String eventId,
+  List<String>? participantIds,
+}) {
+  final members = participantIds ?? _mergeParticipantIds(const [], txs);
+  final balances = _calcNetBalances(txs, members);
+  final instructions = _simplifyBalances(balances);
+  return SettlementSummary(
+    eventId: eventId,
+    balancesByUserId: balances,
+    instructions: instructions,
+    generatedAt: DateTime.now(),
+  );
+}
+
+List<String> _mergeParticipantIds(List<String> base, List<Transaction> txs) {
   final ids = <String>{...base};
   for (final tx in txs) {
     if (tx.type == TxType.expense) {
@@ -268,11 +324,17 @@ Map<String, int> _calcNetBalances(
       final paidBy = tx.paidBy;
       final shares = tx.shares;
       if (paidBy == null || shares == null) continue;
-      net.update(paidBy, (v) => v + tx.totalAmount,
-          ifAbsent: () => tx.totalAmount);
+      net.update(
+        paidBy,
+        (v) => v + tx.totalAmount,
+        ifAbsent: () => tx.totalAmount,
+      );
       for (final entry in shares.entries) {
-        net.update(entry.key, (v) => v - entry.value,
-            ifAbsent: () => -entry.value);
+        net.update(
+          entry.key,
+          (v) => v - entry.value,
+          ifAbsent: () => -entry.value,
+        );
       }
     } else {
       final fromUserId = tx.fromUserId;
@@ -284,21 +346,6 @@ Map<String, int> _calcNetBalances(
     }
   }
   return net;
-}
-
-SettlementSummary _buildSettlementSummary(
-  EventMeta meta,
-  List<Transaction> txs,
-) {
-  final memberIds = _mergeParticipantIds(meta.participantIds, txs);
-  final balances = _calcNetBalances(txs, memberIds);
-  final instructions = _simplifyBalances(balances);
-  return SettlementSummary(
-    eventId: meta.id,
-    balancesByUserId: balances,
-    instructions: instructions,
-    generatedAt: DateTime.now(),
-  );
 }
 
 class _BalanceItem {
@@ -341,4 +388,11 @@ List<SettlementInstruction> _simplifyBalances(Map<String, int> balances) {
     if (creditor.amount == 0) j++;
   }
   return instructions;
+}
+
+String generateId({required String prefix}) {
+  final now = DateTime.now().toUtc();
+  final timestamp = now.toIso8601String().replaceAll(RegExp(r'[^0-9]'), '');
+  final rand = Random().nextInt(1000).toString().padLeft(3, '0');
+  return '${prefix}_$timestamp$rand';
 }

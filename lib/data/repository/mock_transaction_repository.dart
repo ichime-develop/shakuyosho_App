@@ -1,11 +1,5 @@
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
-
-abstract class TransactionRepository {
-  List<Transaction> getAllTransactions();
-  List<Transaction> getTransactionsByEvent(String eventId);
-  void upsertTransaction(Transaction tx);
-  void deleteTransaction(String txId);
-}
+import 'package:shakuyousho_app/domain/repositories/transaction_repository.dart';
 
 /// Mock implementation backed by domain transactions.
 class MockTransactionRepository implements TransactionRepository {
@@ -15,14 +9,12 @@ class MockTransactionRepository implements TransactionRepository {
   final List<Transaction> _txs;
 
   @override
-  List<Transaction> getAllTransactions() => List.unmodifiable(_txs);
+  List<Transaction> getByEventId(String eventId) => _txs
+      .where((t) => t.eventId == eventId && t.deletedAt == null)
+      .toList(growable: false);
 
   @override
-  List<Transaction> getTransactionsByEvent(String eventId) =>
-      _txs.where((t) => t.eventId == eventId).toList(growable: false);
-
-  @override
-  void upsertTransaction(Transaction tx) {
+  void upsert(Transaction tx) {
     final idx = _txs.indexWhere((t) => t.id == tx.id);
     if (idx == -1) {
       _txs.add(tx);
@@ -32,7 +24,7 @@ class MockTransactionRepository implements TransactionRepository {
   }
 
   @override
-  void deleteTransaction(String txId) {
+  void delete(String txId) {
     final now = DateTime.now();
     final index = _txs.indexWhere((t) => t.id == txId);
     if (index == -1) return;

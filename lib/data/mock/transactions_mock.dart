@@ -1,13 +1,7 @@
-import 'package:shakuyousho_app/domain/models/transaction_model.dart'
-    as domain_tx;
-
 enum MockTransactionType { expense, repayment }
 
 class ExpenseDetail {
-  const ExpenseDetail({
-    required this.paidBy,
-    required this.shares,
-  });
+  const ExpenseDetail({required this.paidBy, required this.shares});
 
   final String paidBy;
   final Map<String, int> shares;
@@ -59,160 +53,7 @@ class MockAppTransaction {
   final RepaymentDetail? repaymentDetail;
 }
 
-domain_tx.Transaction toDomainTransaction(MockAppTransaction tx) {
-  final expense = tx.expenseDetail;
-  final repayment = tx.repaymentDetail;
-  return domain_tx.Transaction(
-    id: tx.txId,
-    eventId: tx.eventId,
-    type: tx.txType == MockTransactionType.expense
-        ? domain_tx.TxType.expense
-        : domain_tx.TxType.repayment,
-    title: tx.title,
-    date: tx.date,
-    currency: tx.currency,
-    totalAmount: tx.totalAmount,
-    participantIds: tx.participantIds,
-    paidBy: expense?.paidBy,
-    shares: expense?.shares,
-    fromUserId: repayment?.fromUserId,
-    toUserId: repayment?.toUserId,
-    repaymentAmount: repayment?.amount,
-    createdBy: tx.createdBy,
-    createdAt: tx.createdAt,
-    updatedAt: tx.updatedAt,
-    deletedAt: tx.deletedAt,
-  );
-}
-
-final List<domain_tx.Transaction> mockDomainTransactions =
-    List<domain_tx.Transaction>.unmodifiable(
-  mockAllTransactions.map(toDomainTransaction).toList(growable: false),
-);
-
-
 const _jpy = 'JPY';
-
-List<String> _participantsForExpense(ExpenseDetail d) {
-  final ids = <String>{d.paidBy, ...d.shares.keys};
-  final list = ids.toList()..sort();
-  return List<String>.unmodifiable(list);
-}
-
-List<String> _participantsForRepayment(RepaymentDetail d) {
-  final ids = <String>{d.fromUserId, d.toUserId};
-  final list = ids.toList()..sort();
-  return List<String>.unmodifiable(list);
-}
-
-bool _sameSet(List<String> a, List<String> b) {
-  final sa = a.toSet();
-  final sb = b.toSet();
-  return sa.length == sb.length && sa.containsAll(sb);
-}
-
-/// Debug-only validation for mock data consistency.
-///
-/// In debug mode, this will assert on:
-/// - expense: sum(shares) == totalAmount
-/// - repayment: repaymentDetail.amount == totalAmount
-/// - participantIds is consistent with details
-bool _validateMockAllTransactions(List<MockAppTransaction> txs) {
-  for (final tx in txs) {
-    if (tx.deletedAt != null) {
-      // For PoC we assume deleted items are excluded from UI queries.
-      continue;
-    }
-
-    assert(tx.currency == _jpy, 'Only JPY is expected in PoC mocks: ${tx.txId}');
-
-    switch (tx.txType) {
-      case MockTransactionType.expense:
-        final d = tx.expenseDetail;
-        assert(d != null, 'expenseDetail must be set for expense: ${tx.txId}');
-        if (d == null) break;
-        final sum = d.shares.values.fold<int>(0, (p, v) => p + v);
-        assert(sum == tx.totalAmount,
-            'sum(shares) must equal totalAmount: ${tx.txId} sum=$sum total=${tx.totalAmount}');
-        final expected = _participantsForExpense(d);
-        assert(_sameSet(tx.participantIds, expected),
-            'participantIds must match paidBy+shares.keys: ${tx.txId} expected=$expected actual=${tx.participantIds}');
-        break;
-
-      case MockTransactionType.repayment:
-        final d = tx.repaymentDetail;
-        assert(d != null, 'repaymentDetail must be set for repayment: ${tx.txId}');
-        if (d == null) break;
-        assert(d.amount == tx.totalAmount,
-            'repaymentDetail.amount must equal totalAmount: ${tx.txId} amount=${d.amount} total=${tx.totalAmount}');
-        final expected = _participantsForRepayment(d);
-        assert(_sameSet(tx.participantIds, expected),
-            'participantIds must match from/to: ${tx.txId} expected=$expected actual=${tx.participantIds}');
-        break;
-    }
-  }
-  return true;
-}
-
-/// Calculates net balances per peer from the perspective of [meUserId].
-///
-/// Positive value means the peer owes [meUserId]. Negative means [meUserId] owes the peer.
-///
-/// By default, only personal (eventId == null) transactions are included.
-Map<String, int> calcNetByPeer({
-  required String meUserId,
-  bool includeEvents = false,
-  List<MockAppTransaction>? source,
-}) {
-  final txs = source ?? mockAllTransactions;
-  final net = <String, int>{};
-
-  void add(String peer, int delta) {
-    if (peer == meUserId) return;
-    net[peer] = (net[peer] ?? 0) + delta;
-  }
-
-  for (final tx in txs) {
-    if (tx.deletedAt != null) continue;
-    if (!includeEvents && tx.eventId != null) continue;
-    if (!tx.participantIds.contains(meUserId)) continue;
-
-    if (tx.txType == MockTransactionType.expense) {
-      final d = tx.expenseDetail;
-      if (d == null) continue;
-
-      // Everyone owes their share to the payer.
-      for (final entry in d.shares.entries) {
-        final userId = entry.key;
-        final share = entry.value;
-        if (userId == d.paidBy) continue;
-
-        // userId -> payer
-        if (meUserId == d.paidBy) {
-          // Peer owes me.
-          add(userId, share);
-        } else if (meUserId == userId) {
-          // I owe payer.
-          add(d.paidBy, -share);
-        }
-      }
-    } else {
-      final d = tx.repaymentDetail;
-      if (d == null) continue;
-
-      // from -> to reduces debt.
-      if (meUserId == d.toUserId) {
-        // Peer paid me.
-        add(d.fromUserId, -d.amount);
-      } else if (meUserId == d.fromUserId) {
-        // I paid peer.
-        add(d.toUserId, d.amount);
-      }
-    }
-  }
-
-  return net;
-}
 
 final List<MockAppTransaction> mockAllTransactions = [
   // ========== イベント ev_001 ==========
@@ -632,7 +473,7 @@ final List<MockAppTransaction> mockAllTransactions = [
       'u_007',
       'u_008',
       'u_009',
-      'u_010'
+      'u_010',
     ],
     createdAt: DateTime(2025, 5, 10, 7, 10),
     updatedAt: DateTime(2025, 5, 10, 7, 10),
@@ -671,7 +512,7 @@ final List<MockAppTransaction> mockAllTransactions = [
       'u_007',
       'u_008',
       'u_009',
-      'u_010'
+      'u_010',
     ],
     createdAt: DateTime(2025, 5, 10, 18, 6),
     updatedAt: DateTime(2025, 5, 10, 18, 6),
@@ -710,7 +551,7 @@ final List<MockAppTransaction> mockAllTransactions = [
       'u_007',
       'u_008',
       'u_009',
-      'u_010'
+      'u_010',
     ],
     createdAt: DateTime(2025, 5, 10, 20, 6),
     updatedAt: DateTime(2025, 5, 10, 20, 6),
@@ -749,7 +590,7 @@ final List<MockAppTransaction> mockAllTransactions = [
       'u_007',
       'u_008',
       'u_009',
-      'u_010'
+      'u_010',
     ],
     createdAt: DateTime(2025, 5, 11, 9, 4),
     updatedAt: DateTime(2025, 5, 11, 9, 4),
@@ -788,7 +629,7 @@ final List<MockAppTransaction> mockAllTransactions = [
       'u_007',
       'u_008',
       'u_009',
-      'u_010'
+      'u_010',
     ],
     createdAt: DateTime(2025, 5, 11, 8, 10),
     updatedAt: DateTime(2025, 5, 11, 8, 10),
@@ -1157,17 +998,3 @@ final List<MockAppTransaction> mockAllTransactions = [
     ),
   ),
 ];
-
-// Validates mock invariants in debug builds (asserts are stripped in release).
-// Ignore the returned value.
-final bool _mockValidationOk = _validateMockAllTransactions(mockAllTransactions);
-
-
-// 参考: u_001 視点の純残高（自動算出）
-//
-// 手動で数値を書くとデータ追加/修正でズレやすいため、下記関数で都度算出してください。
-// - 個人（eventId == null）のみ: calcNetByPeer(meUserId: 'u_001')
-// - イベント含む全取引: calcNetByPeer(meUserId: 'u_001', includeEvents: true)
-//
-// 正の値: 相手が u_001 に返すべき（相手→u_001 の負債）
-// 負の値: u_001 が相手に返すべき（u_001→相手 の負債）

@@ -12,7 +12,7 @@ import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 class Sv0100SettlementScreen extends ConsumerStatefulWidget {
   const Sv0100SettlementScreen({super.key, required this.eventId});
 
-  final String? eventId;
+  final String eventId;
 
   @override
   ConsumerState<Sv0100SettlementScreen> createState() =>
@@ -25,7 +25,7 @@ class _Sv0100SettlementScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final eventId = widget.eventId;
-    if (eventId == null || eventId.isEmpty) {
+    if (eventId.isEmpty) {
       return _EventErrorView(
         title: 'SV0100 おかねまとめ',
         message: 'eventIdが未指定です。',
@@ -33,21 +33,8 @@ class _Sv0100SettlementScreenState
       );
     }
 
-    final summaries = ref.watch(eventSummariesProvider);
-    if (summaries.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
-          ),
-          title: const Text('SV0100 おかねまとめ'),
-        ),
-        body: const Center(child: Text('イベントがありません。')),
-      );
-    }
-
-    if (!summaries.any((e) => e.id == eventId)) {
+    final eventMeta = ref.watch(eventMetaProvider(eventId));
+    if (eventMeta == null) {
       return _EventErrorView(
         title: 'SV0100 おかねまとめ',
         message: 'イベントが見つかりません。',
@@ -55,12 +42,10 @@ class _Sv0100SettlementScreenState
       );
     }
 
-    final eventMeta = ref.watch(eventMetaByIdProvider(eventId));
     final settlement = ref.watch(settlementProvider(eventId));
     final transfers =
         settlement?.instructions ?? const <SettlementInstruction>[];
-    final eventTitle =
-        eventMeta?.title ?? summaries.firstWhere((e) => e.id == eventId).title;
+    final eventTitle = eventMeta.title;
 
     return Scaffold(
       appBar: AppBar(
@@ -158,18 +143,11 @@ class _Sv0100SettlementScreenState
 
   String _currentEventTitle() {
     final activeEventId = widget.eventId;
-    if (activeEventId == null || activeEventId.isEmpty) {
+    if (activeEventId.isEmpty) {
       return 'イベント';
     }
-    final meta = ref.read(eventMetaByIdProvider(activeEventId));
-    if (meta != null) return meta.title;
-    final summaries = ref.read(eventSummariesProvider);
-    if (summaries.isEmpty) return 'イベント';
-    final event = summaries.firstWhere(
-      (e) => e.id == activeEventId,
-      orElse: () => summaries.first,
-    );
-    return event.title;
+    final meta = ref.read(eventMetaProvider(activeEventId));
+    return meta?.title ?? 'イベント';
   }
 }
 

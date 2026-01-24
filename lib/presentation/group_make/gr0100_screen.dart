@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shakuyousho_app/application/providers/group_providers.dart';
-import 'package:shakuyousho_app/application/usecases/create_group_usecase.dart';
-import 'package:shakuyousho_app/data/mock/contacts_mock.dart';
+import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/data/mock/users_mock.dart';
+import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
+import 'package:shakuyousho_app/domain/models/thread_model.dart';
 
 /// GR0100: グループ作成／招待画面（作成者向け・モック）
 ///
 /// - グループ名入力
 /// - 友達検索＋チェック選択
 /// - 「グループをつくる」押下で
-///   1) Group作成
-///   2) 選択メンバーへ招待送信（モック）
-///   3) 初期Event作成 → EV0100に即時反映
+///   1) Thread作成
+///   2) EventMeta作成
+///   3) EV0200へ遷移
 class Gr0100GroupCreateScreen extends ConsumerStatefulWidget {
   const Gr0100GroupCreateScreen({super.key});
 
@@ -51,15 +51,12 @@ class _Gr0100GroupCreateScreenState
     final canCreate = groupName.isNotEmpty;
 
     final friendQuery = _friendSearchCtrl.text.trim();
-    final friends =
-        mockUsers.where((f) => f.userId != mockLoginUserId).toList();
+    final friends = mockUsers.where((f) => f.userId != currentUserId).toList();
     final filteredFriends = friendQuery.isEmpty
         ? friends
         : friends
-            .where(
-              (f) => f.displayName.contains(friendQuery),
-            )
-            .toList(growable: false);
+              .where((f) => f.displayName.contains(friendQuery))
+              .toList(growable: false);
 
     return Scaffold(
       backgroundColor: bg,
@@ -74,10 +71,7 @@ class _Gr0100GroupCreateScreenState
         ),
         title: const Text(
           'グループをつくる／しょうたい',
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            color: textMain,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w800, color: textMain),
         ),
         centerTitle: true,
       ),
@@ -104,8 +98,10 @@ class _Gr0100GroupCreateScreenState
                   hintStyle: const TextStyle(color: textSub),
                   filled: true,
                   fillColor: surface,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 16,
+                  ),
                   border: OutlineInputBorder(
                     borderSide: BorderSide.none,
                     borderRadius: BorderRadius.circular(999),
@@ -155,8 +151,10 @@ class _Gr0100GroupCreateScreenState
                     ),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: surface,
                       borderRadius: BorderRadius.circular(999),
@@ -186,8 +184,10 @@ class _Gr0100GroupCreateScreenState
                   filled: true,
                   fillColor: surface,
                   prefixIcon: const Icon(Icons.search, color: textSub),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   border: OutlineInputBorder(
                     borderSide: BorderSide.none,
                     borderRadius: BorderRadius.circular(20),
@@ -212,13 +212,11 @@ class _Gr0100GroupCreateScreenState
                     }
                   });
                 },
-                isChecked: (friendId) =>
-                    _selectedFriendIds.contains(friendId),
+                isChecked: (friendId) => _selectedFriendIds.contains(friendId),
               ),
               const SizedBox(height: 8),
             ],
           ),
-
         ],
       ),
     );
@@ -228,25 +226,41 @@ class _Gr0100GroupCreateScreenState
     final name = _groupNameCtrl.text.trim();
     if (name.isEmpty) return;
 
-    final usecase = ref.read(createGroupUsecaseProvider);
     final memberIds = _selectedFriendIds.toList(growable: false);
-    final result = await usecase.execute(
-      CreateGroupRequest(
-        title: name,
-        memberIds: memberIds,
-        createdBy: mockLoginUserId,
-        inviteMessage: '「$name」にしょうたいするね。',
-      ),
+    final now = DateTime.now();
+    final threadId = generateId(prefix: 'th');
+    final eventId = generateId(prefix: 'ev');
+    final participants = <String>{
+      ...memberIds,
+      currentUserId,
+    }.toList(growable: false);
+    final thread = Thread(
+      id: threadId,
+      type: 'group',
+      title: name,
+      participantIds: participants,
+      createdAt: now,
+      updatedAt: now,
     );
+    ref.read(threadListProvider.notifier).upsert(thread);
+    final eventMeta = EventMeta(
+      id: eventId,
+      title: name,
+      participantIds: participants,
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+    );
+    ref.read(eventMetaListProvider.notifier).upsertEventMeta(eventMeta);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('グループをつくりました')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('グループをつくりました')));
 
     final router = GoRouter.of(context);
     router.go('/ev0100');
     Future.microtask(() {
-      router.push('/ev0200?eventId=${result.eventMeta.id}');
+      router.push('/ev0200/$eventId');
     });
   }
 }
@@ -341,10 +355,7 @@ class _FriendTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            _CircleCheckbox(
-              checked: checked,
-              onTap: onToggle,
-            ),
+            _CircleCheckbox(checked: checked, onTap: onToggle),
           ],
         ),
       ),
@@ -446,7 +457,7 @@ const List<_AvatarColors> _avatarPalette = [
 
 _AvatarColors _avatarColorsFor(String userId) {
   if (userId.isEmpty) return _avatarPalette.first;
-  final idx = userId.codeUnits.fold<int>(0, (p, v) => p + v) %
-      _avatarPalette.length;
+  final idx =
+      userId.codeUnits.fold<int>(0, (p, v) => p + v) % _avatarPalette.length;
   return _avatarPalette[idx];
 }

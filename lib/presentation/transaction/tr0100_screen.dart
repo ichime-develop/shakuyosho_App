@@ -29,7 +29,7 @@ class Tr0100TransactionScreen extends ConsumerStatefulWidget {
     this.transactionId,
   });
 
-  final String? eventId;
+  final String eventId;
   final String? transactionId;
 
   @override
@@ -76,9 +76,7 @@ class _Tr0100TransactionScreenState
   }
 
   void _initFromParams(String? eventIdParam, String? transactionId) {
-    _editingTransaction = _findTransaction(transactionId);
-    _eventId = _editingTransaction?.eventId ?? eventIdParam;
-
+    _eventId = eventIdParam;
     if (_eventId == null || _eventId!.isEmpty) {
       _missingEventId = true;
       _members = [];
@@ -88,7 +86,8 @@ class _Tr0100TransactionScreenState
       return;
     }
 
-    final meta = ref.read(eventMetaByIdProvider(_eventId!));
+    _editingTransaction = _findTransaction(transactionId);
+    final meta = ref.read(eventMetaProvider(_eventId!));
     if (meta == null) {
       _missingEventId = true;
       _members = [];
@@ -446,7 +445,8 @@ class _Tr0100TransactionScreenState
     if (transactionId == null || transactionId.isEmpty) {
       return null;
     }
-    final txs = ref.read(eventStateProvider).transactions;
+    if (_eventId == null || _eventId!.isEmpty) return null;
+    final txs = ref.read(transactionsByEventProvider(_eventId!));
     for (final tx in txs) {
       if (tx.id == transactionId && tx.deletedAt == null) return tx;
     }
@@ -466,7 +466,7 @@ class _Tr0100TransactionScreenState
     }
 
     if (eventId != null && eventId.isNotEmpty) {
-      final meta = ref.read(eventMetaByIdProvider(eventId));
+      final meta = ref.read(eventMetaProvider(eventId));
       if (meta != null) {
         for (final id in meta.participantIds) {
           addIfMissing(id);
@@ -505,6 +505,10 @@ class _Tr0100TransactionScreenState
     final context = this.context;
     final total = int.tryParse(_amountController.text) ?? 0;
 
+    if (_eventId == null || _eventId!.isEmpty) {
+      _showError(context, 'eventIdが未指定です。');
+      return;
+    }
     if (_payerUserId == null || _payerUserId!.isEmpty) {
       _showError(context, 'はらったひとをえらんでね。');
       return;
@@ -519,7 +523,7 @@ class _Tr0100TransactionScreenState
       return;
     }
 
-    // Map UI -> Transaction and save via EventStateNotifier
+    // Map UI -> Transaction and save via repository
     final id = _editingTransaction?.id ?? _generateTxId(_eventId);
     final createdAt = _editingTransaction?.createdAt ?? DateTime.now();
 
@@ -555,7 +559,7 @@ class _Tr0100TransactionScreenState
       shares[diffTarget] = (shares[diffTarget] ?? 0) + diff;
     }
 
-    final eventId = (_eventId == null || _eventId!.isEmpty) ? null : _eventId;
+    final eventId = _eventId!;
     final participantIds = <String>{...shares.keys};
     if (_payerUserId != null) {
       participantIds.add(_payerUserId!);
@@ -584,7 +588,7 @@ class _Tr0100TransactionScreenState
     );
 
     // Persist to state
-    ref.read(eventStateProvider.notifier).upsertTransaction(tx);
+    ref.read(transactionRepositoryProvider).upsert(tx);
 
     ScaffoldMessenger.of(
       context,
@@ -622,8 +626,8 @@ class _Tr0100TransactionScreenState
     if (confirmed == true && mounted) {
       if (_editingTransaction != null) {
         ref
-            .read(eventStateProvider.notifier)
-            .deleteTransaction(_editingTransaction!.id);
+            .read(transactionRepositoryProvider)
+            .delete(_editingTransaction!.id);
       }
       context.pop();
     }

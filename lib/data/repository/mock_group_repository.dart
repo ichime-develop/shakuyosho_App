@@ -1,7 +1,6 @@
 import 'package:shakuyousho_app/domain/models/group_model.dart';
 import 'package:shakuyousho_app/domain/repositories/group_repository.dart';
 
-/// GroupRepositoryのモック実装
 class MockGroupRepository implements GroupRepository {
   MockGroupRepository(List<Group> initial)
     : _groups = List<Group>.from(initial);

@@ -621,7 +621,7 @@ class _Controller {
 
   static void onOpenEventList(BuildContext context) => context.push('/ev0100');
   static void onOpenEventDetail(BuildContext context, String eventId) =>
-      context.push('/ev0200?eventId=$eventId');
+      context.push('/ev0200/$eventId');
 
   // 個人タブアクション
   static void onAddPersonalTransaction(BuildContext context) {

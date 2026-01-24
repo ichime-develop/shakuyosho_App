@@ -5,7 +5,6 @@ class EventSummary {
     required this.isSettled,
     required this.participantIds,
     required this.lastUpdatedAt,
-    required this.totalUnsettledAmount,
   });
 
   final String id;
@@ -14,7 +13,6 @@ class EventSummary {
   // participantIds: list of userId strings
   final List<String> participantIds;
   final DateTime lastUpdatedAt;
-  final int totalUnsettledAmount;
 
   EventSummary copyWith({
     String? id,
@@ -22,7 +20,6 @@ class EventSummary {
     bool? isSettled,
     List<String>? participantIds,
     DateTime? lastUpdatedAt,
-    int? totalUnsettledAmount,
   }) {
     return EventSummary(
       id: id ?? this.id,
@@ -30,8 +27,6 @@ class EventSummary {
       isSettled: isSettled ?? this.isSettled,
       participantIds: participantIds ?? this.participantIds,
       lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
-      totalUnsettledAmount:
-          totalUnsettledAmount ?? this.totalUnsettledAmount,
     );
   }
 }

@@ -61,7 +61,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/tr0100',
         name: 'TR0100',
         builder: (context, state) {
-          final eventId = state.uri.queryParameters['eventId'];
+          final eventId = state.uri.queryParameters['eventId'] ?? '';
           final transactionId = state.uri.queryParameters['transactionId'];
           return Tr0100TransactionScreen(
             eventId: eventId,
@@ -100,10 +100,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const Ev0100EventListScreen(),
       ),
       GoRoute(
-        path: '/ev0200',
+        path: '/ev0200/:eventId',
         name: 'EV0200',
         builder: (context, state) {
-          final eventId = state.uri.queryParameters['eventId'];
+          final eventId = state.pathParameters['eventId'] ?? '';
           return Ev0200EventDetailScreen(eventId: eventId);
         },
       ),
@@ -111,7 +111,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/sv0100',
         name: 'SV0100',
         builder: (context, state) {
-          final eventId = state.uri.queryParameters['eventId'];
+          final eventId = state.uri.queryParameters['eventId'] ?? '';
           return Sv0100SettlementScreen(eventId: eventId);
         },
       ),

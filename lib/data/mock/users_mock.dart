@@ -5,6 +5,8 @@ class MockUser {
   final String displayName;
 }
 
+const String currentUserId = 'u_001';
+
 const List<MockUser> mockUsers = [
   MockUser(userId: 'u_001', displayName: 'いちか'),
   MockUser(userId: 'u_002', displayName: 'ゆうき'),

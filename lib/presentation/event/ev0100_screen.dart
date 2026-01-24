@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
-import 'package:shakuyousho_app/domain/models/event_models.dart';
+import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/presentation/common/common_bottom_nav_bar.dart';
 
 /// EV0100: イベント一覧画面
@@ -14,11 +14,25 @@ class Ev0100EventListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final summaries = ref.watch(eventSummariesProvider);
-    final ongoing = summaries.where((e) => !e.isSettled).toList()
-      ..sort((a, b) => b.lastUpdatedAt.compareTo(a.lastUpdatedAt));
-    final finished = summaries.where((e) => e.isSettled).toList()
-      ..sort((a, b) => b.lastUpdatedAt.compareTo(a.lastUpdatedAt));
+    final metas = ref
+        .watch(eventMetaListProvider)
+        .where((meta) => meta.deletedAt == null)
+        .toList(growable: false);
+    final views = metas
+        .map((meta) {
+          final txs = ref.watch(transactionsByEventProvider(meta.id));
+          final summary = deriveEventSummary(meta, txs);
+          return _EventView(meta: meta, summary: summary);
+        })
+        .toList(growable: false);
+    final ongoing = views.where((e) => !e.summary.isSettled).toList()
+      ..sort(
+        (a, b) => b.summary.lastUpdatedAt.compareTo(a.summary.lastUpdatedAt),
+      );
+    final finished = views.where((e) => e.summary.isSettled).toList()
+      ..sort(
+        (a, b) => b.summary.lastUpdatedAt.compareTo(a.summary.lastUpdatedAt),
+      );
 
     return Scaffold(
       appBar: AppBar(title: const Text('EV0100 イベント一覧'), centerTitle: false),
@@ -39,8 +53,9 @@ class Ev0100EventListScreen extends ConsumerWidget {
                   _EventList(
                     themes: theme,
                     events: ongoing,
-                    onTap: (e) => _Controller.goDetail(context, e.id),
-                    onAction: (e) => _Controller.goSettlement(context, e.id),
+                    onTap: (e) => _Controller.goDetail(context, e.meta.id),
+                    onAction: (e) =>
+                        _Controller.goSettlement(context, e.meta.id),
                   ),
                 const SizedBox(height: 24),
                 _SectionHeader(
@@ -55,7 +70,7 @@ class Ev0100EventListScreen extends ConsumerWidget {
                     themes: theme,
                     events: finished,
                     isFinished: true,
-                    onTap: (e) => _Controller.goDetail(context, e.id),
+                    onTap: (e) => _Controller.goDetail(context, e.meta.id),
                   ),
               ],
             ),
@@ -74,10 +89,16 @@ class Ev0100EventListScreen extends ConsumerWidget {
   }
 }
 
+class _EventView {
+  const _EventView({required this.meta, required this.summary});
+
+  final EventMeta meta;
+  final EventDerivedSummary summary;
+}
+
 class _Controller {
   static void goDetail(BuildContext context, String eventId) {
-    final uri = Uri(path: '/ev0200', queryParameters: {'eventId': eventId});
-    context.push(uri.toString());
+    context.push('/ev0200/$eventId');
   }
 
   static void goSettlement(BuildContext context, String eventId) {
@@ -90,34 +111,14 @@ class _Controller {
   }
 }
 
-// mockEvents and mockTransactions are provided by lib/data/mock/event_mock.dart
-
-String _fmtYen(int n) {
-  final s = n.abs().toString();
-  final buf = StringBuffer();
-  for (int i = 0; i < s.length; i++) {
-    final r = s.length - i;
-    buf.write(s[i]);
-    if (r > 1 && r % 3 == 1) buf.write(',');
-  }
-  return '¥${buf.toString()}';
-}
-
 String _fmtDate(DateTime d) =>
     '${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.label,
-    required this.accentColor,
-    this.actionLabel,
-    this.onTapAction,
-  });
+  const _SectionHeader({required this.label, required this.accentColor});
 
   final String label;
   final Color accentColor;
-  final String? actionLabel;
-  final VoidCallback? onTapAction;
 
   @override
   Widget build(BuildContext context) {
@@ -144,16 +145,6 @@ class _SectionHeader extends StatelessWidget {
             ),
           ],
         ),
-        if (actionLabel != null)
-          TextButton(
-            onPressed: onTapAction,
-            child: Text(
-              actionLabel!,
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
       ],
     );
   }
@@ -169,10 +160,10 @@ class _EventList extends StatelessWidget {
   });
 
   final ThemeData themes;
-  final List<EventSummary> events;
+  final List<_EventView> events;
   final bool isFinished;
-  final void Function(EventSummary) onTap;
-  final void Function(EventSummary)? onAction;
+  final void Function(_EventView) onTap;
+  final void Function(_EventView)? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -182,7 +173,8 @@ class _EventList extends StatelessWidget {
         return Column(
           children: [
             _EventRow(
-              summary: event,
+              summary: event.summary,
+              meta: event.meta,
               theme: themes,
               isFinished: isFinished,
               onTap: () => onTap(event),
@@ -200,13 +192,15 @@ class _EventList extends StatelessWidget {
 class _EventRow extends StatelessWidget {
   const _EventRow({
     required this.summary,
+    required this.meta,
     required this.theme,
     required this.onTap,
     this.onAction,
     this.isFinished = false,
   });
 
-  final EventSummary summary;
+  final EventDerivedSummary summary;
+  final EventMeta meta;
   final ThemeData theme;
   final VoidCallback onTap;
   final VoidCallback? onAction;
@@ -269,7 +263,7 @@ class _EventRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    summary.title,
+                    meta.title,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -286,17 +280,13 @@ class _EventRow extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  _fmtYen(summary.totalUnsettledAmount),
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
                 if (!isFinished && onAction != null)
                   IconButton(
                     onPressed: onAction,
                     icon: const Icon(Icons.arrow_forward_ios, size: 16),
                   ),
+                if (isFinished || onAction == null)
+                  const SizedBox(height: 0, width: 0),
               ],
             ),
           ],

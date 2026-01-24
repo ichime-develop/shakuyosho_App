@@ -6,7 +6,6 @@ class EventMeta {
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
-    this.threadId,
   });
 
   final String id;
@@ -15,7 +14,6 @@ class EventMeta {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
-  final String? threadId;
 
   EventMeta copyWith({
     String? id,
@@ -24,7 +22,6 @@ class EventMeta {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? deletedAt,
-    String? threadId,
   }) {
     return EventMeta(
       id: id ?? this.id,
@@ -33,7 +30,6 @@ class EventMeta {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
-      threadId: threadId ?? this.threadId,
     );
   }
 
@@ -45,7 +41,6 @@ class EventMeta {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'deletedAt': deletedAt?.toIso8601String(),
-      'threadId': threadId,
     };
   }
 
@@ -61,7 +56,6 @@ class EventMeta {
       deletedAt: json['deletedAt'] == null
           ? null
           : DateTime.parse(json['deletedAt'] as String),
-      threadId: json['threadId'] as String?,
     );
   }
 }
