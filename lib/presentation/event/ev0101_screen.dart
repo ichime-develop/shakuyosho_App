@@ -6,24 +6,24 @@ import 'package:shakuyousho_app/data/mock/users_mock.dart';
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/thread_model.dart';
 
-/// GR0100: グループ作成／招待画面（作成者向け・モック）
+/// EV0101: イベント新規作成画面（作成者向け・モック）
 ///
-/// - グループ名入力
+/// - イベント名入力
 /// - 友達検索＋チェック選択
-/// - 「グループをつくる」押下で
+/// - 「イベントをつくる」押下で
 ///   1) Thread作成
 ///   2) EventMeta作成
 ///   3) EV0200へ遷移
-class Gr0100GroupCreateScreen extends ConsumerStatefulWidget {
-  const Gr0100GroupCreateScreen({super.key});
+class Ev0101EventCreateScreen extends ConsumerStatefulWidget {
+  const Ev0101EventCreateScreen({super.key});
 
   @override
-  ConsumerState<Gr0100GroupCreateScreen> createState() =>
-      _Gr0100GroupCreateScreenState();
+  ConsumerState<Ev0101EventCreateScreen> createState() =>
+      _Ev0101EventCreateScreenState();
 }
 
-class _Gr0100GroupCreateScreenState
-    extends ConsumerState<Gr0100GroupCreateScreen> {
+class _Ev0101EventCreateScreenState
+    extends ConsumerState<Ev0101EventCreateScreen> {
   final _groupNameCtrl = TextEditingController(text: '');
   final _friendSearchCtrl = TextEditingController();
 
@@ -70,7 +70,7 @@ class _Gr0100GroupCreateScreenState
           icon: const Icon(Icons.arrow_back_ios_new),
         ),
         title: const Text(
-          'グループをつくる／しょうたい',
+          'イベントをつくる／しょうたい',
           style: TextStyle(fontWeight: FontWeight.w800, color: textMain),
         ),
         centerTitle: true,
@@ -83,8 +83,8 @@ class _Gr0100GroupCreateScreenState
             children: [
               const SizedBox(height: 8),
 
-              // --- Group creation section ---
-              const _SectionLabel('グループのなまえ'),
+              // --- Event creation section ---
+              const _SectionLabel('イベントのなまえ'),
               const SizedBox(height: 8),
               TextField(
                 controller: _groupNameCtrl,
@@ -128,7 +128,7 @@ class _Gr0100GroupCreateScreenState
                   ),
                   icon: const Icon(Icons.add_circle),
                   label: const Text(
-                    'グループをつくる',
+                    'イベントをつくる',
                     style: TextStyle(fontWeight: FontWeight.w800),
                   ),
                 ),

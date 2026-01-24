@@ -13,7 +13,7 @@ import 'package:shakuyousho_app/presentation/event/ev0200_screen.dart';
 import 'package:shakuyousho_app/presentation/settlement/sv0100_screen.dart';
 
 import '../presentation/splash/st0100_screen.dart';
-import '../presentation/group_make/gr0100_screen.dart';
+import '../presentation/event/ev0101_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -53,9 +53,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       GoRoute(
-        path: '/gr0100',
-        name: 'GR0100',
-        builder: (_, __) => const Gr0100GroupCreateScreen(),
+        path: '/ev0101',
+        name: 'EV0101',
+        builder: (_, __) => const Ev0101EventCreateScreen(),
       ),
       GoRoute(
         path: '/tr0100',

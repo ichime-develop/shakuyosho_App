@@ -107,7 +107,7 @@ class _Controller {
   }
 
   static void onCreateEvent(BuildContext context) {
-    context.push('/gr0100');
+    context.push('/ev0101');
   }
 }
 

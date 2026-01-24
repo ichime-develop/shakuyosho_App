@@ -646,7 +646,7 @@ class _Controller {
 
   // イベントタブアクション
   static void onCreateEvent(BuildContext context) {
-    context.push('/gr0100'); // 新規イベント/グループ作成
+    context.push('/ev0101'); // 新規イベント作成
   }
 
   static void onComputeSettlement(BuildContext context) {
