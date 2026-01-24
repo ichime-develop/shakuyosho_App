@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakuyousho_app/data/mock/event_meta_mock.dart'
     as event_meta_mock;
 import 'package:shakuyousho_app/data/mock/threads_mock.dart' as threads_mock;
-import 'package:shakuyousho_app/core/utils/transactions_mock_mapper.dart'
-    as transactions_mock_mapper;
-import 'package:shakuyousho_app/data/repository/mock_event_repository.dart';
-import 'package:shakuyousho_app/data/repository/mock_thread_repository.dart';
-import 'package:shakuyousho_app/data/repository/mock_transaction_repository.dart';
+import 'package:shakuyousho_app/infrastructure/mock/mock_transaction_mapper.dart'
+    as mock_transaction_mapper;
+import 'package:shakuyousho_app/infrastructure/repositories/mock_event_repository.dart';
+import 'package:shakuyousho_app/infrastructure/repositories/mock_thread_repository.dart';
+import 'package:shakuyousho_app/infrastructure/repositories/mock_transaction_repository.dart';
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/thread_model.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
@@ -156,7 +156,7 @@ final List<EventMeta> _initialEventMetas = List<EventMeta>.from(
   event_meta_mock.mockEventMetas,
 );
 final List<Transaction> _initialTransactions = List<Transaction>.from(
-  transactions_mock_mapper.mockDomainTransactions,
+  mock_transaction_mapper.mockDomainTransactions,
 );
 final List<Thread> _initialThreads = List<Thread>.from(
   threads_mock.mockThreads,

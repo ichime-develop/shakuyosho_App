@@ -16,6 +16,7 @@
 
 | ドキュメント | 内容 |
 |---------------|------|
+| [docs/README_ARCHITECTURE.md](docs/README_ARCHITECTURE.md) | レイヤー構成・依存ルール・命名規約 |
 | [docs/SCREEN_MAP.md](docs/SCREEN_MAP.md) | 画面一覧・画面遷移マップ（Copilot参照用） |
 | Notion プロジェクトページ | 仕様・タスク管理（非公開） |
 
