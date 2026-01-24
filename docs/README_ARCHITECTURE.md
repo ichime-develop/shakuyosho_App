@@ -71,7 +71,7 @@ lib/
 
 ### data/
 - mock/: **純データ（fixture/seed）だけ**
-  - 例: `users_mock.dart`, `transactions_mock.dart`
+  - 例: `users_mock.dart`, `event_transactions_mock.dart`
 - 原則として **import しない**（依存を作らない）
 
 ### core/

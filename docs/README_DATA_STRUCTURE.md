@@ -78,22 +78,33 @@ app
 ## 5. Mock データの方針
 
 ### 一次 mock として許可されるもの
-- users_mock.dart
+- users_mock.dart（全ユーザーDB）
+- contacts_mock.dart（自分の友達リスト）
 - threads_mock.dart
 - event_meta_mock.dart
-- transactions_mock.dart
+- event_transactions_mock.dart
 
 ### 廃止する mock
 - group_mock.dart
 - event_mock.dart
 - events_mock.dart
-- contacts_mock.dart
+
+### users_mock と contacts_mock の関係
+
+```
+users_mock.dart     → 全ユーザー（友達以外も含む）
+contacts_mock.dart  → 自分の友達リスト（peerUserId で users を参照）
+```
+
+- FR0100/FR0200 は contacts → users の順で参照
+- 表示名は `contact.nickname ?? user.displayName`
+- Firebase 移行時：users コレクション + contacts サブコレクションに対応
 
 ### self の扱い（モック方針）
 
 - `self` は User データに保存しない
 - `currentUserId`（セッション/認証）から **導出** する
-- 友達一覧は `users_mock.dart` から `currentUserId` を除外して表示する
+- 友達一覧は contacts_mock から取得し、users_mock で詳細を補完する
 
 ### Users の扱い（重要）
 

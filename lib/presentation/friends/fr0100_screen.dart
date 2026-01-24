@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakuyousho_app/core/utils/app_logger.dart';
-import 'package:shakuyousho_app/data/mock/users_mock.dart';
+import 'package:shakuyousho_app/infrastructure/mock/mock_friend_mapper.dart';
 import '../common/common_bottom_nav_bar.dart';
 
 /// FR0100: 友達一覧
@@ -14,7 +14,7 @@ class Fr0100FriendsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     AppLog.i('open screen', ctx: context, data: {'screen': 'FR0100'});
-    final users = mockUsers.where((u) => u.userId != currentUserId).toList();
+    final friends = getCurrentUserFriends();
 
     return Scaffold(
       appBar: AppBar(title: const Text('FR0100 友達一覧')),
@@ -30,7 +30,7 @@ class Fr0100FriendsScreen extends ConsumerWidget {
                 children: [
                   _KpiTile(
                     label: '友達の数',
-                    value: '${users.length}',
+                    value: '${friends.length}',
                     icon: Icons.people_outlined,
                   ),
                 ],
@@ -38,7 +38,7 @@ class Fr0100FriendsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
-          if (users.isEmpty)
+          if (friends.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Text(
@@ -50,7 +50,7 @@ class Fr0100FriendsScreen extends ConsumerWidget {
               ),
             )
           else
-            _UserList(users: users),
+            _FriendList(friends: friends),
         ],
       ),
       bottomNavigationBar: const CommonBottomNavBar(currentIndex: 1),
@@ -58,23 +58,23 @@ class Fr0100FriendsScreen extends ConsumerWidget {
   }
 }
 
-class _UserList extends StatelessWidget {
-  const _UserList({required this.users});
+class _FriendList extends StatelessWidget {
+  const _FriendList({required this.friends});
 
-  final List<MockUser> users;
+  final List<FriendView> friends;
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: List.generate(users.length * 2 - 1, (index) {
+      children: List.generate(friends.length * 2 - 1, (index) {
         if (index.isOdd) {
           return Divider(height: 1, color: Colors.grey.shade200);
         }
-        final user = users[index ~/ 2];
+        final friend = friends[index ~/ 2];
         return ListTile(
-          leading: CircleAvatar(child: Text(user.displayName[0])),
-          title: Text(user.displayName),
-          subtitle: Text(user.userId),
+          leading: CircleAvatar(child: Text(friend.displayName[0])),
+          title: Text(friend.displayName),
+          subtitle: Text(friend.userId),
         );
       }),
     );

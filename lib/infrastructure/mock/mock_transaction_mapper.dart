@@ -1,4 +1,4 @@
-import 'package:shakuyousho_app/data/mock/transactions_mock.dart';
+import 'package:shakuyousho_app/data/mock/event_transactions_mock.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart'
     as domain_tx;
 

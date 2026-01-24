@@ -20,7 +20,7 @@ final List<EventMeta> mockEventMetas = List<EventMeta>.unmodifiable([
   EventMeta(
     id: 'ev_003',
     title: '秋キャンプ',
-    participantIds: ['u_002', 'u_003', 'u_006'],
+    participantIds: ['u_001', 'u_002', 'u_003', 'u_006'],
     createdAt: DateTime(2024, 6, 2, 8, 0),
     updatedAt: DateTime(2024, 6, 4, 19, 10),
   ),
@@ -41,7 +41,7 @@ final List<EventMeta> mockEventMetas = List<EventMeta>.unmodifiable([
   EventMeta(
     id: 'ev_006',
     title: '沖縄旅行',
-    participantIds: ['u_004', 'u_006', 'u_008', 'u_010'],
+    participantIds: ['u_001', 'u_004', 'u_006', 'u_008', 'u_010'],
     createdAt: DateTime(2024, 8, 9, 9, 0),
     updatedAt: DateTime(2024, 8, 12, 21, 45),
   ),
@@ -55,7 +55,7 @@ final List<EventMeta> mockEventMetas = List<EventMeta>.unmodifiable([
   EventMeta(
     id: 'ev_008',
     title: 'BBQ会',
-    participantIds: ['u_003', 'u_007', 'u_009', 'u_010'],
+    participantIds: ['u_001', 'u_003', 'u_007', 'u_009', 'u_010'],
     createdAt: DateTime(2024, 9, 15, 11, 0),
     updatedAt: DateTime(2024, 9, 15, 19, 30),
   ),
