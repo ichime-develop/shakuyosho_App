@@ -1,3 +1,4 @@
+// スレッド（会話/グループ）の情報を表すモデル。
 class Thread {
   Thread({
     required this.id,

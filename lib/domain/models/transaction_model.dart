@@ -1,5 +1,7 @@
+// 取引の種別（支出 or 返済）を表す列挙型。
 enum TxType { expense, repayment }
 
+// 取引（支出/返済）の詳細を表すドメインモデル。
 class Transaction {
   Transaction({
     required this.id,
@@ -85,6 +87,7 @@ class Transaction {
   }
 }
 
+// 精算時の支払指示（誰が誰にいくら払うか）を表すモデル。
 class SettlementInstruction {
   SettlementInstruction({
     required this.fromUserId,
@@ -99,6 +102,7 @@ class SettlementInstruction {
   final String currency;
 }
 
+// 精算の集計結果（残高と支払指示の一覧）を表すモデル。
 class SettlementSummary {
   SettlementSummary({
     required this.eventId,

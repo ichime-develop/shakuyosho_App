@@ -152,16 +152,21 @@ class ThreadListNotifier extends StateNotifier<List<Thread>>
   }
 }
 
+// モックデータの初期化（アプリ起動時の初期状態）
 final List<EventMeta> _initialEventMetas = List<EventMeta>.from(
   event_meta_mock.mockEventMetas,
 );
+// 取引モックの初期化（UI/集計の動作確認用）
 final List<Transaction> _initialTransactions = List<Transaction>.from(
   mock_transaction_mapper.mockDomainTransactions,
 );
+// スレッドモックの初期化（会話/グループ用）
 final List<Thread> _initialThreads = List<Thread>.from(
   threads_mock.mockThreads,
 );
 
+// リポジトリの実体（ここではモック）
+// Providerからはインターフェース(EventRepository等)として扱う
 final EventRepository _eventRepo = MockEventRepository(
   initialMetas: _initialEventMetas,
 );
@@ -171,6 +176,9 @@ final TransactionRepository _txRepo = MockTransactionRepository(
 final ThreadRepository _threadRepo = MockThreadRepository(_initialThreads);
 
 // Repository providers
+// UI/ユースケース層から「保存先（Repository）」として参照するための入口。
+// ここでは StateNotifier を Repository として公開しているため、
+// 「読み書きの実体」は StateNotifier 側に集約される。
 final eventRepositoryProvider = Provider<EventRepository>((ref) {
   return ref.read(eventMetaListProvider.notifier);
 });
@@ -184,6 +192,9 @@ final threadRepositoryProvider = Provider<ThreadRepository>((ref) {
 });
 
 // State providers
+// 画面で表示する「現在の一覧状態」を持つProvider。
+// - watch: 画面が自動更新
+// - notifier: 追加/更新/削除などの操作
 final eventMetaListProvider =
     StateNotifierProvider<EventMetaListNotifier, List<EventMeta>>((ref) {
       return EventMetaListNotifier(
@@ -209,6 +220,13 @@ final threadListProvider =
     });
 
 // Derived providers
+// 生データを「画面で使いやすい形」に加工したProvider群。
+// 例: イベントID指定のメタ取得、イベント別の取引一覧、詳細集約など。
+// ここを読むと「画面が欲しいデータ」が何か分かる。
+//
+// eventMetaProvider
+// - 役割: 指定イベントのメタを1件返す
+// - フィルタ: deletedAt == null のみ
 final eventMetaProvider = Provider.family<EventMeta?, String>((ref, eventId) {
   final metas = ref.watch(eventMetaListProvider);
   for (final meta in metas) {
@@ -217,10 +235,15 @@ final eventMetaProvider = Provider.family<EventMeta?, String>((ref, eventId) {
   return null;
 });
 
+// transactionsByEventProvider
+// - 役割: 指定イベントに紐づく取引一覧を返す
+// - フィルタ: deletedAt == null のみ
+// - ソート: 日付降順（新しい取引が先頭）
 final transactionsByEventProvider = Provider.family<List<Transaction>, String>((
   ref,
   eventId,
 ) {
+  // 指定イベントに紐づく取引だけを抽出し、日付降順で返す
   final txs = ref.watch(transactionListProvider);
   final filtered = txs
       .where((t) => t.eventId == eventId && t.deletedAt == null)
@@ -230,10 +253,14 @@ final transactionsByEventProvider = Provider.family<List<Transaction>, String>((
   return sorted;
 });
 
+// eventDetailProvider
+// - 役割: イベント詳細画面に必要な「メタ + 取引」をまとめて返す
+// - 取引は新しい順に並び替え
 final eventDetailProvider = Provider.family<EventDetail?, String>((
   ref,
   eventId,
 ) {
+  // イベントメタと取引一覧をまとめた詳細情報
   final meta = ref.watch(eventMetaProvider(eventId));
   if (meta == null) return null;
 
@@ -245,10 +272,14 @@ final eventDetailProvider = Provider.family<EventDetail?, String>((
   return EventDetail(meta: meta, transactions: txs);
 });
 
+// settlementProvider
+// - 役割: 精算画面に必要な「残高・支払指示」を返す
+// - 入力: eventDetailProvider から取引と参加者を取得
 final settlementProvider = Provider.family<SettlementSummary?, String>((
   ref,
   eventId,
 ) {
+  // 精算計算結果（残高・支払指示）を返す
   final detail = ref.watch(eventDetailProvider(eventId));
   if (detail == null) return null;
   return computeSettlement(
@@ -258,6 +289,10 @@ final settlementProvider = Provider.family<SettlementSummary?, String>((
   );
 });
 
+// deriveEventSummary
+// - 役割: イベント一覧表示用のサマリーを作る
+// - 入力: イベントのメタ情報 + そのイベントの取引一覧
+// - 出力: 参加者一覧 / 最終更新日時 / 精算済みかどうか
 EventDerivedSummary deriveEventSummary(EventMeta meta, List<Transaction> txs) {
   final participantIds = _mergeParticipantIds(meta.participantIds, txs);
   final lastUpdatedAt = _latestUpdatedAt(meta.updatedAt, txs);
@@ -270,6 +305,10 @@ EventDerivedSummary deriveEventSummary(EventMeta meta, List<Transaction> txs) {
   );
 }
 
+// computeSettlement
+// - 役割: 精算画面に必要な「残高」と「支払指示」を計算する
+// - 入力: 取引一覧 / イベントID / 参加者一覧（任意）
+// - 出力: SettlementSummary（残高 + 指示 + 生成時刻）
 SettlementSummary computeSettlement(
   List<Transaction> txs, {
   required String eventId,
@@ -286,6 +325,9 @@ SettlementSummary computeSettlement(
   );
 }
 
+// _mergeParticipantIds
+// - 役割: メタの参加者 + 取引から登場したユーザーを統合して一覧化
+// - 目的: 支払者/受取者がメタに居ないケースも一覧に含める
 List<String> _mergeParticipantIds(List<String> base, List<Transaction> txs) {
   final ids = <String>{...base};
   for (final tx in txs) {
@@ -302,6 +344,9 @@ List<String> _mergeParticipantIds(List<String> base, List<Transaction> txs) {
   return ids.toList(growable: false);
 }
 
+// _latestUpdatedAt
+// - 役割: イベントの「最新更新日時」を決める
+// - ルール: イベントメタ更新日時 vs 各取引の更新/作成日時の最大値
 DateTime _latestUpdatedAt(DateTime metaUpdatedAt, List<Transaction> txs) {
   var latest = metaUpdatedAt;
   for (final tx in txs) {
@@ -313,6 +358,11 @@ DateTime _latestUpdatedAt(DateTime metaUpdatedAt, List<Transaction> txs) {
   return latest;
 }
 
+// _calcNetBalances
+// - 役割: 参加者ごとの「差額残高」を計算する
+// - プラス: 受け取る側 / マイナス: 支払う側
+// - expense: 支払者がプラス、参加者がマイナス
+// - repayment: 返済者がプラス、受取者がマイナス
 Map<String, int> _calcNetBalances(
   List<Transaction> txs,
   List<String> memberIds,
@@ -348,12 +398,17 @@ Map<String, int> _calcNetBalances(
   return net;
 }
 
+// _BalanceItem
+// - 役割: 精算計算用の内部データ（公開しない）
 class _BalanceItem {
   _BalanceItem(this.userId, this.amount);
   final String userId;
   int amount;
 }
 
+// _simplifyBalances
+// - 役割: 残高を「誰が誰にいくら払うか」に変換
+// - 仕組み: プラス（受け取る側）とマイナス（支払う側）を突き合わせる
 List<SettlementInstruction> _simplifyBalances(Map<String, int> balances) {
   final creditors = <_BalanceItem>[];
   final debtors = <_BalanceItem>[];
@@ -390,6 +445,9 @@ List<SettlementInstruction> _simplifyBalances(Map<String, int> balances) {
   return instructions;
 }
 
+// generateId
+// - 役割: モック/一時データ用のIDを生成
+// - 形式: <prefix>_YYYYMMDDhhmmssSSS + 乱数
 String generateId({required String prefix}) {
   final now = DateTime.now().toUtc();
   final timestamp = now.toIso8601String().replaceAll(RegExp(r'[^0-9]'), '');

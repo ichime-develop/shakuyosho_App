@@ -1,3 +1,4 @@
+// アプリ内ユーザーの基本情報を表すモデル。
 class User {
   User({
     required this.id,

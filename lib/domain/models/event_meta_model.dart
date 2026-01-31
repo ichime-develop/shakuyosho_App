@@ -1,3 +1,4 @@
+// イベントの基本情報（メタデータ）を表すモデル。保存・一覧の基礎データ。
 class EventMeta {
   EventMeta({
     required this.id,

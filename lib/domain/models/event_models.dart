@@ -1,3 +1,4 @@
+// イベント一覧表示などで使う派生サマリー情報のモデル。
 class EventSummary {
   EventSummary({
     required this.id,
@@ -31,6 +32,7 @@ class EventSummary {
   }
 }
 
+// イベントに紐づく支出取引の簡易モデル（UI/集計用）。
 class EventTransaction {
   EventTransaction({
     required this.id,
