@@ -117,7 +117,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                   eventId: eventId,
                   payment: p,
                 ),
-                onDelete: (p) => _onDeletePayment(ref, context, p.id),
+                onDelete: (p) => _onDeletePayment(ref, context, eventId, p.id),
               ),
           ],
         ),
@@ -135,6 +135,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
   Future<void> _onDeletePayment(
     WidgetRef ref,
     BuildContext context,
+    String eventId,
     String paymentId,
   ) async {
     final confirmed = await showDialog<bool>(
@@ -163,6 +164,8 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
     }
     // Delete via provider so other screens update
     ref.read(transactionRepositoryProvider).delete(paymentId);
+    // 再計算を促して一覧/詳細のズレを防ぐ
+    ref.invalidate(eventDetailProvider(eventId));
 
     ScaffoldMessenger.of(
       context,
@@ -176,8 +179,7 @@ class _Controller {
     required BuildContext context,
     required String eventId,
   }) {
-    final uri = Uri(path: '/sv0100', queryParameters: {'eventId': eventId});
-    context.push(uri.toString());
+    context.push('/sv0100/$eventId');
   }
 
   /// 追加ボタン → TR0100（新規）
@@ -185,8 +187,7 @@ class _Controller {
     required BuildContext context,
     required String eventId,
   }) {
-    final uri = Uri(path: '/tr0100', queryParameters: {'eventId': eventId});
-    context.push(uri.toString());
+    context.push('/tr0100/$eventId');
   }
 
   /// 支払いカードタップ → TR0100（編集）
@@ -196,8 +197,8 @@ class _Controller {
     required Transaction payment,
   }) {
     final uri = Uri(
-      path: '/tr0100',
-      queryParameters: {'eventId': eventId, 'transactionId': payment.id},
+      path: '/tr0100/$eventId',
+      queryParameters: {'transactionId': payment.id},
     );
     context.push(uri.toString());
   }
