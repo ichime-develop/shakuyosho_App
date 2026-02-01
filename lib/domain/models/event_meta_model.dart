@@ -1,4 +1,9 @@
+import 'package:hive/hive.dart';
+
+part 'event_meta_model.g.dart';
+
 // イベントの基本情報（メタデータ）を表すモデル。保存・一覧の基礎データ。
+@HiveType(typeId: 1)
 class EventMeta {
   EventMeta({
     required this.id,
@@ -9,11 +14,17 @@ class EventMeta {
     this.deletedAt,
   });
 
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String title;
+  @HiveField(2)
   final List<String> participantIds;
+  @HiveField(3)
   final DateTime createdAt;
+  @HiveField(4)
   final DateTime updatedAt;
+  @HiveField(5)
   final DateTime? deletedAt;
 
   EventMeta copyWith({

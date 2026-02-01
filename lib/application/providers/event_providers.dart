@@ -1,20 +1,26 @@
 import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive/hive.dart';
 import 'package:shakuyousho_app/data/mock/event_meta_mock.dart'
     as event_meta_mock;
 import 'package:shakuyousho_app/data/mock/threads_mock.dart' as threads_mock;
+import 'package:shakuyousho_app/infrastructure/mock/mock_user_mapper.dart'
+    as mock_user_mapper;
 import 'package:shakuyousho_app/infrastructure/mock/mock_transaction_mapper.dart'
     as mock_transaction_mapper;
-import 'package:shakuyousho_app/infrastructure/repositories/mock_event_repository.dart';
-import 'package:shakuyousho_app/infrastructure/repositories/mock_thread_repository.dart';
-import 'package:shakuyousho_app/infrastructure/repositories/mock_transaction_repository.dart';
+import 'package:shakuyousho_app/infrastructure/repositories/hive_event_repository.dart';
+import 'package:shakuyousho_app/infrastructure/repositories/hive_transaction_repository.dart';
+import 'package:shakuyousho_app/infrastructure/repositories/hive_thread_repository.dart';
+import 'package:shakuyousho_app/infrastructure/repositories/hive_user_repository.dart';
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/thread_model.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
+import 'package:shakuyousho_app/domain/models/user_model.dart';
 import 'package:shakuyousho_app/domain/repositories/event_repository.dart';
 import 'package:shakuyousho_app/domain/repositories/thread_repository.dart';
 import 'package:shakuyousho_app/domain/repositories/transaction_repository.dart';
+import 'package:shakuyousho_app/domain/repositories/user_repository.dart';
 
 class EventDetail {
   const EventDetail({required this.meta, required this.transactions});
@@ -152,28 +158,114 @@ class ThreadListNotifier extends StateNotifier<List<Thread>>
   }
 }
 
-// モックデータの初期化（アプリ起動時の初期状態）
-final List<EventMeta> _initialEventMetas = List<EventMeta>.from(
+class UserListNotifier extends StateNotifier<List<User>>
+    implements UserRepository {
+  UserListNotifier({
+    required UserRepository userRepository,
+    required List<User> initialUsers,
+  }) : _userRepository = userRepository,
+       super(List<User>.from(initialUsers));
+
+  final UserRepository _userRepository;
+
+  @override
+  List<User> getAll() => List.unmodifiable(state);
+
+  @override
+  User? getById(String userId) {
+    for (final user in state) {
+      if (user.id == userId) return user;
+    }
+    return null;
+  }
+
+  @override
+  void upsert(User user) {
+    _userRepository.upsert(user);
+    final updated = [...state];
+    final index = updated.indexWhere((u) => u.id == user.id);
+    if (index == -1) {
+      updated.add(user);
+    } else {
+      updated[index] = user;
+    }
+    state = updated;
+  }
+}
+
+// モックデータ（初回投入用）
+final List<EventMeta> _mockEventMetas = List<EventMeta>.from(
   event_meta_mock.mockEventMetas,
 );
 // 取引モックの初期化（UI/集計の動作確認用）
-final List<Transaction> _initialTransactions = List<Transaction>.from(
+final List<Transaction> _mockTransactions = List<Transaction>.from(
   mock_transaction_mapper.mockDomainTransactions,
 );
 // スレッドモックの初期化（会話/グループ用）
-final List<Thread> _initialThreads = List<Thread>.from(
-  threads_mock.mockThreads,
-);
+final List<Thread> _mockThreads = List<Thread>.from(threads_mock.mockThreads);
+// ユーザーモックの初期化（友達/参加者の表示用）
+final List<User> _mockUsers = List<User>.from(mock_user_mapper.mockDomainUsers);
 
-// リポジトリの実体（ここではモック）
+void _seedEventMetasIfEmpty(Box<EventMeta> box) {
+  if (box.isNotEmpty) return;
+  for (final meta in _mockEventMetas) {
+    box.put(meta.id, meta);
+  }
+}
+
+void _seedTransactionsIfEmpty(Box<Transaction> box) {
+  if (box.isNotEmpty) return;
+  for (final tx in _mockTransactions) {
+    box.put(tx.id, tx);
+  }
+}
+
+void _seedThreadsIfEmpty(Box<Thread> box) {
+  if (box.isNotEmpty) return;
+  for (final thread in _mockThreads) {
+    box.put(thread.id, thread);
+  }
+}
+
+void _seedUsersIfEmpty(Box<User> box) {
+  if (box.isNotEmpty) return;
+  for (final user in _mockUsers) {
+    box.put(user.id, user);
+  }
+}
+
+// リポジトリの実体（EventMeta は Hive に切替）
 // Providerからはインターフェース(EventRepository等)として扱う
-final EventRepository _eventRepo = MockEventRepository(
-  initialMetas: _initialEventMetas,
+final Box<EventMeta> _eventMetaBox = Hive.box<EventMeta>('eventMetas');
+final EventRepository _eventRepo = HiveEventRepository(
+  eventMetaBox: _eventMetaBox,
 );
-final TransactionRepository _txRepo = MockTransactionRepository(
-  _initialTransactions,
+final List<EventMeta> _initialEventMetas = (() {
+  _seedEventMetasIfEmpty(_eventMetaBox);
+  return _eventMetaBox.values.toList(growable: false);
+})();
+final Box<Transaction> _transactionBox = Hive.box<Transaction>('transactions');
+final TransactionRepository _txRepo = HiveTransactionRepository(
+  transactionBox: _transactionBox,
 );
-final ThreadRepository _threadRepo = MockThreadRepository(_initialThreads);
+final List<Transaction> _initialTransactions = (() {
+  _seedTransactionsIfEmpty(_transactionBox);
+  return _transactionBox.values.toList(growable: false);
+})();
+final Box<Thread> _threadBox = Hive.box<Thread>('threads');
+final ThreadRepository _threadRepo = HiveThreadRepository(
+  threadBox: _threadBox,
+);
+final List<Thread> _initialThreads = (() {
+  _seedThreadsIfEmpty(_threadBox);
+  return _threadBox.values.toList(growable: false);
+})();
+final Box<User> _userBox = Hive.box<User>('users');
+final UserRepository _userRepo = HiveUserRepository(userBox: _userBox);
+final List<User> _initialUsers = (() {
+  _seedUsersIfEmpty(_userBox);
+  return _userBox.values.toList(growable: false);
+})();
 
 // Repository providers
 // UI/ユースケース層から「保存先（Repository）」として参照するための入口。
@@ -189,6 +281,10 @@ final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
 
 final threadRepositoryProvider = Provider<ThreadRepository>((ref) {
   return ref.read(threadListProvider.notifier);
+});
+
+final userRepositoryProvider = Provider<UserRepository>((ref) {
+  return ref.read(userListProvider.notifier);
 });
 
 // State providers
@@ -218,6 +314,15 @@ final threadListProvider =
         initialThreads: _initialThreads,
       );
     });
+
+final userListProvider = StateNotifierProvider<UserListNotifier, List<User>>((
+  ref,
+) {
+  return UserListNotifier(
+    userRepository: _userRepo,
+    initialUsers: _initialUsers,
+  );
+});
 
 // Derived providers
 // 生データを「画面で使いやすい形」に加工したProvider群。

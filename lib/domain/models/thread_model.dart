@@ -1,4 +1,9 @@
+import 'package:hive/hive.dart';
+
+part 'thread_model.g.dart';
+
 // スレッド（会話/グループ）の情報を表すモデル。
+@HiveType(typeId: 4)
 class Thread {
   Thread({
     required this.id,
@@ -9,11 +14,17 @@ class Thread {
     required this.updatedAt,
   });
 
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String type; // e.g. 'group'
+  @HiveField(2)
   final String title;
+  @HiveField(3)
   final List<String> participantIds;
+  @HiveField(4)
   final DateTime createdAt;
+  @HiveField(5)
   final DateTime updatedAt;
 
   Thread copyWith({

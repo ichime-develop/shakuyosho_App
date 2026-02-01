@@ -2,6 +2,7 @@ import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 import 'package:shakuyousho_app/domain/repositories/transaction_repository.dart';
 
 /// Mock implementation backed by domain transactions.
+/// NOTE: 現在はHive実装に切替済みのため未使用。テストや比較用に保持。
 class MockTransactionRepository implements TransactionRepository {
   MockTransactionRepository(List<Transaction> initial)
     : _txs = List<Transaction>.from(initial);

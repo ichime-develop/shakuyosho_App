@@ -2,10 +2,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import 'router/app_router.dart';
 import 'core/utils/app_logger.dart';
 import 'presentation/common/app_paper_background.dart';
+import 'domain/models/event_meta_model.dart';
+import 'domain/models/transaction_model.dart';
+import 'domain/models/thread_model.dart';
+import 'domain/models/user_model.dart';
 
 /// ─────────────────────────────────────────────────────────
 /// しゃくよーしょ: アプリのエントリポイント（Composition Root）
@@ -46,6 +51,28 @@ void main() {
         // if (kUseFirebase) FirebaseCrashlytics.instance.recordFlutterFatalError(details);
         // if (kUseSentry)   Sentry.captureException(details.exception, stackTrace: details.stack);
       };
+
+      // 3.5) Hive 初期化（EventMeta だけ先行で永続化）
+      await Hive.initFlutter();
+      if (!Hive.isAdapterRegistered(1)) {
+        Hive.registerAdapter(EventMetaAdapter());
+      }
+      if (!Hive.isAdapterRegistered(2)) {
+        Hive.registerAdapter(TxTypeAdapter());
+      }
+      if (!Hive.isAdapterRegistered(3)) {
+        Hive.registerAdapter(TransactionAdapter());
+      }
+      if (!Hive.isAdapterRegistered(4)) {
+        Hive.registerAdapter(ThreadAdapter());
+      }
+      if (!Hive.isAdapterRegistered(5)) {
+        Hive.registerAdapter(UserAdapter());
+      }
+      await Hive.openBox<EventMeta>('eventMetas');
+      await Hive.openBox<Transaction>('transactions');
+      await Hive.openBox<Thread>('threads');
+      await Hive.openBox<User>('users');
 
       // 4) 依存注入の根：ProviderScope（全Providerのルート）。
       runApp(

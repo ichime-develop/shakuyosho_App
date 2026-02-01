@@ -1,7 +1,18 @@
+import 'package:hive/hive.dart';
+
+part 'transaction_model.g.dart';
+
 // 取引の種別（支出 or 返済）を表す列挙型。
-enum TxType { expense, repayment }
+@HiveType(typeId: 2)
+enum TxType {
+  @HiveField(0)
+  expense,
+  @HiveField(1)
+  repayment,
+}
 
 // 取引（支出/返済）の詳細を表すドメインモデル。
+@HiveType(typeId: 3)
 class Transaction {
   Transaction({
     required this.id,
@@ -23,27 +34,44 @@ class Transaction {
     this.deletedAt,
   });
 
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String? eventId; // null for personal tx
+  @HiveField(2)
   final TxType type;
+  @HiveField(3)
   final String title;
+  @HiveField(4)
   final DateTime date;
+  @HiveField(5)
   final String currency; // 'JPY'
+  @HiveField(6)
   final int totalAmount; // integer JPY
+  @HiveField(7)
   final List<String> participantIds;
 
   // expense-specific
+  @HiveField(8)
   final String? paidBy;
+  @HiveField(9)
   final Map<String, int>? shares; // userId -> amount
 
   // repayment-specific
+  @HiveField(10)
   final String? fromUserId;
+  @HiveField(11)
   final String? toUserId;
+  @HiveField(12)
   final int? repaymentAmount;
 
+  @HiveField(13)
   final String createdBy;
+  @HiveField(14)
   final DateTime createdAt;
+  @HiveField(15)
   final DateTime? updatedAt;
+  @HiveField(16)
   final DateTime? deletedAt;
 
   Transaction copyWith({
