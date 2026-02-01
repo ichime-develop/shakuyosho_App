@@ -70,6 +70,7 @@ flutter:
   assets:
     - assets/images/
     - assets/fonts/
+    - assets/background/
 
   fonts:
     - family: Yomogi
