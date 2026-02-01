@@ -1,6 +1,8 @@
 // Mock データ整合性バリデーター
 // - contacts と users の整合性を検証
 // - アプリ起動時またはリポジトリ初期化時に一度だけ呼び出す想定
+// NOTE: 本番データ（Hive/Firebase）へ移行した後は不要になる想定。
+//       開発・デモ用のモックデータを使う場合のみ残す。
 
 import 'package:shakuyousho_app/data/mock/contacts_mock.dart';
 import 'package:shakuyousho_app/data/mock/users_mock.dart';

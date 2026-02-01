@@ -1,6 +1,8 @@
 // 友達表示用のビューモデル（contacts + users の join 結果）
 // - infrastructure 層で contacts と users を結合
 // - 画面は mock ファイルを直接参照しない
+// NOTE: 本番データ（Hive/Firebase）へ移行した後は不要になる想定。
+//       開発・デモ用のモックデータを使う場合のみ残す。
 
 import 'package:shakuyousho_app/data/mock/contacts_mock.dart';
 import 'package:shakuyousho_app/data/mock/users_mock.dart';

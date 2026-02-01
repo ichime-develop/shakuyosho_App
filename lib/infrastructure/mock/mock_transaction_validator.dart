@@ -4,6 +4,8 @@ import 'package:shakuyousho_app/data/mock/event_transactions_mock.dart';
 ///
 /// - `assert` を使うため、リリースビルドでは実行されない。
 /// - Mock実装専用のバリデーター。
+/// NOTE: 本番データ（Hive/Firebase）へ移行した後は不要になる想定。
+///       開発・デモ用のモックデータを使う場合のみ残す。
 bool validateMockTransactions(List<MockAppTransaction> txs) {
   for (final tx in txs) {
     if (tx.deletedAt != null) {

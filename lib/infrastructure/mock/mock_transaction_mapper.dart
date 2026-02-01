@@ -3,6 +3,8 @@ import 'package:shakuyousho_app/domain/models/transaction_model.dart'
     as domain_tx;
 
 /// Mockの生データをドメインモデルに変換するためのマッパー。
+/// NOTE: 本番データ（Hive/Firebase）へ移行した後は不要になる想定。
+///       開発・デモ用のモックデータを使う場合のみ残す。
 ///
 /// - DB由来のスキーマ（MockAppTransaction）と
 ///   アプリで使用するドメインモデル（Transaction）を分離するための層。
