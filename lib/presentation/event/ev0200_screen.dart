@@ -121,12 +121,11 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
               ),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
+        floatingActionButton: _CreateFab(
           onPressed: () => _Controller.goAddEventTransaction(
             context: context,
             eventId: eventId,
           ),
-          child: const Icon(Icons.add),
         ),
       ),
     );
@@ -170,6 +169,29 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('おしはらいをけしたよ')));
+  }
+}
+
+class _CreateFab extends StatelessWidget {
+  const _CreateFab({required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF13EC80),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: const StadiumBorder(),
+        elevation: 8,
+      ),
+      icon: const Icon(Icons.add, size: 28, color: Color(0xFF102219)),
+      label: const Text(
+        'あたらしくつくる',
+        style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF102219)),
+      ),
+    );
   }
 }
 
