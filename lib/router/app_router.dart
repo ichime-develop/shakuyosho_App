@@ -124,19 +124,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'FR0100',
         pageBuilder: (context, state) => NoTransitionPage(
           key: state.pageKey,
-          child: const Fr0100FriendsScreen(),
+          child: const Fr0100ThreadListScreen(),
         ),
       ),
       GoRoute(
-        path: '/fr0200/:friendId',
+        path: '/fr0200/:threadId',
         name: 'FR0200',
         pageBuilder: (context, state) {
-          final friendId = state.pathParameters['friendId'];
-          if (friendId == null || friendId.isEmpty) {
+          final threadId = state.pathParameters['threadId'];
+          if (threadId == null || threadId.isEmpty) {
             return NoTransitionPage(
               key: state.pageKey,
               child: const _MissingParamScreen(
-                param: 'friendId',
+                param: 'threadId',
                 screen: 'FR0200',
               ),
             );
@@ -146,7 +146,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             child: AppRouteLoadingGate(
               // TODO: 外部データ取得を導入したら、ここで prefetch Future を待つ
               load: () async {},
-              child: Fr0200FriendDetailScreen(friendId: friendId),
+              child: Fr0200ThreadDetailScreen(threadId: threadId),
             ),
           );
         },
