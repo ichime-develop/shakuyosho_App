@@ -11,6 +11,7 @@ import 'package:shakuyousho_app/presentation/my/my0100_screen.dart';
 import 'package:shakuyousho_app/presentation/event/ev0100_screen.dart';
 import 'package:shakuyousho_app/presentation/event/ev0200_screen.dart';
 import 'package:shakuyousho_app/presentation/settlement/sv0100_screen.dart';
+import 'package:shakuyousho_app/presentation/common/app_route_loading_gate.dart';
 
 import '../presentation/splash/st0100_screen.dart';
 import '../presentation/event/ev0101_screen.dart';
@@ -30,7 +31,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/st0100',
         name: 'ST0100',
-        builder: (_, __) => const St0100SplashScreen(),
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: state.pageKey,
+          child: const St0100SplashScreen(),
+        ),
       ),
 
       // TO0100: 統一ルート（タブは path parameter によって制御）
@@ -46,7 +50,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final tab = state.pathParameters['tab'];
           final initial = (tab == 'event') ? 1 : 0;
           return NoTransitionPage(
-            key: const ValueKey('TO0100'),
+            key: state.pageKey,
             child: To0100Screen(initialTab: initial),
           );
         },
@@ -55,39 +59,62 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/ev0101',
         name: 'EV0101',
-        builder: (_, __) => const Ev0101EventCreateScreen(),
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: state.pageKey,
+          child: const Ev0101EventCreateScreen(),
+        ),
       ),
       GoRoute(
         path: '/tr0100/:eventId',
         name: 'TR0100',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final eventId = state.pathParameters['eventId'];
           if (eventId == null || eventId.isEmpty) {
-            return const _MissingParamScreen(
-              param: 'eventId',
-              screen: 'TR0100',
+            return NoTransitionPage(
+              key: state.pageKey,
+              child: const _MissingParamScreen(
+                param: 'eventId',
+                screen: 'TR0100',
+              ),
             );
           }
           final transactionId = state.uri.queryParameters['transactionId'];
-          final mode = state.uri.queryParameters['mode'];
-          return Tr0100TransactionScreen(
-            eventId: eventId,
-            transactionId: transactionId,
+          return NoTransitionPage(
+            key: state.pageKey,
+            child: AppRouteLoadingGate(
+              // TODO: 外部データ取得を導入したら、ここで prefetch Future を待つ
+              // 例) load: () => ref.read(trDetailProvider(...).future),
+              load: () async {},
+              child: Tr0100TransactionScreen(
+                eventId: eventId,
+                transactionId: transactionId,
+              ),
+            ),
           );
         },
       ),
       GoRoute(
         path: '/lb0100/:friendId',
         name: 'LB0100',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final friendId = state.pathParameters['friendId'];
           if (friendId == null || friendId.isEmpty) {
-            return const _MissingParamScreen(
-              param: 'friendId',
-              screen: 'LB0100',
+            return NoTransitionPage(
+              key: state.pageKey,
+              child: const _MissingParamScreen(
+                param: 'friendId',
+                screen: 'LB0100',
+              ),
             );
           }
-          return Lb0100IouScreen(friendId: friendId);
+          return NoTransitionPage(
+            key: state.pageKey,
+            child: AppRouteLoadingGate(
+              // TODO: 外部データ取得を導入したら、ここで prefetch Future を待つ
+              load: () async {},
+              child: Lb0100IouScreen(friendId: friendId),
+            ),
+          );
         },
       ),
 
@@ -95,52 +122,86 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/fr0100',
         name: 'FR0100',
-        builder: (context, state) => const Fr0100FriendsScreen(),
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: state.pageKey,
+          child: const Fr0100FriendsScreen(),
+        ),
       ),
       GoRoute(
         path: '/fr0200/:friendId',
         name: 'FR0200',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final friendId = state.pathParameters['friendId'];
           if (friendId == null || friendId.isEmpty) {
-            return const _MissingParamScreen(
-              param: 'friendId',
-              screen: 'FR0200',
+            return NoTransitionPage(
+              key: state.pageKey,
+              child: const _MissingParamScreen(
+                param: 'friendId',
+                screen: 'FR0200',
+              ),
             );
           }
-          return Fr0200FriendDetailScreen(friendId: friendId);
+          return NoTransitionPage(
+            key: state.pageKey,
+            child: AppRouteLoadingGate(
+              // TODO: 外部データ取得を導入したら、ここで prefetch Future を待つ
+              load: () async {},
+              child: Fr0200FriendDetailScreen(friendId: friendId),
+            ),
+          );
         },
       ),
       GoRoute(
         path: '/my0100',
         name: 'MY0100',
-        builder: (context, state) => const My0100Screen(),
+        pageBuilder: (context, state) =>
+            NoTransitionPage(key: state.pageKey, child: const My0100Screen()),
       ),
       GoRoute(
         path: '/ev0100',
         name: 'EV0100',
-        builder: (context, state) => const Ev0100EventListScreen(),
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: state.pageKey,
+          child: const Ev0100EventListScreen(),
+        ),
       ),
       GoRoute(
         path: '/ev0200/:eventId',
         name: 'EV0200',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final eventId = state.pathParameters['eventId'] ?? '';
-          return Ev0200EventDetailScreen(eventId: eventId);
+          return NoTransitionPage(
+            key: state.pageKey,
+            child: AppRouteLoadingGate(
+              // TODO: 外部データ取得を導入したら、ここで prefetch Future を待つ
+              load: () async {},
+              child: Ev0200EventDetailScreen(eventId: eventId),
+            ),
+          );
         },
       ),
       GoRoute(
         path: '/sv0100/:eventId',
         name: 'SV0100',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final eventId = state.pathParameters['eventId'];
           if (eventId == null || eventId.isEmpty) {
-            return const _MissingParamScreen(
-              param: 'eventId',
-              screen: 'SV0100',
+            return NoTransitionPage(
+              key: state.pageKey,
+              child: const _MissingParamScreen(
+                param: 'eventId',
+                screen: 'SV0100',
+              ),
             );
           }
-          return Sv0100SettlementScreen(eventId: eventId);
+          return NoTransitionPage(
+            key: state.pageKey,
+            child: AppRouteLoadingGate(
+              // TODO: 外部データ取得を導入したら、ここで prefetch Future を待つ
+              load: () async {},
+              child: Sv0100SettlementScreen(eventId: eventId),
+            ),
+          );
         },
       ),
     ],
