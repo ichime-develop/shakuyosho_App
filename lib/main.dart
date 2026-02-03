@@ -7,10 +7,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'router/app_router.dart';
 import 'core/utils/app_logger.dart';
 import 'presentation/common/app_paper_background.dart';
-import 'domain/models/event_meta_model.dart';
-import 'domain/models/transaction_model.dart';
-import 'domain/models/thread_model.dart';
-import 'domain/models/user_model.dart';
 
 /// ─────────────────────────────────────────────────────────
 /// しゃくよーしょ: アプリのエントリポイント（Composition Root）
@@ -22,7 +18,7 @@ import 'domain/models/user_model.dart';
 // 実導入時は true にし、該当コードのコメントアウトを外すだけで接続できる。
 const bool kUseFirebase = false;
 const bool kUseSentry = false;
-const Color _appBgColor = Color(0xFFFFFBF5);
+const Color _appBgColor = Color(0xFFFFF8DC);
 
 void main() {
   // runZonedGuarded 内で binding 初期化〜runApp までを同じ Zone で実行し、
@@ -52,27 +48,14 @@ void main() {
         // if (kUseSentry)   Sentry.captureException(details.exception, stackTrace: details.stack);
       };
 
-      // 3.5) Hive 初期化（EventMeta だけ先行で永続化）
+      // 3.5) Hive 初期化（Map保存）
       await Hive.initFlutter();
-      if (!Hive.isAdapterRegistered(1)) {
-        Hive.registerAdapter(EventMetaAdapter());
-      }
-      if (!Hive.isAdapterRegistered(2)) {
-        Hive.registerAdapter(TxTypeAdapter());
-      }
-      if (!Hive.isAdapterRegistered(3)) {
-        Hive.registerAdapter(TransactionAdapter());
-      }
-      if (!Hive.isAdapterRegistered(4)) {
-        Hive.registerAdapter(ThreadAdapter());
-      }
-      if (!Hive.isAdapterRegistered(5)) {
-        Hive.registerAdapter(UserAdapter());
-      }
-      await Hive.openBox<EventMeta>('eventMetas');
-      await Hive.openBox<Transaction>('transactions');
-      await Hive.openBox<Thread>('threads');
-      await Hive.openBox<User>('users');
+      await Hive.openBox<Map>('eventMetas');
+      await Hive.openBox<Map>('transactions');
+      await Hive.openBox<Map>('threads');
+      await Hive.openBox<Map>('users');
+      await Hive.openBox<Map>('loans');
+      await Hive.openBox<Map>('friends');
 
       // 4) 依存注入の根：ProviderScope（全Providerのルート）。
       runApp(

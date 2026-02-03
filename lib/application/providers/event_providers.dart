@@ -51,12 +51,13 @@ class EventMetaListNotifier extends StateNotifier<List<EventMeta>>
   final EventRepository _eventRepository;
 
   @override
-  List<EventMeta> getAllEventMetas() => List.unmodifiable(state);
+  List<EventMeta> getAllEventMetas() =>
+      List.unmodifiable(state.where((m) => m.deletedAt == null));
 
   @override
   EventMeta? getEventMetaById(String eventId) {
     for (final meta in state) {
-      if (meta.id == eventId) return meta;
+      if (meta.id == eventId && meta.deletedAt == null) return meta;
     }
     return null;
   }
@@ -77,7 +78,13 @@ class EventMetaListNotifier extends StateNotifier<List<EventMeta>>
   @override
   void deleteEventMeta(String eventId) {
     _eventRepository.deleteEventMeta(eventId);
-    state = state.where((meta) => meta.id != eventId).toList(growable: false);
+    final now = DateTime.now();
+    state = state
+        .map((meta) {
+          if (meta.id != eventId) return meta;
+          return meta.copyWith(deletedAt: now, updatedAt: now);
+        })
+        .toList(growable: false);
   }
 }
 
@@ -134,12 +141,13 @@ class ThreadListNotifier extends StateNotifier<List<Thread>>
   final ThreadRepository _threadRepository;
 
   @override
-  List<Thread> getAll() => List.unmodifiable(state);
+  List<Thread> getAll() =>
+      List.unmodifiable(state.where((t) => t.deletedAt == null));
 
   @override
   Thread? getById(String threadId) {
     for (final thread in state) {
-      if (thread.id == threadId) return thread;
+      if (thread.id == threadId && thread.deletedAt == null) return thread;
     }
     return null;
   }
@@ -169,12 +177,13 @@ class UserListNotifier extends StateNotifier<List<User>>
   final UserRepository _userRepository;
 
   @override
-  List<User> getAll() => List.unmodifiable(state);
+  List<User> getAll() =>
+      List.unmodifiable(state.where((u) => u.deletedAt == null));
 
   @override
   User? getById(String userId) {
     for (final user in state) {
-      if (user.id == userId) return user;
+      if (user.id == userId && user.deletedAt == null) return user;
     }
     return null;
   }
@@ -206,65 +215,79 @@ final List<Thread> _mockThreads = List<Thread>.from(threads_mock.mockThreads);
 // ユーザーモックの初期化（友達/参加者の表示用）
 final List<User> _mockUsers = List<User>.from(mock_user_mapper.mockDomainUsers);
 
-void _seedEventMetasIfEmpty(Box<EventMeta> box) {
+void _seedEventMetasIfEmpty(Box<Map> box) {
   if (box.isNotEmpty) return;
   for (final meta in _mockEventMetas) {
-    box.put(meta.id, meta);
+    box.put(meta.id, meta.toMap());
   }
 }
 
-void _seedTransactionsIfEmpty(Box<Transaction> box) {
+void _seedTransactionsIfEmpty(Box<Map> box) {
   if (box.isNotEmpty) return;
   for (final tx in _mockTransactions) {
-    box.put(tx.id, tx);
+    box.put(tx.id, tx.toMap());
   }
 }
 
-void _seedThreadsIfEmpty(Box<Thread> box) {
+void _seedThreadsIfEmpty(Box<Map> box) {
   if (box.isNotEmpty) return;
   for (final thread in _mockThreads) {
-    box.put(thread.id, thread);
+    box.put(thread.id, thread.toMap());
   }
 }
 
-void _seedUsersIfEmpty(Box<User> box) {
+void _seedUsersIfEmpty(Box<Map> box) {
   if (box.isNotEmpty) return;
   for (final user in _mockUsers) {
-    box.put(user.id, user);
+    box.put(user.id, user.toMap());
   }
 }
 
-// リポジトリの実体（EventMeta は Hive に切替）
+Map<String, dynamic> _castMap(dynamic raw) {
+  if (raw is Map<String, dynamic>) return raw;
+  if (raw is Map) return Map<String, dynamic>.from(raw);
+  return <String, dynamic>{};
+}
+
+// リポジトリの実体（Map保存）
 // Providerからはインターフェース(EventRepository等)として扱う
-final Box<EventMeta> _eventMetaBox = Hive.box<EventMeta>('eventMetas');
+final Box<Map> _eventMetaBox = Hive.box<Map>('eventMetas');
 final EventRepository _eventRepo = HiveEventRepository(
   eventMetaBox: _eventMetaBox,
 );
 final List<EventMeta> _initialEventMetas = (() {
   _seedEventMetasIfEmpty(_eventMetaBox);
-  return _eventMetaBox.values.toList(growable: false);
+  return _eventMetaBox.values
+      .map((raw) => EventMeta.fromMap(_castMap(raw)))
+      .toList(growable: false);
 })();
-final Box<Transaction> _transactionBox = Hive.box<Transaction>('transactions');
+final Box<Map> _transactionBox = Hive.box<Map>('transactions');
 final TransactionRepository _txRepo = HiveTransactionRepository(
   transactionBox: _transactionBox,
 );
 final List<Transaction> _initialTransactions = (() {
   _seedTransactionsIfEmpty(_transactionBox);
-  return _transactionBox.values.toList(growable: false);
+  return _transactionBox.values
+      .map((raw) => Transaction.fromMap(_castMap(raw)))
+      .toList(growable: false);
 })();
-final Box<Thread> _threadBox = Hive.box<Thread>('threads');
+final Box<Map> _threadBox = Hive.box<Map>('threads');
 final ThreadRepository _threadRepo = HiveThreadRepository(
   threadBox: _threadBox,
 );
 final List<Thread> _initialThreads = (() {
   _seedThreadsIfEmpty(_threadBox);
-  return _threadBox.values.toList(growable: false);
+  return _threadBox.values
+      .map((raw) => Thread.fromMap(_castMap(raw)))
+      .toList(growable: false);
 })();
-final Box<User> _userBox = Hive.box<User>('users');
+final Box<Map> _userBox = Hive.box<Map>('users');
 final UserRepository _userRepo = HiveUserRepository(userBox: _userBox);
 final List<User> _initialUsers = (() {
   _seedUsersIfEmpty(_userBox);
-  return _userBox.values.toList(growable: false);
+  return _userBox.values
+      .map((raw) => User.fromMap(_castMap(raw)))
+      .toList(growable: false);
 })();
 
 // Repository providers

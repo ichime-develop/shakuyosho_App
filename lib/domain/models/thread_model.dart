@@ -1,9 +1,4 @@
-import 'package:hive/hive.dart';
-
-part 'thread_model.g.dart';
-
 // スレッド（会話/グループ）の情報を表すモデル。
-@HiveType(typeId: 4)
 class Thread {
   Thread({
     required this.id,
@@ -12,20 +7,16 @@ class Thread {
     required this.participantIds,
     required this.createdAt,
     required this.updatedAt,
+    this.deletedAt,
   });
 
-  @HiveField(0)
   final String id;
-  @HiveField(1)
   final String type; // e.g. 'group'
-  @HiveField(2)
   final String title;
-  @HiveField(3)
   final List<String> participantIds;
-  @HiveField(4)
   final DateTime createdAt;
-  @HiveField(5)
   final DateTime updatedAt;
+  final DateTime? deletedAt;
 
   Thread copyWith({
     String? id,
@@ -34,6 +25,7 @@ class Thread {
     List<String>? participantIds,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? deletedAt,
   }) {
     return Thread(
       id: id ?? this.id,
@@ -42,6 +34,52 @@ class Thread {
       participantIds: participantIds ?? this.participantIds,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'type': type,
+      'title': title,
+      'participantIds': participantIds,
+      'createdAtMs': createdAt.millisecondsSinceEpoch,
+      'updatedAtMs': updatedAt.millisecondsSinceEpoch,
+      'deletedAtMs': deletedAt?.millisecondsSinceEpoch,
+    };
+  }
+
+  factory Thread.fromMap(Map<dynamic, dynamic> map, {String? id}) {
+    final resolvedId = id ?? map['id'] as String? ?? '';
+    return Thread(
+      id: resolvedId,
+      type: map['type'] as String? ?? '',
+      title: map['title'] as String? ?? '',
+      participantIds: _stringListFrom(map['participantIds']),
+      createdAt: _dateFrom(map['createdAtMs'] ?? map['createdAt']),
+      updatedAt: _dateFrom(map['updatedAtMs'] ?? map['updatedAt']),
+      deletedAt: _dateFromNullable(map['deletedAtMs'] ?? map['deletedAt']),
+    );
+  }
+}
+
+DateTime _dateFrom(dynamic raw) {
+  if (raw is DateTime) return raw;
+  if (raw is int) return DateTime.fromMillisecondsSinceEpoch(raw);
+  if (raw is num) return DateTime.fromMillisecondsSinceEpoch(raw.toInt());
+  if (raw is String) return DateTime.tryParse(raw) ?? DateTime.now();
+  return DateTime.now();
+}
+
+DateTime? _dateFromNullable(dynamic raw) {
+  if (raw == null) return null;
+  return _dateFrom(raw);
+}
+
+List<String> _stringListFrom(dynamic raw) {
+  if (raw is List) {
+    return raw.map((e) => '$e').toList(growable: false);
+  }
+  return const <String>[];
 }

@@ -12,7 +12,7 @@ class AppPaperBackground extends StatelessWidget {
   /// 和紙テクスチャの濃さ（0.02〜0.035 推奨）。
   final double opacity;
 
-  static const Color baseColor = Color(0xFFF8F6F2);
+  static const Color baseColor = Color(0xFFFFF8DC);
   static const String assetPath = 'assets/background/japanese-paper_00188.jpg';
 
   @override

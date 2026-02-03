@@ -4,28 +4,43 @@ import 'package:shakuyousho_app/domain/repositories/event_repository.dart';
 
 /// Hive-backed implementation for EventMeta persistence.
 class HiveEventRepository implements EventRepository {
-  HiveEventRepository({required Box<EventMeta> eventMetaBox})
+  HiveEventRepository({required Box<Map> eventMetaBox})
     : _eventMetaBox = eventMetaBox;
 
-  final Box<EventMeta> _eventMetaBox;
+  final Box<Map> _eventMetaBox;
 
   @override
   List<EventMeta> getAllEventMetas() {
-    return _eventMetaBox.values.toList(growable: false);
+    return _eventMetaBox.values
+        .map((raw) => EventMeta.fromMap(_castMap(raw)))
+        .toList(growable: false);
   }
 
   @override
   EventMeta? getEventMetaById(String eventId) {
-    return _eventMetaBox.get(eventId);
+    final raw = _eventMetaBox.get(eventId);
+    if (raw == null) return null;
+    return EventMeta.fromMap(_castMap(raw), id: eventId);
   }
 
   @override
   void upsertEventMeta(EventMeta meta) {
-    _eventMetaBox.put(meta.id, meta);
+    _eventMetaBox.put(meta.id, meta.toMap());
   }
 
   @override
   void deleteEventMeta(String eventId) {
-    _eventMetaBox.delete(eventId);
+    final raw = _eventMetaBox.get(eventId);
+    if (raw == null) return;
+    final current = EventMeta.fromMap(_castMap(raw), id: eventId);
+    final now = DateTime.now();
+    final updated = current.copyWith(deletedAt: now, updatedAt: now);
+    _eventMetaBox.put(eventId, updated.toMap());
   }
+}
+
+Map<String, dynamic> _castMap(dynamic raw) {
+  if (raw is Map<String, dynamic>) return raw;
+  if (raw is Map) return Map<String, dynamic>.from(raw);
+  return <String, dynamic>{};
 }

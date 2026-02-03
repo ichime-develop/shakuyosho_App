@@ -1,18 +1,10 @@
-import 'package:hive/hive.dart';
-
-part 'transaction_model.g.dart';
-
 // 取引の種別（支出 or 返済）を表す列挙型。
-@HiveType(typeId: 2)
 enum TxType {
-  @HiveField(0)
   expense,
-  @HiveField(1)
   repayment,
 }
 
 // 取引（支出/返済）の詳細を表すドメインモデル。
-@HiveType(typeId: 3)
 class Transaction {
   Transaction({
     required this.id,
@@ -34,44 +26,27 @@ class Transaction {
     this.deletedAt,
   });
 
-  @HiveField(0)
   final String id;
-  @HiveField(1)
   final String? eventId; // null for personal tx
-  @HiveField(2)
   final TxType type;
-  @HiveField(3)
   final String title;
-  @HiveField(4)
   final DateTime date;
-  @HiveField(5)
   final String currency; // 'JPY'
-  @HiveField(6)
   final int totalAmount; // integer JPY
-  @HiveField(7)
   final List<String> participantIds;
 
   // expense-specific
-  @HiveField(8)
   final String? paidBy;
-  @HiveField(9)
   final Map<String, int>? shares; // userId -> amount
 
   // repayment-specific
-  @HiveField(10)
   final String? fromUserId;
-  @HiveField(11)
   final String? toUserId;
-  @HiveField(12)
   final int? repaymentAmount;
 
-  @HiveField(13)
   final String createdBy;
-  @HiveField(14)
   final DateTime createdAt;
-  @HiveField(15)
   final DateTime? updatedAt;
-  @HiveField(16)
   final DateTime? deletedAt;
 
   Transaction copyWith({
@@ -113,6 +88,53 @@ class Transaction {
       deletedAt: deletedAt ?? this.deletedAt,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'eventId': eventId,
+      'type': type.name,
+      'title': title,
+      'dateMs': date.millisecondsSinceEpoch,
+      'currency': currency,
+      'totalAmount': totalAmount,
+      'participantIds': participantIds,
+      'paidBy': paidBy,
+      'shares': shares,
+      'fromUserId': fromUserId,
+      'toUserId': toUserId,
+      'repaymentAmount': repaymentAmount,
+      'createdBy': createdBy,
+      'createdAtMs': createdAt.millisecondsSinceEpoch,
+      'updatedAtMs': updatedAt?.millisecondsSinceEpoch,
+      'deletedAtMs': deletedAt?.millisecondsSinceEpoch,
+    };
+  }
+
+  factory Transaction.fromMap(Map<dynamic, dynamic> map, {String? id}) {
+    final resolvedId = id ?? map['id'] as String? ?? '';
+    final typeRaw = map['type'];
+    final type = _txTypeFrom(typeRaw);
+    return Transaction(
+      id: resolvedId,
+      eventId: map['eventId'] as String?,
+      type: type,
+      title: map['title'] as String? ?? '',
+      date: _dateFrom(map['dateMs'] ?? map['date']),
+      currency: map['currency'] as String? ?? 'JPY',
+      totalAmount: _intFrom(map['totalAmount']),
+      participantIds: _stringListFrom(map['participantIds']),
+      paidBy: map['paidBy'] as String?,
+      shares: _stringIntMapFrom(map['shares']),
+      fromUserId: map['fromUserId'] as String?,
+      toUserId: map['toUserId'] as String?,
+      repaymentAmount: _intFromNullable(map['repaymentAmount']),
+      createdBy: map['createdBy'] as String? ?? '',
+      createdAt: _dateFrom(map['createdAtMs'] ?? map['createdAt']),
+      updatedAt: _dateFromNullable(map['updatedAtMs'] ?? map['updatedAt']),
+      deletedAt: _dateFromNullable(map['deletedAtMs'] ?? map['deletedAt']),
+    );
+  }
 }
 
 // 精算時の支払指示（誰が誰にいくら払うか）を表すモデル。
@@ -143,4 +165,60 @@ class SettlementSummary {
   final Map<String, int> balancesByUserId;
   final List<SettlementInstruction> instructions;
   final DateTime generatedAt;
+}
+
+TxType _txTypeFrom(dynamic raw) {
+  if (raw is TxType) return raw;
+  if (raw is String) {
+    for (final v in TxType.values) {
+      if (v.name == raw) return v;
+    }
+  }
+  if (raw is int && raw >= 0 && raw < TxType.values.length) {
+    return TxType.values[raw];
+  }
+  return TxType.expense;
+}
+
+int _intFrom(dynamic raw, {int fallback = 0}) {
+  if (raw is int) return raw;
+  if (raw is num) return raw.toInt();
+  if (raw is String) return int.tryParse(raw) ?? fallback;
+  return fallback;
+}
+
+int? _intFromNullable(dynamic raw) {
+  if (raw == null) return null;
+  return _intFrom(raw);
+}
+
+DateTime _dateFrom(dynamic raw) {
+  if (raw is DateTime) return raw;
+  if (raw is int) return DateTime.fromMillisecondsSinceEpoch(raw);
+  if (raw is num) return DateTime.fromMillisecondsSinceEpoch(raw.toInt());
+  if (raw is String) return DateTime.tryParse(raw) ?? DateTime.now();
+  return DateTime.now();
+}
+
+DateTime? _dateFromNullable(dynamic raw) {
+  if (raw == null) return null;
+  return _dateFrom(raw);
+}
+
+List<String> _stringListFrom(dynamic raw) {
+  if (raw is List) {
+    return raw.map((e) => '$e').toList(growable: false);
+  }
+  return const <String>[];
+}
+
+Map<String, int>? _stringIntMapFrom(dynamic raw) {
+  if (raw is Map) {
+    final result = <String, int>{};
+    raw.forEach((key, value) {
+      result['$key'] = _intFrom(value);
+    });
+    return result;
+  }
+  return null;
 }

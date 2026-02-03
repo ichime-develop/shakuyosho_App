@@ -1,149 +1,226 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shakuyousho_app/application/providers/thread_providers.dart';
+import 'package:shakuyousho_app/application/providers/loan_providers.dart';
 import 'package:shakuyousho_app/presentation/common/common_bottom_nav_bar.dart';
 
-/// FR0100: スレッド一覧（個人/グループ）
-class Fr0100ThreadListScreen extends ConsumerWidget {
+/// FR0100: 友達一覧（坂口モデル準拠）
+class Fr0100ThreadListScreen extends ConsumerStatefulWidget {
   const Fr0100ThreadListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final personalThreads = ref.watch(personalThreadsProvider);
-    final groupThreads = ref.watch(groupThreadsProvider);
+  ConsumerState<Fr0100ThreadListScreen> createState() =>
+      _Fr0100ThreadListScreenState();
+}
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('ともだち'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'こじん'),
-              Tab(text: 'ぐるーぷ'),
-            ],
+class _Fr0100ThreadListScreenState
+    extends ConsumerState<Fr0100ThreadListScreen> {
+  String _searchQuery = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final summariesAsync = ref.watch(friendSummariesProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('ともだち', style: TextStyle(fontSize: 18)),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          // 検索バー
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: CupertinoSearchTextField(
+              placeholder: 'けんさく',
+              style: const TextStyle(),
+              onChanged: (value) {
+                setState(() => _searchQuery = value.trim());
+              },
+            ),
+          ),
+          // 友達一覧
+          Expanded(
+            child: summariesAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('エラー: $e')),
+              data: (summaries) {
+                // 検索フィルタ
+                final filtered = _searchQuery.isEmpty
+                    ? summaries
+                    : summaries
+                          .where(
+                            (s) => s.displayName.toLowerCase().contains(
+                              _searchQuery.toLowerCase(),
+                            ),
+                          )
+                          .toList();
+
+                if (filtered.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'ともだち が いないよ',
+                      style: TextStyle(fontSize: 16, color: theme.hintColor),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final summary = filtered[index];
+                    return _FriendCard(
+                      summary: summary,
+                      onTap: () => _openFriendDetail(context, summary.friendId),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      // 友達追加ボタン
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: SizedBox(
+        width: 220,
+        child: CupertinoButton(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          onPressed: () => _showAddFriendDialog(context, ref),
+          child: const Text(
+            '＋ ともだち を ついか',
+            style: TextStyle(fontSize: 16, color: Color(0xFF374151)),
           ),
         ),
-        body: TabBarView(
-          children: [
-            _PersonalThreadList(
-              threads: personalThreads,
-              onTap: (t) => _Controller.openThread(context, t.threadId),
+      ),
+      bottomNavigationBar: const CommonBottomNavBar(currentIndex: 1),
+    );
+  }
+
+  void _openFriendDetail(BuildContext context, String friendId) {
+    context.push('/fr0200/$friendId');
+  }
+
+  Future<void> _showAddFriendDialog(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController();
+
+    await showCupertinoDialog<void>(
+      context: context,
+      builder: (context) {
+        return CupertinoAlertDialog(
+          title: const Text('ともだち を ついか', style: TextStyle()),
+          content: Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: CupertinoTextField(
+              controller: controller,
+              placeholder: 'ユーザーID / なまえ',
+              autofocus: true,
+              style: const TextStyle(),
             ),
-            _GroupThreadList(
-              threads: groupThreads,
-              onTap: (t) => _Controller.openThread(context, t.threadId),
+          ),
+          actions: [
+            CupertinoDialogAction(
+              isDestructiveAction: true,
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('やめる', style: TextStyle()),
+            ),
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              onPressed: () {
+                final input = controller.text.trim();
+                if (input.isEmpty) return;
+                ref.read(friendActionsProvider.notifier).addFriend(input);
+                Navigator.of(context).pop();
+              },
+              child: const Text('ついか', style: TextStyle()),
             ),
           ],
+        );
+      },
+    );
+  }
+}
+
+/// 友達カード（貸借サマリー表示）
+class _FriendCard extends StatelessWidget {
+  const _FriendCard({required this.summary, required this.onTap});
+
+  final FriendSummary summary;
+  final VoidCallback onTap;
+
+  String _fmtYen(int value) {
+    final s = value.toString();
+    return s.replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]},',
+    );
+  }
+
+  String _fmtDate(DateTime dt) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${dt.year}/${two(dt.month)}/${two(dt.day)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 名前
+            Text(
+              summary.displayName,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF111827),
+              ),
+            ),
+            const SizedBox(height: 6),
+            // かした / かりた
+            Row(
+              children: [
+                Text(
+                  'かした：¥${_fmtYen(summary.lentTotal)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  'かりた：¥${_fmtYen(summary.borrowedTotal)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ],
+            ),
+            // めやすのひ
+            if (summary.nearestDueDate != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                'めやすのひ：${_fmtDate(summary.nearestDueDate!)}',
+                style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+              ),
+            ],
+            const SizedBox(height: 8),
+            const Divider(height: 1, color: Color(0xFFE5E7EB)),
+          ],
         ),
-        bottomNavigationBar: const CommonBottomNavBar(currentIndex: 1),
       ),
     );
-  }
-}
-
-class _PersonalThreadList extends StatelessWidget {
-  const _PersonalThreadList({required this.threads, required this.onTap});
-
-  final List<PersonalThreadSummary> threads;
-  final void Function(PersonalThreadSummary) onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    if (threads.isEmpty) {
-      return _EmptyState(
-        message: '個人スレッドがまだありません。',
-        theme: theme,
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-      itemCount: threads.length,
-      separatorBuilder: (_, __) => Divider(
-        height: 1,
-        thickness: 1,
-        color: theme.dividerColor.withOpacity(0.2),
-      ),
-      itemBuilder: (context, index) {
-        final thread = threads[index];
-        final initial = thread.displayName.isEmpty
-            ? '?'
-            : thread.displayName.characters.first;
-        return ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 0),
-          leading: CircleAvatar(child: Text(initial)),
-          title: Text(thread.displayName),
-          subtitle: Text('最終更新: ${thread.updatedAtLabel}'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => onTap(thread),
-        );
-      },
-    );
-  }
-}
-
-class _GroupThreadList extends StatelessWidget {
-  const _GroupThreadList({required this.threads, required this.onTap});
-
-  final List<GroupThreadSummary> threads;
-  final void Function(GroupThreadSummary) onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    if (threads.isEmpty) {
-      return _EmptyState(
-        message: 'グループスレッドがまだありません。',
-        theme: theme,
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-      itemCount: threads.length,
-      separatorBuilder: (_, __) => Divider(
-        height: 1,
-        thickness: 1,
-        color: theme.dividerColor.withOpacity(0.2),
-      ),
-      itemBuilder: (context, index) {
-        final thread = threads[index];
-        return ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 0),
-          title: Text(thread.groupName),
-          subtitle: Text(
-            '参加人数: ${thread.memberCount} ・ 最終更新: ${thread.updatedAtLabel}',
-          ),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => onTap(thread),
-        );
-      },
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.message, required this.theme});
-
-  final String message;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        message,
-        style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
-      ),
-    );
-  }
-}
-
-class _Controller {
-  static void openThread(BuildContext context, String threadId) {
-    context.push('/fr0200/$threadId');
   }
 }

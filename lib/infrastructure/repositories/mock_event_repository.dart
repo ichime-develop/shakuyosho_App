@@ -32,6 +32,9 @@ class MockEventRepository implements EventRepository {
 
   @override
   void deleteEventMeta(String eventId) {
-    _metas.removeWhere((m) => m.id == eventId);
+    final idx = _metas.indexWhere((m) => m.id == eventId);
+    if (idx == -1) return;
+    final now = DateTime.now();
+    _metas[idx] = _metas[idx].copyWith(deletedAt: now, updatedAt: now);
   }
 }

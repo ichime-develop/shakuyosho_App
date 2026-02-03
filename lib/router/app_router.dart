@@ -7,6 +7,7 @@ import 'package:shakuyousho_app/presentation/transaction/tr0100_screen.dart';
 import 'package:shakuyousho_app/presentation/top/to0100_screen.dart';
 import 'package:shakuyousho_app/presentation/friends/fr0100_screen.dart';
 import 'package:shakuyousho_app/presentation/friends/fr0200_screen.dart';
+import 'package:shakuyousho_app/presentation/loan_book/lb0200_screen.dart';
 import 'package:shakuyousho_app/presentation/my/my0100_screen.dart';
 import 'package:shakuyousho_app/presentation/event/ev0100_screen.dart';
 import 'package:shakuyousho_app/presentation/event/ev0200_screen.dart';
@@ -117,8 +118,43 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-
-      // ───── プレースホルダルート（未実装画面のための暫定。後で正式Screenに差し替え）
+      GoRoute(
+        path: '/lb0200/:loanId',
+        name: 'LB0200_DETAIL',
+        pageBuilder: (context, state) {
+          final loanId = state.pathParameters['loanId'];
+          if (loanId == null || loanId.isEmpty) {
+            return NoTransitionPage(
+              key: state.pageKey,
+              child: const _MissingParamScreen(
+                param: 'loanId',
+                screen: 'LB0200',
+              ),
+            );
+          }
+          return NoTransitionPage(
+            key: state.pageKey,
+            child: AppRouteLoadingGate(
+              load: () async {},
+              child: Lb0200BorrowNotePreviewScreen(loanId: loanId),
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/lb0200',
+        name: 'LB0200',
+        pageBuilder: (context, state) {
+          final friendId = state.uri.queryParameters['friendId'];
+          return NoTransitionPage(
+            key: state.pageKey,
+            child: AppRouteLoadingGate(
+              load: () async {},
+              child: Lb0200BorrowNotePreviewScreen(friendId: friendId),
+            ),
+          );
+        },
+      ),
       GoRoute(
         path: '/fr0100',
         name: 'FR0100',
@@ -128,15 +164,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: '/fr0200/:threadId',
+        path: '/fr0200/:friendId',
         name: 'FR0200',
         pageBuilder: (context, state) {
-          final threadId = state.pathParameters['threadId'];
-          if (threadId == null || threadId.isEmpty) {
+          final friendId = state.pathParameters['friendId'];
+          if (friendId == null || friendId.isEmpty) {
             return NoTransitionPage(
               key: state.pageKey,
               child: const _MissingParamScreen(
-                param: 'threadId',
+                param: 'friendId',
                 screen: 'FR0200',
               ),
             );
@@ -144,9 +180,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return NoTransitionPage(
             key: state.pageKey,
             child: AppRouteLoadingGate(
-              // TODO: 外部データ取得を導入したら、ここで prefetch Future を待つ
               load: () async {},
-              child: Fr0200ThreadDetailScreen(threadId: threadId),
+              child: Fr0200ThreadDetailScreen(friendId: friendId),
             ),
           );
         },
