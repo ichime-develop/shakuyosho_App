@@ -1,5 +1,10 @@
 # データ構造 README
 
+> 関連ドキュメント:
+> - [README_FRIENDS.md](README_FRIENDS.md) - 友達機能（FR）仕様
+> - [README_PROVIDERS.md](README_PROVIDERS.md) - Provider設計
+> - [SCREEN_MAP.md](SCREEN_MAP.md) - 画面一覧・遷移
+
 ## 1. 全体像（概要）
 - このアプリでは以下の 4 つを一次データとする
   - User（人物マスタ）

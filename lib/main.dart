@@ -50,12 +50,13 @@ void main() {
 
       // 3.5) Hive 初期化（Map保存）
       await Hive.initFlutter();
-      await Hive.openBox<Map>('eventMetas');
-      await Hive.openBox<Map>('transactions');
-      await Hive.openBox<Map>('threads');
-      await Hive.openBox<Map>('users');
-      await Hive.openBox<Map>('loans');
-      await Hive.openBox<Map>('friends');
+      await _openMapBox('eventMetas');
+      await _openMapBox('transactions');
+      await _openMapBox('threads');
+      await _openMapBox('users');
+      await _openMapBox('loans');
+      await _openMapBox('friends');
+      await _openMapBox('messages');
 
       // 4) 依存注入の根：ProviderScope（全Providerのルート）。
       runApp(
@@ -113,6 +114,16 @@ class App extends ConsumerWidget {
       },
       // locale / localizationsDelegates / supportedLocales を追加する場合はここに記述。
     );
+  }
+}
+
+Future<Box<Map>> _openMapBox(String name) async {
+  try {
+    return await Hive.openBox<Map>(name);
+  } on HiveError catch (_) {
+    // 旧HiveType保存のボックスが残っている場合は削除して再作成
+    await Hive.deleteBoxFromDisk(name);
+    return Hive.openBox<Map>(name);
   }
 }
 

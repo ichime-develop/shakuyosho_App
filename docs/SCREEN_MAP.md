@@ -3,6 +3,11 @@
 # しゃくよーしょ 画面一覧・画面遷移（Copilot参照用）
 
 > このファイルは GitHub Copilot や開発者が素早く全体像を掴むための **単一ソース** です。実装が変わったら本ファイルも更新してください。
+>
+> 関連ドキュメント:
+> - [README_FRIENDS.md](README_FRIENDS.md) - 友達機能（FR）仕様
+> - [README_DATA_STRUCTURE.md](README_DATA_STRUCTURE.md) - データ構造
+> - [README_PROVIDERS.md](README_PROVIDERS.md) - Provider設計
 
 ---
 

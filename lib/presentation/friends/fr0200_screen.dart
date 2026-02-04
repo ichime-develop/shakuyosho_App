@@ -2,8 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shakuyousho_app/application/providers/chat_message_providers.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/application/providers/loan_providers.dart';
+import 'package:shakuyousho_app/data/mock/users_mock.dart';
+import 'package:shakuyousho_app/domain/models/chat_message_model.dart';
 import 'package:shakuyousho_app/domain/models/loan_model.dart';
 
 /// FR0200: 友達との取引詳細（friends_page.dart FriendDetailPage 準拠）
@@ -25,7 +28,6 @@ class _Fr0200ThreadDetailScreenState
     extends ConsumerState<Fr0200ThreadDetailScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<_ChatMessage> _messages = [];
   bool _didInitialScroll = false;
 
   @override
@@ -52,11 +54,13 @@ class _Fr0200ThreadDetailScreenState
   void _handleSend() {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
-    setState(() {
-      _messages.add(
-        _ChatMessage(isMe: true, text: text, createdAt: DateTime.now()),
-      );
-    });
+    ref
+        .read(chatMessageActionsProvider.notifier)
+        .sendMessage(
+          threadId: widget.friendId,
+          senderId: currentUserId,
+          text: text,
+        );
     _messageController.clear();
     _scrollToBottom(force: true);
   }
@@ -73,9 +77,7 @@ class _Fr0200ThreadDetailScreenState
     final userRepo = ref.read(userRepositoryProvider);
     final displayName =
         userRepo.getById(widget.friendId)?.displayName ?? widget.friendId;
-    final loansAsync = ref.watch(
-      loansByCounterpartyProvider(widget.friendId),
-    );
+    final loansAsync = ref.watch(loansByCounterpartyProvider(widget.friendId));
 
     return Scaffold(
       appBar: AppBar(
@@ -94,13 +96,22 @@ class _Fr0200ThreadDetailScreenState
         child: loansAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('エラー: $e')),
-          data: (loans) => _buildBody(context, loans),
+          data: (loans) {
+            final messages = ref.watch(
+              messagesByThreadProvider(widget.friendId),
+            );
+            return _buildBody(context, loans, messages);
+          },
         ),
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context, List<Loan> loans) {
+  Widget _buildBody(
+    BuildContext context,
+    List<Loan> loans,
+    List<ChatMessage> messages,
+  ) {
     // 初回自動スクロール
     if (!_didInitialScroll) {
       _didInitialScroll = true;
@@ -120,7 +131,7 @@ class _Fr0200ThreadDetailScreenState
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   padding: const EdgeInsets.fromLTRB(8, 8, 8, 80),
-                  child: _buildTimeline(loans),
+                  child: _buildTimeline(loans, messages),
                 ),
               ),
             ),
@@ -134,15 +145,14 @@ class _Fr0200ThreadDetailScreenState
     );
   }
 
-  Widget _buildTimeline(List<Loan> loans) {
+  Widget _buildTimeline(List<Loan> loans, List<ChatMessage> messages) {
     // タイムライン項目（借用書 + メッセージ）を1列に
-    final items =
-        <({DateTime t, bool isLoan, Loan? loan, _ChatMessage? msg})>[];
+    final items = <({DateTime t, bool isLoan, Loan? loan, ChatMessage? msg})>[];
 
     for (final l in loans) {
       items.add((t: l.createdAt, isLoan: true, loan: l, msg: null));
     }
-    for (final m in _messages) {
+    for (final m in messages) {
       items.add((t: m.createdAt, isLoan: false, loan: null, msg: m));
     }
 
@@ -190,7 +200,10 @@ class _Fr0200ThreadDetailScreenState
           ),
         );
       } else if (it.msg != null) {
-        children.add(_ChatBubble(message: it.msg!));
+        final msg = it.msg!;
+        children.add(
+          _ChatBubble(isMe: msg.senderId == currentUserId, text: msg.text),
+        );
       }
     }
 
@@ -622,18 +635,6 @@ class _Fr0200ThreadDetailScreenState
 // サブウィジェット
 // ────────────────────────────────────────────────────────────────
 
-class _ChatMessage {
-  final bool isMe;
-  final String text;
-  final DateTime createdAt;
-
-  _ChatMessage({
-    required this.isMe,
-    required this.text,
-    required this.createdAt,
-  });
-}
-
 /// 日付チップ
 class _DateChip extends StatelessWidget {
   final String label;
@@ -662,15 +663,15 @@ class _DateChip extends StatelessWidget {
 
 /// チャットバブル
 class _ChatBubble extends StatelessWidget {
-  final _ChatMessage message;
-  const _ChatBubble({required this.message});
+  final bool isMe;
+  final String text;
+  const _ChatBubble({required this.isMe, required this.text});
 
   @override
   Widget build(BuildContext context) {
-    final isMe = message.isMe;
     final align = isMe ? Alignment.centerRight : Alignment.centerLeft;
     final bubbleColor = isMe
-        ? const Color(0xFF34C759).withOpacity(0.18)
+        ? const Color(0xFF34C759).withValues(alpha: 0.18)
         : const Color(0xFFF3F4F6);
     final radius = BorderRadius.only(
       topLeft: const Radius.circular(16),
@@ -687,10 +688,12 @@ class _ChatBubble extends StatelessWidget {
         decoration: BoxDecoration(
           color: bubbleColor,
           borderRadius: radius,
-          border: Border.all(color: const Color(0xFF4B5563).withOpacity(0.12)),
+          border: Border.all(
+            color: const Color(0xFF4B5563).withValues(alpha: 0.12),
+          ),
         ),
         child: Text(
-          message.text,
+          text,
           style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
         ),
       ),

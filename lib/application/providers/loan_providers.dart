@@ -24,7 +24,10 @@ final Box<Map> _threadBox = Hive.box<Map>('threads');
 final Box<Map> _userBox = Hive.box<Map>('users');
 
 void _seedLoansIfEmpty({required Box<Map> box}) {
-  if (box.isNotEmpty) return;
+  final hasLive = box.values.any(
+    (raw) => Loan.fromMap(_castMap(raw)).deletedAt == null,
+  );
+  if (hasLive) return;
   final userIds = _userIdsFromBox(_userBox);
   final friendIds = _friendIdsFromThreads(_threadBox).toSet();
   for (final loan in mockLoans) {
@@ -35,7 +38,10 @@ void _seedLoansIfEmpty({required Box<Map> box}) {
 }
 
 void _seedFriendsIfEmpty({required Box<Map> box}) {
-  if (box.isNotEmpty) return;
+  final hasLive = box.values.any(
+    (raw) => Friend.fromMap(_castMap(raw)).deletedAt == null,
+  );
+  if (hasLive) return;
   final userIds = _userIdsFromBox(_userBox);
   final createdAtByUserId = _friendCreatedAtFromThreads(_threadBox);
 
@@ -61,12 +67,18 @@ void _seedFriendsIfEmpty({required Box<Map> box}) {
 
 /// LoanRepository（Map保存）
 final loanRepositoryProvider = Provider<LoanRepository>((ref) {
+  // Ensure users/threads seed are initialized before friend/loan seeds.
+  ref.read(userListProvider);
+  ref.read(threadListProvider);
   _seedLoansIfEmpty(box: _loanBox);
   return HiveLoanRepository(loanBox: _loanBox);
 });
 
 /// FriendRepository（Map保存）
 final friendRepositoryProvider = Provider<FriendRepository>((ref) {
+  // Ensure users/threads seed are initialized before friend/loan seeds.
+  ref.read(userListProvider);
+  ref.read(threadListProvider);
   _seedFriendsIfEmpty(box: _friendBox);
   return HiveFriendRepository(friendBox: _friendBox);
 });
