@@ -183,12 +183,14 @@ class _Fr0200ThreadDetailScreenState
 
       if (it.isLoan && it.loan != null) {
         final loan = it.loan!;
-        final isMeLend = loan.direction == LoanDirection.lent;
+        final isMe = loan.createdBy.isNotEmpty
+            ? loan.createdBy == currentUserId
+            : loan.direction == LoanDirection.lent;
         children.add(
           _TxBubble(
-            isMeLend: isMeLend,
+            isMe: isMe,
             amount: '¥${_fmtYen(loan.amountYen)}',
-            label: isMeLend ? 'かした' : 'かりた',
+            label: loan.direction == LoanDirection.lent ? 'かした' : 'かりた',
             memo: loan.purpose,
             date: _fmtDate(loan.createdAt),
             due: _fmtDate(loan.dueDate),
@@ -703,7 +705,7 @@ class _ChatBubble extends StatelessWidget {
 
 /// 借用書バブル（iMessage風）
 class _TxBubble extends StatelessWidget {
-  final bool isMeLend;
+  final bool isMe;
   final String amount;
   final String label;
   final String memo;
@@ -716,7 +718,7 @@ class _TxBubble extends StatelessWidget {
   final VoidCallback? onTap;
 
   const _TxBubble({
-    required this.isMeLend,
+    required this.isMe,
     required this.amount,
     required this.label,
     required this.memo,
@@ -731,25 +733,21 @@ class _TxBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final align = isMeLend ? Alignment.centerRight : Alignment.centerLeft;
+    final align = isMe ? Alignment.centerRight : Alignment.centerLeft;
 
-    final bubbleColor = isMeLend
+    final bubbleColor = isMe
         ? const Color(0xFF34C759).withOpacity(0.18)
         : const Color(0xFFF3F4F6);
 
-    final borderColor = isMeLend
+    final borderColor = isMe
         ? const Color(0xFF34C759).withOpacity(0.6)
         : const Color(0xFF4B5563).withOpacity(0.15);
 
     final borderRadius = BorderRadius.only(
       topLeft: const Radius.circular(18),
       topRight: const Radius.circular(18),
-      bottomLeft: isMeLend
-          ? const Radius.circular(18)
-          : const Radius.circular(4),
-      bottomRight: isMeLend
-          ? const Radius.circular(4)
-          : const Radius.circular(18),
+      bottomLeft: isMe ? const Radius.circular(18) : const Radius.circular(4),
+      bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(18),
     );
 
     return Align(
@@ -757,10 +755,7 @@ class _TxBubble extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          margin: EdgeInsets.symmetric(
-            vertical: 6,
-            horizontal: isMeLend ? 40 : 8,
-          ),
+          margin: EdgeInsets.symmetric(vertical: 6, horizontal: isMe ? 40 : 8),
           padding: const EdgeInsets.all(10),
           constraints: const BoxConstraints(maxWidth: 280),
           decoration: BoxDecoration(

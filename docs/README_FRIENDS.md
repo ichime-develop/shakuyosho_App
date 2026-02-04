@@ -122,6 +122,11 @@ AppBar: {友達の表示名}
     └── 送信ボタン
 ```
 
+**左右表示ルール（LINE風）**:
+- **メッセージ**: `senderId == currentUserId` は右、相手は左
+- **借用書**: `createdBy == currentUserId` は右、相手は左
+  - 既存データで `createdBy` が空の場合は、後方互換として `direction == lent` を右に表示
+
 **操作シート（借用書タップ時）**:
 - 金額・用途・返済期限を表示
 - 「かえす」ボタン（自分が借りた場合）
@@ -141,6 +146,7 @@ class Loan {
   final String id;
   final LoanDirection direction;     // lent (かした) / borrowed (かりた)
   final String counterpartyId;       // 相手のユーザーID
+  final String createdBy;            // 作成者（送信者）のユーザーID
   final int amountYen;               // 元金
   final String purpose;              // 用途
   final DateTime dueDate;            // 返済期限

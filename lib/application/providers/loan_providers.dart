@@ -237,6 +237,7 @@ class LoanActionsNotifier extends Notifier<void> {
       id: _repo.newId(),
       direction: direction,
       counterpartyId: counterpartyId,
+      createdBy: currentUserId,
       legacyCounterpartyName: counterpartyName,
       amountYen: amountYen,
       purpose: purpose,
@@ -252,6 +253,7 @@ class LoanActionsNotifier extends Notifier<void> {
 
     await _repo.upsert(loan);
     _invalidateAll();
+    _invalidateCounterparty(counterpartyId);
     return loan;
   }
 
@@ -263,6 +265,7 @@ class LoanActionsNotifier extends Notifier<void> {
     final updated = loan.copyWith(status: LoanStatus.pending);
     await _repo.upsert(updated);
     _invalidateAll();
+    _invalidateCounterparty(loan.counterpartyId);
   }
 
   /// 返済を承認（repayments追加 + status → approved）
@@ -281,6 +284,7 @@ class LoanActionsNotifier extends Notifier<void> {
     );
     await _repo.upsert(updated);
     _invalidateAll();
+    _invalidateCounterparty(loan.counterpartyId);
   }
 
   /// 返済を却下（status → approved に戻す）
@@ -291,12 +295,17 @@ class LoanActionsNotifier extends Notifier<void> {
     final updated = loan.copyWith(status: LoanStatus.approved);
     await _repo.upsert(updated);
     _invalidateAll();
+    _invalidateCounterparty(loan.counterpartyId);
   }
 
   /// 借用書を削除
   Future<void> deleteLoan(String loanId) async {
+    final loan = await _repo.getById(loanId);
     await _repo.delete(loanId);
     _invalidateAll();
+    if (loan != null) {
+      _invalidateCounterparty(loan.counterpartyId);
+    }
   }
 
   /// 借用書を承認（pending → approved）
@@ -308,6 +317,7 @@ class LoanActionsNotifier extends Notifier<void> {
     final updated = loan.copyWith(status: LoanStatus.approved);
     await _repo.upsert(updated);
     _invalidateAll();
+    _invalidateCounterparty(loan.counterpartyId);
   }
 
   /// 借用書を却下（pending → rejected）
@@ -319,6 +329,7 @@ class LoanActionsNotifier extends Notifier<void> {
     final updated = loan.copyWith(status: LoanStatus.rejected);
     await _repo.upsert(updated);
     _invalidateAll();
+    _invalidateCounterparty(loan.counterpartyId);
   }
 
   /// 返済を追加
@@ -335,12 +346,17 @@ class LoanActionsNotifier extends Notifier<void> {
     final updated = loan.copyWith(repayments: newRepayments);
     await _repo.upsert(updated);
     _invalidateAll();
+    _invalidateCounterparty(loan.counterpartyId);
   }
 
   void _invalidateAll() {
     ref.invalidate(allLoansProvider);
     ref.invalidate(loanTotalsProvider);
     ref.invalidate(friendSummariesProvider);
+  }
+
+  void _invalidateCounterparty(String counterpartyId) {
+    ref.invalidate(loansByCounterpartyProvider(counterpartyId));
   }
 }
 

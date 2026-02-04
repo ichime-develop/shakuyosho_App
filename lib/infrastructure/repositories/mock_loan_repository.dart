@@ -1,3 +1,5 @@
+import 'package:shakuyousho_app/data/mock/users_mock.dart';
+
 import '../../domain/models/loan_model.dart';
 import '../../domain/repositories/loan_repository.dart';
 
@@ -65,6 +67,7 @@ class MockLoanRepository implements LoanRepository {
       id: 'loan_001',
       direction: LoanDirection.lent,
       counterpartyId: 'u_002',
+      createdBy: currentUserId,
       amountYen: 10000,
       purpose: 'おこのみやき の だい',
       dueDate: DateTime(2026, 3, 1),
@@ -78,6 +81,7 @@ class MockLoanRepository implements LoanRepository {
       id: 'loan_002',
       direction: LoanDirection.borrowed,
       counterpartyId: 'u_003',
+      createdBy: 'u_003',
       amountYen: 5000,
       purpose: 'でんしゃちん',
       dueDate: DateTime(2026, 2, 15),
@@ -91,6 +95,7 @@ class MockLoanRepository implements LoanRepository {
       id: 'loan_003',
       direction: LoanDirection.lent,
       counterpartyId: 'u_002',
+      createdBy: currentUserId,
       amountYen: 3000,
       purpose: 'らんち だい',
       dueDate: DateTime(2026, 2, 28),
@@ -104,6 +109,7 @@ class MockLoanRepository implements LoanRepository {
       id: 'loan_004',
       direction: LoanDirection.borrowed,
       counterpartyId: 'u_004',
+      createdBy: 'u_004',
       amountYen: 2000,
       purpose: 'コンビニ',
       dueDate: DateTime(2026, 2, 10),

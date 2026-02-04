@@ -53,6 +53,9 @@ class Loan {
   /// 相手（友達）のユーザーID
   final String counterpartyId;
 
+  /// 作成者（送信者）のユーザーID
+  final String createdBy;
+
   final String _legacyCounterpartyName;
 
   /// 相手（友達）の名前（後方互換）
@@ -87,6 +90,7 @@ class Loan {
     required this.id,
     required this.direction,
     required this.counterpartyId,
+    required this.createdBy,
     String legacyCounterpartyName = '',
     @Deprecated('Use counterpartyId') String? counterpartyName,
     required this.amountYen,
@@ -104,6 +108,7 @@ class Loan {
     id: '',
     direction: LoanDirection.lent,
     counterpartyId: '',
+    createdBy: '',
     amountYen: 0,
     purpose: '',
     dueDate: DateTime.now(),
@@ -130,6 +135,7 @@ class Loan {
     'id': id,
     'direction': direction.name,
     'counterpartyId': counterpartyId,
+    'createdBy': createdBy,
     'counterpartyName': _legacyCounterpartyName,
     'amountYen': amountYen,
     'purpose': purpose,
@@ -164,6 +170,8 @@ class Loan {
     final counterpartyId =
         (map['counterpartyId'] as String?) ??
         (counterpartyName.isNotEmpty ? counterpartyName : 'ゲスト');
+
+    final createdBy = (map['createdBy'] as String?) ?? '';
 
     final amountRaw = map['amountYen'];
     final amountYen = amountRaw is int
@@ -214,6 +222,7 @@ class Loan {
       id: resolvedId,
       direction: direction,
       counterpartyId: counterpartyId,
+      createdBy: createdBy,
       legacyCounterpartyName: counterpartyName,
       amountYen: amountYen,
       purpose: purpose,
@@ -230,6 +239,7 @@ class Loan {
     String? id,
     LoanDirection? direction,
     String? counterpartyId,
+    String? createdBy,
     String? legacyCounterpartyName,
     @Deprecated('Use counterpartyId') String? counterpartyName,
     int? amountYen,
@@ -245,6 +255,7 @@ class Loan {
       id: id ?? this.id,
       direction: direction ?? this.direction,
       counterpartyId: counterpartyId ?? this.counterpartyId,
+      createdBy: createdBy ?? this.createdBy,
       legacyCounterpartyName:
           legacyCounterpartyName ?? counterpartyName ?? _legacyCounterpartyName,
       amountYen: amountYen ?? this.amountYen,
