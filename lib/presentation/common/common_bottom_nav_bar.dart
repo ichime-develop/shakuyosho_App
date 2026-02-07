@@ -36,7 +36,7 @@ class CommonBottomNavBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
@@ -67,18 +67,15 @@ class CommonBottomNavBar extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          data.icon,
-                          color: color,
-                          size: 24,
-                        ),
+                        Icon(data.icon, color: color, size: 24),
                         const SizedBox(height: 4),
                         Text(
                           data.label,
                           style: TextStyle(
                             fontSize: 11,
-                            fontWeight:
-                                selected ? FontWeight.bold : FontWeight.w500,
+                            fontWeight: selected
+                                ? FontWeight.bold
+                                : FontWeight.w500,
                             color: color,
                           ),
                         ),
