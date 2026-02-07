@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
-import 'package:shakuyousho_app/data/mock/users_mock.dart';
+
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
 
@@ -367,11 +367,7 @@ class _PaymentList extends StatelessWidget {
         final p = payments[index];
         return Column(
           children: [
-            _PaymentRow(
-              transaction: p,
-              theme: theme,
-              onTap: () => onTap(p),
-            ),
+            _PaymentRow(transaction: p, theme: theme, onTap: () => onTap(p)),
             if (index != payments.length - 1)
               Divider(height: 1, thickness: 0.8, color: Colors.grey.shade200),
           ],
@@ -381,7 +377,7 @@ class _PaymentList extends StatelessWidget {
   }
 }
 
-class _PaymentRow extends StatelessWidget {
+class _PaymentRow extends ConsumerWidget {
   const _PaymentRow({
     required this.transaction,
     required this.theme,
@@ -393,17 +389,17 @@ class _PaymentRow extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isExpense = transaction.type == TxType.expense;
     final fromName = transaction.fromUserId == null
         ? '???'
-        : displayNameOf(transaction.fromUserId!);
+        : ref.watch(userDisplayNameProvider(transaction.fromUserId!));
     final toName = transaction.toUserId == null
         ? '???'
-        : displayNameOf(transaction.toUserId!);
+        : ref.watch(userDisplayNameProvider(transaction.toUserId!));
     final payerName = transaction.paidBy == null
         ? '???'
-        : displayNameOf(transaction.paidBy!);
+        : ref.watch(userDisplayNameProvider(transaction.paidBy!));
     return InkWell(
       onTap: onTap,
       child: Padding(

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shakuyousho_app/application/providers/my_profile_provider.dart';
 import 'package:shakuyousho_app/core/utils/app_logger.dart';
+import 'package:shakuyousho_app/data/mock/users_mock.dart';
 import '../common/common_bottom_nav_bar.dart';
-import '../common/strings.dart';
 
 /// MY0100: じぶん（プロフィール/設定）
 /// - プロフィール表示（名前/ユーザーID）
@@ -16,11 +18,12 @@ class My0100Screen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     AppLog.i('open screen', ctx: context, data: {'screen': 'MY0100'});
-    final notifOn = ref.watch(_notifEnabledProvider);
-    final bioOn = ref.watch(_biometricEnabledProvider);
+    final currentUser = ref.watch(currentUserProvider);
+    final displayName = currentUser?.displayName ?? 'あなた';
+    final userId = currentUser?.id ?? currentUserId;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('MY0100 じぶん')),
+      appBar: AppBar(title: const Text('まいぺーじ')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
@@ -36,13 +39,10 @@ class My0100Screen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          _mockProfile.displayName,
-                          style: theme.textTheme.titleMedium,
-                        ),
+                        Text(displayName, style: theme.textTheme.titleMedium),
                         const SizedBox(height: 4),
                         Text(
-                          'ID: ${_mockProfile.userId}',
+                          'ゆーざーあいでぃー: $userId',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.hintColor,
                           ),
@@ -61,100 +61,34 @@ class My0100Screen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
 
-          // ── 基本設定
-          Text('きほんせってい', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 8),
-          Card(
-            child: Column(
-              children: [
-                SwitchListTile(
-                  title: const Text('プッシュつうち'),
-                  subtitle: const Text('めやすのひやおかねまとめのおしらせをうけとる'),
-                  value: notifOn,
-                  onChanged: (v) =>
-                      ref.read(_notifEnabledProvider.notifier).state = v,
-                  secondary: const Icon(Icons.notifications_active_outlined),
-                ),
-                const Divider(height: 1),
-                SwitchListTile(
-                  title: const Text('せいたいにんしょうでロック'),
-                  subtitle: const Text('Face/Touch ID（ダミーせってい）'),
-                  value: bioOn,
-                  onChanged: (v) =>
-                      ref.read(_biometricEnabledProvider.notifier).state = v,
-                  secondary: const Icon(Icons.fingerprint),
-                ),
-              ],
-            ),
-          ),
+          // ── なまえをへんしゅう
+          Card(),
           const SizedBox(height: 12),
 
-          // ── 表示設定
-          Text('ひょうじ', style: theme.textTheme.titleSmall),
+          // ── あぷりじょうほう / りようきやく / ぷらいばしー（カードではなく単一のリスト）
+          Text('あぷりじょうほう', style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.currency_yen),
-                  title: const Text('つうか'),
-                  subtitle: Text('JPY（にほん${AppStrings.amountUnit}）'),
-                  onTap: () => _Controller.onChangeCurrency(context),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.palette_outlined),
-                  title: const Text('テーマ'),
-                  subtitle: const Text('システムにあわせる'),
-                  onTap: () => _Controller.onChangeTheme(context),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // ── データ
-          Text('データ', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 8),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.file_download_outlined),
-                  title: const Text('データをかきだす（CSV）'),
-                  onTap: () => _Controller.onExportCsv(context),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.delete_sweep_outlined),
-                  title: const Text('キャッシュをきれいにする'),
-                  onTap: () => _Controller.onClearCache(context),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // ── その他
-          Text('そのほか', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 8),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.info_outline),
-                  title: const Text('バージョン'),
-                  subtitle: const Text('0.1.0 (mock)'),
-                  onTap: () => _Controller.onOpenAbout(context),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.logout),
-                  title: const Text('サインアウト'),
-                  onTap: () => _Controller.onSignOut(context),
-                ),
-              ],
-            ),
+          Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: const Text('ばーじょん'),
+                subtitle: const Text('1.0.0'),
+                onTap: () => _Controller.onOpenAbout(context),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.description_outlined),
+                title: const Text('りようきやく（あとで）'),
+                onTap: () => _Controller.onOpenTerms(context),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.privacy_tip_outlined),
+                title: const Text('ぷらいばしー（あとで）'),
+                onTap: () => _Controller.onOpenPrivacy(context),
+              ),
+            ],
           ),
         ],
       ),
@@ -172,62 +106,24 @@ class _Controller {
   }
 
   static void onEditProfile(BuildContext context) {
-    _toast(context, 'プロフィールへんしゅう: まだだよ');
-  }
-
-  static void onChangeCurrency(BuildContext context) {
-    _toast(context, 'つうかのせってい: まだだよ（しょうらいは JPY/USD/EUR など）');
-  }
-
-  static void onChangeTheme(BuildContext context) {
-    _toast(context, 'テーマのきりかえ: まだだよ（ライト/ダーク/システム）');
-  }
-
-  static void onExportCsv(BuildContext context) {
-    _toast(context, 'CSVエクスポート: まだだよ');
-  }
-
-  static void onClearCache(BuildContext context) {
-    _toast(context, 'キャッシュのおそうじ: まだだよ');
+    context.push('/my0101');
   }
 
   static void onOpenAbout(BuildContext context) {
     showAboutDialog(
       context: context,
       applicationName: 'しゃくよーしょ',
-      applicationVersion: '0.1.0 (mock)',
+      applicationVersion: '1.0.0',
       applicationIcon: const Icon(Icons.receipt_long_outlined),
       children: const [Text('ともだちやイベントのおかねのかりかえを、かるくメモしてまとめられるアプリだよ。')],
     );
   }
 
-  static void onSignOut(BuildContext context) {
-    _toast(context, 'サインアウト: まだだよ');
+  static void onOpenTerms(BuildContext context) {
+    _toast(context, 'りようきやくはあとでたいおうするよ');
+  }
+
+  static void onOpenPrivacy(BuildContext context) {
+    _toast(context, 'ぷらいばしーはあとでたいおうするよ');
   }
 }
-
-/// ---------------------------
-/// ローカルState（モック）
-/// ---------------------------
-final _notifEnabledProvider = StateProvider<bool>((ref) => true);
-final _biometricEnabledProvider = StateProvider<bool>((ref) => false);
-
-/// ---------------------------
-/// モックプロフィール（このファイルに集約）
-/// ---------------------------
-class UserProfile {
-  final String userId;
-  final String displayName;
-  final String email;
-  const UserProfile({
-    required this.userId,
-    required this.displayName,
-    required this.email,
-  });
-}
-
-const _mockProfile = UserProfile(
-  userId: 'u_ichikawa',
-  displayName: 'いちかわ けいた',
-  email: 'keita@example.com',
-);

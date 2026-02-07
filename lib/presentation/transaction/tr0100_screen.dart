@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shakuyousho_app/data/mock/users_mock.dart';
+
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
@@ -499,7 +499,12 @@ class _Tr0100TransactionScreenState
     }
 
     return memberIds
-        .map((id) => _EventMember(id: id, displayName: displayNameOf(id)))
+        .map(
+          (id) => _EventMember(
+            id: id,
+            displayName: ref.watch(userDisplayNameProvider(id)),
+          ),
+        )
         .toList();
   }
 
@@ -582,7 +587,8 @@ class _Tr0100TransactionScreenState
       fromUserId: null,
       toUserId: null,
       repaymentAmount: null,
-      createdBy: _editingTransaction?.createdBy ??
+      createdBy:
+          _editingTransaction?.createdBy ??
           (_payerUserId ?? included.first.memberId),
       createdAt: createdAt,
       updatedAt: DateTime.now(),
@@ -627,9 +633,7 @@ class _Tr0100TransactionScreenState
     );
     if (confirmed == true && mounted) {
       if (_editingTransaction != null) {
-        ref
-            .read(transactionRepositoryProvider)
-            .delete(_editingTransaction!.id);
+        ref.read(transactionRepositoryProvider).delete(_editingTransaction!.id);
       }
       context.pop();
     }
@@ -725,10 +729,7 @@ class _EventErrorView extends StatelessWidget {
             children: [
               Text(message),
               const SizedBox(height: 12),
-              TextButton(
-                onPressed: onBack,
-                child: const Text('EV0100にもどる'),
-              ),
+              TextButton(onPressed: onBack, child: const Text('EV0100にもどる')),
             ],
           ),
         ),

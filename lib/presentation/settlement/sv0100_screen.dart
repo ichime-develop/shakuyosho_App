@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
-import 'package:shakuyousho_app/data/mock/users_mock.dart';
+
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 
@@ -118,9 +118,14 @@ class _Sv0100SettlementScreenState
     final eventId = widget.eventId;
     final meta = ref.read(eventMetaProvider(eventId));
     if (meta != null) {
-      ref.read(eventMetaListProvider.notifier).upsertEventMeta(
-        meta.copyWith(status: EventStatus.settled, updatedAt: DateTime.now()),
-      );
+      ref
+          .read(eventMetaListProvider.notifier)
+          .upsertEventMeta(
+            meta.copyWith(
+              status: EventStatus.settled,
+              updatedAt: DateTime.now(),
+            ),
+          );
     }
     ScaffoldMessenger.of(
       context,
@@ -176,12 +181,12 @@ class _HeroSection extends StatelessWidget {
   }
 }
 
-class _TransferList extends StatelessWidget {
+class _TransferList extends ConsumerWidget {
   const _TransferList({required this.transfers});
   final List<SettlementInstruction> transfers;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
         border: Border(
@@ -192,8 +197,8 @@ class _TransferList extends StatelessWidget {
       child: Column(
         children: List.generate(transfers.length, (index) {
           final t = transfers[index];
-          final fromName = displayNameOf(t.fromUserId);
-          final toName = displayNameOf(t.toUserId);
+          final fromName = ref.watch(userDisplayNameProvider(t.fromUserId));
+          final toName = ref.watch(userDisplayNameProvider(t.toUserId));
           return Column(
             children: [
               _TransferRow(

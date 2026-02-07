@@ -64,6 +64,9 @@ final Map<String, MockUser> mockUsersById = {
 };
 
 /// ユーザーIDから表示名を取得（互換用）
+/// 画面での名前表示には userDisplayNameProvider を使用すること。
+/// この関数はモックデータ初期化専用として残す。
+@Deprecated('画面表示には userDisplayNameProvider を使用してください')
 String displayNameOf(String userId) {
   final user = mockUsersById[userId];
   assert(user != null, 'Unknown userId referenced in mock data: $userId');

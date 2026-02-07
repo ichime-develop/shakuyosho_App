@@ -9,6 +9,7 @@ import 'package:shakuyousho_app/presentation/friends/fr0100_screen.dart';
 import 'package:shakuyousho_app/presentation/friends/fr0200_screen.dart';
 import 'package:shakuyousho_app/presentation/loan_book/lb0200_screen.dart';
 import 'package:shakuyousho_app/presentation/my/my0100_screen.dart';
+import 'package:shakuyousho_app/presentation/my/my0101_screen.dart';
 import 'package:shakuyousho_app/presentation/event/ev0100_screen.dart';
 import 'package:shakuyousho_app/presentation/event/ev0200_screen.dart';
 import 'package:shakuyousho_app/presentation/settlement/sv0100_screen.dart';
@@ -191,6 +192,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'MY0100',
         pageBuilder: (context, state) =>
             NoTransitionPage(key: state.pageKey, child: const My0100Screen()),
+      ),
+      GoRoute(
+        path: '/my0101',
+        name: 'MY0101',
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: state.pageKey,
+          child: const My0101NameEditScreen(),
+        ),
       ),
       GoRoute(
         path: '/ev0100',

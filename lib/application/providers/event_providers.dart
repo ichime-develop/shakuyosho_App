@@ -333,6 +333,16 @@ final userRepositoryProvider = Provider<UserRepository>((ref) {
   return ref.read(userListProvider.notifier);
 });
 
+/// ユーザーIDから表示名を引くProvider（全画面で使用）
+/// userListProvider を watch しているため、名前変更が自動で全画面に伝播する
+final userDisplayNameProvider = Provider.family<String, String>((ref, userId) {
+  final users = ref.watch(userListProvider);
+  for (final u in users) {
+    if (u.id == userId && u.deletedAt == null) return u.displayName;
+  }
+  return userId; // フォールバック: IDをそのまま返す
+});
+
 // State providers
 // 画面で表示する「現在の一覧状態」を持つProvider。
 // - watch: 画面が自動更新
