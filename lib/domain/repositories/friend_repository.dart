@@ -8,6 +8,9 @@ abstract class FriendRepository {
   /// 追加
   Future<void> add(String userId);
 
+  /// 追加（経路付き）
+  Future<void> addWithSource(String userId, {String? source});
+
   /// 削除
   Future<void> remove(String userId);
 

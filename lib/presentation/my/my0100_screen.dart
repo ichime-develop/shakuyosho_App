@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shakuyousho_app/application/providers/user_providers.dart';
 import 'package:shakuyousho_app/core/utils/app_logger.dart';
 import '../common/common_bottom_nav_bar.dart';
@@ -10,16 +12,25 @@ import '../common/common_bottom_nav_bar.dart';
 /// - 通知ON/OFF、簡易生体認証ON/OFF（モック）
 /// - 表示設定（通貨/テーマ：モック）
 /// - データエクスポート/キャッシュクリア/サインアウトなどの導線（モック）
-class My0100Screen extends ConsumerWidget {
+class My0100Screen extends ConsumerStatefulWidget {
   const My0100Screen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<My0100Screen> createState() => _My0100ScreenState();
+}
+
+class _My0100ScreenState extends ConsumerState<My0100Screen> {
+  bool _codeCopied = false;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     AppLog.i('open screen', ctx: context, data: {'screen': 'MY0100'});
     final currentUser = ref.watch(currentUserProvider);
     final displayName = currentUser?.displayName ?? 'あなた';
     final userId = currentUser?.id ?? ref.watch(currentUserIdProvider);
+    final myCode = currentUser?.myCode ?? '---';
+    final inviteUrl = 'shakuyousho://invite?code=$myCode';
 
     return Scaffold(
       appBar: AppBar(title: const Text('まいぺーじ')),
@@ -45,6 +56,53 @@ class My0100Screen extends ConsumerWidget {
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.hintColor,
                           ),
+                        ),
+                        const SizedBox(height: 6),
+                        // ── ともだちコード ──
+                        Row(
+                          children: [
+                            Text(
+                              'ともだちコード: $myCode',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF374151),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            InkWell(
+                              borderRadius: BorderRadius.circular(4),
+                              onTap: () async {
+                                await Clipboard.setData(
+                                  ClipboardData(text: myCode),
+                                );
+                                setState(() => _codeCopied = true);
+                                Future.delayed(const Duration(seconds: 2), () {
+                                  if (mounted) {
+                                    setState(() => _codeCopied = false);
+                                  }
+                                });
+                              },
+                              child: Icon(
+                                _codeCopied ? Icons.check : Icons.copy,
+                                size: 16,
+                                color: _codeCopied
+                                    ? const Color(0xFF36E28C)
+                                    : const Color(0xFF6B7280),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            InkWell(
+                              borderRadius: BorderRadius.circular(4),
+                              onTap: () => Share.share(
+                                'しゃくようしょ で ともだちに なろう！\n$inviteUrl',
+                              ),
+                              child: const Icon(
+                                Icons.share,
+                                size: 16,
+                                color: Color(0xFF6B7280),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

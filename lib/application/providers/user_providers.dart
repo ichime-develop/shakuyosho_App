@@ -41,6 +41,17 @@ class UserListNotifier extends StateNotifier<List<User>>
   }
 
   @override
+  User? getByCode(String code) {
+    final trimmed = code.trim().toUpperCase();
+    if (trimmed.isEmpty) return null;
+    for (final user in state) {
+      if (user.deletedAt != null) continue;
+      if (user.myCode?.toUpperCase() == trimmed) return user;
+    }
+    return null;
+  }
+
+  @override
   void upsert(User user) {
     _userRepository.upsert(user);
     final updated = [...state];

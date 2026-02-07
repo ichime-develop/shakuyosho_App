@@ -3,6 +3,7 @@ class User {
   User({
     required this.id,
     required this.displayName,
+    this.myCode,
     this.avatarUrl,
     this.createdAt,
     this.deletedAt,
@@ -10,6 +11,9 @@ class User {
 
   final String id;
   final String displayName;
+
+  /// 友達追加用コード（例: SYY-8F3K2）
+  final String? myCode;
   final String? avatarUrl;
   final DateTime? createdAt;
   final DateTime? deletedAt;
@@ -17,6 +21,7 @@ class User {
   User copyWith({
     String? id,
     String? displayName,
+    String? myCode,
     String? avatarUrl,
     DateTime? createdAt,
     DateTime? deletedAt,
@@ -24,6 +29,7 @@ class User {
     return User(
       id: id ?? this.id,
       displayName: displayName ?? this.displayName,
+      myCode: myCode ?? this.myCode,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       createdAt: createdAt ?? this.createdAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -34,6 +40,7 @@ class User {
     return {
       'id': id,
       'displayName': displayName,
+      'myCode': myCode,
       'avatarUrl': avatarUrl,
       'createdAtMs': createdAt?.millisecondsSinceEpoch,
       'deletedAtMs': deletedAt?.millisecondsSinceEpoch,
@@ -45,6 +52,7 @@ class User {
     return User(
       id: resolvedId,
       displayName: map['displayName'] as String? ?? '',
+      myCode: map['myCode'] as String?,
       avatarUrl: map['avatarUrl'] as String?,
       createdAt: _dateFromNullable(map['createdAtMs'] ?? map['createdAt']),
       deletedAt: _dateFromNullable(map['deletedAtMs'] ?? map['deletedAt']),

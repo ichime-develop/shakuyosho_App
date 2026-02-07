@@ -23,6 +23,18 @@ class HiveUserRepository implements UserRepository {
   }
 
   @override
+  User? getByCode(String code) {
+    final trimmed = code.trim().toUpperCase();
+    if (trimmed.isEmpty) return null;
+    for (final raw in _userBox.values) {
+      final user = User.fromMap(_castMap(raw));
+      if (user.deletedAt != null) continue;
+      if (user.myCode?.toUpperCase() == trimmed) return user;
+    }
+    return null;
+  }
+
+  @override
   void upsert(User user) {
     _userBox.put(user.id, user.toMap());
   }

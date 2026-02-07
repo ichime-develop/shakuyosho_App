@@ -8,6 +8,9 @@ abstract class UserRepository {
   /// IDでユーザーを取得
   User? getById(String userId);
 
+  /// 友達コードでユーザーを取得
+  User? getByCode(String code);
+
   /// ユーザーを作成または更新
   void upsert(User user);
 }

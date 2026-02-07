@@ -8,6 +8,7 @@ domain_user.User toDomainUser(users_mock.MockUser user) {
   return domain_user.User(
     id: user.userId,
     displayName: user.displayName,
+    myCode: user.myCode,
     avatarUrl: user.avatarUrl,
     createdAt: null,
   );

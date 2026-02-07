@@ -6,9 +6,7 @@ import '../../domain/repositories/friend_repository.dart';
 /// FriendRepositoryのMock実装
 class MockFriendRepository implements FriendRepository {
   MockFriendRepository({List<MockContact>? initialContacts})
-    : _contacts = List<MockContact>.from(
-        initialContacts ?? mockContacts,
-      );
+    : _contacts = List<MockContact>.from(initialContacts ?? mockContacts);
 
   final List<MockContact> _contacts;
 
@@ -30,7 +28,10 @@ class MockFriendRepository implements FriendRepository {
   }
 
   @override
-  Future<void> add(String userId) async {
+  Future<void> add(String userId) => addWithSource(userId);
+
+  @override
+  Future<void> addWithSource(String userId, {String? source}) async {
     final resolved = _resolveUserId(userId);
     if (resolved == null) return;
     final exists = _contacts.any(

@@ -5,11 +5,13 @@ class MockUser {
   const MockUser({
     required this.userId,
     required this.displayName,
+    required this.myCode,
     this.avatarUrl,
   });
 
   final String userId;
   final String displayName;
+  final String myCode;
   final String? avatarUrl;
 }
 
@@ -22,40 +24,40 @@ const String currentUserId = 'u_001';
 /// - 友達ではないユーザーも含む（友達フィルタ検証用）
 const List<MockUser> mockUsers = [
   // 自分
-  MockUser(userId: 'u_001', displayName: 'いちかわけいた'),
+  MockUser(userId: 'u_001', displayName: 'いちかわけいた', myCode: 'SYY-K1A0X'),
 
   // 友達（contacts_mock に登録されるユーザー）
-  MockUser(userId: 'u_002', displayName: 'ゆうき'),
-  MockUser(userId: 'u_003', displayName: 'まな'),
-  MockUser(userId: 'u_004', displayName: 'けんた'),
-  MockUser(userId: 'u_005', displayName: 'みさき'),
-  MockUser(userId: 'u_006', displayName: 'あやこ'),
-  MockUser(userId: 'u_007', displayName: 'なおき'),
-  MockUser(userId: 'u_008', displayName: 'さとる'),
-  MockUser(userId: 'u_009', displayName: 'りえ'),
-  MockUser(userId: 'u_010', displayName: 'ごう'),
-  MockUser(userId: 'u_011', displayName: 'ひろし'),
-  MockUser(userId: 'u_012', displayName: 'かおり'),
+  MockUser(userId: 'u_002', displayName: 'ゆうき', myCode: 'SYY-Y2B1K'),
+  MockUser(userId: 'u_003', displayName: 'まな', myCode: 'SYY-M3C2N'),
+  MockUser(userId: 'u_004', displayName: 'けんた', myCode: 'SYY-K4D3T'),
+  MockUser(userId: 'u_005', displayName: 'みさき', myCode: 'SYY-M5E4S'),
+  MockUser(userId: 'u_006', displayName: 'あやこ', myCode: 'SYY-A6F5Y'),
+  MockUser(userId: 'u_007', displayName: 'なおき', myCode: 'SYY-N7G6K'),
+  MockUser(userId: 'u_008', displayName: 'さとる', myCode: 'SYY-S8H7R'),
+  MockUser(userId: 'u_009', displayName: 'りえ', myCode: 'SYY-R9J8E'),
+  MockUser(userId: 'u_010', displayName: 'ごう', myCode: 'SYY-G0K9U'),
+  MockUser(userId: 'u_011', displayName: 'ひろし', myCode: 'SYY-H1L0S'),
+  MockUser(userId: 'u_012', displayName: 'かおり', myCode: 'SYY-K2M1R'),
 
   // 友達ではないユーザー（フィルタ検証用）
-  MockUser(userId: 'u_013', displayName: 'たかし'),
-  MockUser(userId: 'u_014', displayName: 'さくら'),
-  MockUser(userId: 'u_015', displayName: 'ゆうた'),
-  MockUser(userId: 'u_016', displayName: 'れいな'),
-  MockUser(userId: 'u_017', displayName: 'こうじ'),
-  MockUser(userId: 'u_018', displayName: 'みゆき'),
-  MockUser(userId: 'u_019', displayName: 'だいすけ'),
-  MockUser(userId: 'u_020', displayName: 'あかね'),
-  MockUser(userId: 'u_021', displayName: 'しんじ'),
-  MockUser(userId: 'u_022', displayName: 'なつみ'),
-  MockUser(userId: 'u_023', displayName: 'けいすけ'),
-  MockUser(userId: 'u_024', displayName: 'ゆりか'),
-  MockUser(userId: 'u_025', displayName: 'たくや'),
-  MockUser(userId: 'u_026', displayName: 'さやか'),
-  MockUser(userId: 'u_027', displayName: 'りょうた'),
-  MockUser(userId: 'u_028', displayName: 'ももこ'),
-  MockUser(userId: 'u_029', displayName: 'しゅんすけ'),
-  MockUser(userId: 'u_030', displayName: 'あすか'),
+  MockUser(userId: 'u_013', displayName: 'たかし', myCode: 'SYY-T3N2S'),
+  MockUser(userId: 'u_014', displayName: 'さくら', myCode: 'SYY-S4P3R'),
+  MockUser(userId: 'u_015', displayName: 'ゆうた', myCode: 'SYY-Y5Q4T'),
+  MockUser(userId: 'u_016', displayName: 'れいな', myCode: 'SYY-R6R5N'),
+  MockUser(userId: 'u_017', displayName: 'こうじ', myCode: 'SYY-K7S6J'),
+  MockUser(userId: 'u_018', displayName: 'みゆき', myCode: 'SYY-M8T7K'),
+  MockUser(userId: 'u_019', displayName: 'だいすけ', myCode: 'SYY-D9U8K'),
+  MockUser(userId: 'u_020', displayName: 'あかね', myCode: 'SYY-A0V9N'),
+  MockUser(userId: 'u_021', displayName: 'しんじ', myCode: 'SYY-S1W0J'),
+  MockUser(userId: 'u_022', displayName: 'なつみ', myCode: 'SYY-N2X1M'),
+  MockUser(userId: 'u_023', displayName: 'けいすけ', myCode: 'SYY-K3Y2S'),
+  MockUser(userId: 'u_024', displayName: 'ゆりか', myCode: 'SYY-Y4Z3K'),
+  MockUser(userId: 'u_025', displayName: 'たくや', myCode: 'SYY-T5A4Y'),
+  MockUser(userId: 'u_026', displayName: 'さやか', myCode: 'SYY-S6B5K'),
+  MockUser(userId: 'u_027', displayName: 'りょうた', myCode: 'SYY-R7C6T'),
+  MockUser(userId: 'u_028', displayName: 'ももこ', myCode: 'SYY-M8D7K'),
+  MockUser(userId: 'u_029', displayName: 'しゅんすけ', myCode: 'SYY-S9E8K'),
+  MockUser(userId: 'u_030', displayName: 'あすか', myCode: 'SYY-A0F9K'),
 ];
 
 /// ユーザーIDでユーザーを引くためのMap

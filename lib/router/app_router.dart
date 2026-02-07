@@ -17,6 +17,8 @@ import 'package:shakuyousho_app/presentation/common/app_route_loading_gate.dart'
 
 import '../presentation/splash/st0100_screen.dart';
 import '../presentation/event/ev0101_screen.dart';
+import '../presentation/friends/invite_screen.dart';
+import '../presentation/friends/qr_scanner_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -30,6 +32,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      // ── 招待リンク（shakuyousho://invite?code=...）
+      GoRoute(
+        path: '/invite',
+        name: 'INVITE',
+        pageBuilder: (context, state) {
+          final code = state.uri.queryParameters['code'] ?? '';
+          if (code.isEmpty) {
+            return NoTransitionPage(
+              key: state.pageKey,
+              child: const _MissingParamScreen(param: 'code', screen: 'INVITE'),
+            );
+          }
+          return NoTransitionPage(
+            key: state.pageKey,
+            child: InviteScreen(code: code),
+          );
+        },
+      ),
+
+      // ── QR スキャナー（BottomSheet から遷移）
+      GoRoute(
+        path: '/qr-scanner',
+        name: 'QR_SCANNER',
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: state.pageKey,
+          child: const QrScannerScreen(),
+        ),
+      ),
+
       GoRoute(
         path: '/st0100',
         name: 'ST0100',

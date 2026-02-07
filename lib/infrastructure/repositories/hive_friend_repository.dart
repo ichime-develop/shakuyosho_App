@@ -10,16 +10,20 @@ class HiveFriendRepository implements FriendRepository {
 
   @override
   Future<List<Friend>> getAll() async {
-    final friends = _friendBox.values
-        .map((raw) => Friend.fromMap(_castMap(raw)))
-        .where((f) => f.deletedAt == null)
-        .toList()
-      ..sort((a, b) => a.userId.compareTo(b.userId));
+    final friends =
+        _friendBox.values
+            .map((raw) => Friend.fromMap(_castMap(raw)))
+            .where((f) => f.deletedAt == null)
+            .toList()
+          ..sort((a, b) => a.userId.compareTo(b.userId));
     return friends;
   }
 
   @override
-  Future<void> add(String userId) async {
+  Future<void> add(String userId) => addWithSource(userId);
+
+  @override
+  Future<void> addWithSource(String userId, {String? source}) async {
     final trimmed = userId.trim();
     if (trimmed.isEmpty) return;
     final raw = _friendBox.get(trimmed);
@@ -27,13 +31,14 @@ class HiveFriendRepository implements FriendRepository {
       final friend = Friend(
         userId: trimmed,
         createdAt: DateTime.now(),
+        source: source,
       );
       _friendBox.put(trimmed, friend.toMap());
       return;
     }
     final existing = Friend.fromMap(_castMap(raw), userId: trimmed);
     if (existing.deletedAt == null) return;
-    final revived = existing.copyWith(deletedAt: null);
+    final revived = existing.copyWith(deletedAt: null, source: source);
     _friendBox.put(trimmed, revived.toMap());
   }
 
@@ -55,12 +60,13 @@ class HiveFriendRepository implements FriendRepository {
   Future<List<Friend>> search(String query) async {
     final q = query.trim().toLowerCase();
     if (q.isEmpty) return getAll();
-    final friends = _friendBox.values
-        .map((raw) => Friend.fromMap(_castMap(raw)))
-        .where((f) => f.deletedAt == null)
-        .where((f) => f.userId.toLowerCase().contains(q))
-        .toList()
-      ..sort((a, b) => a.userId.compareTo(b.userId));
+    final friends =
+        _friendBox.values
+            .map((raw) => Friend.fromMap(_castMap(raw)))
+            .where((f) => f.deletedAt == null)
+            .where((f) => f.userId.toLowerCase().contains(q))
+            .toList()
+          ..sort((a, b) => a.userId.compareTo(b.userId));
     return friends;
   }
 }

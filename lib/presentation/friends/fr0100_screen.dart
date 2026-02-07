@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/loan_providers.dart';
 import 'package:shakuyousho_app/presentation/common/common_bottom_nav_bar.dart';
+import 'package:shakuyousho_app/presentation/friends/add_friend_sheet.dart';
 
 /// FR0100: 友達一覧（坂口モデル準拠）
 class Fr0100ThreadListScreen extends ConsumerStatefulWidget {
@@ -93,7 +94,12 @@ class _Fr0100ThreadListScreenState
           padding: const EdgeInsets.symmetric(vertical: 10),
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          onPressed: () => _showAddFriendDialog(context, ref),
+          onPressed: () async {
+            final result = await showAddFriendSheet(context);
+            if (result == 'qr' && context.mounted) {
+              context.push('/qr-scanner');
+            }
+          },
           child: const Text(
             '＋ ともだち を ついか',
             style: TextStyle(fontSize: 16, color: Color(0xFF374151)),
@@ -106,45 +112,6 @@ class _Fr0100ThreadListScreenState
 
   void _openFriendDetail(BuildContext context, String friendId) {
     context.push('/fr0200/$friendId');
-  }
-
-  Future<void> _showAddFriendDialog(BuildContext context, WidgetRef ref) async {
-    final controller = TextEditingController();
-
-    await showCupertinoDialog<void>(
-      context: context,
-      builder: (context) {
-        return CupertinoAlertDialog(
-          title: const Text('ともだち を ついか', style: TextStyle()),
-          content: Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: CupertinoTextField(
-              controller: controller,
-              placeholder: 'ユーザーID / なまえ',
-              autofocus: true,
-              style: const TextStyle(),
-            ),
-          ),
-          actions: [
-            CupertinoDialogAction(
-              isDestructiveAction: true,
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('やめる', style: TextStyle()),
-            ),
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              onPressed: () {
-                final input = controller.text.trim();
-                if (input.isEmpty) return;
-                ref.read(friendActionsProvider.notifier).addFriend(input);
-                Navigator.of(context).pop();
-              },
-              child: const Text('ついか', style: TextStyle()),
-            ),
-          ],
-        );
-      },
-    );
   }
 }
 

@@ -1,23 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
-import 'package:shakuyousho_app/data/mock/contacts_mock.dart';
+import 'package:shakuyousho_app/application/providers/friend_providers.dart';
 import 'package:shakuyousho_app/data/mock/loans_mock.dart';
-import 'package:shakuyousho_app/domain/models/friend_model.dart';
 import 'package:shakuyousho_app/domain/models/loan_model.dart';
 import 'package:shakuyousho_app/domain/models/thread_model.dart';
-import 'package:shakuyousho_app/domain/repositories/friend_repository.dart';
 import 'package:shakuyousho_app/domain/repositories/loan_repository.dart';
-import 'package:shakuyousho_app/domain/repositories/user_repository.dart';
-import 'package:shakuyousho_app/infrastructure/repositories/hive_friend_repository.dart';
 import 'package:shakuyousho_app/infrastructure/repositories/hive_loan_repository.dart';
+
+// 友達関連Providerは friend_providers.dart に分離（再エクスポート）
+export 'package:shakuyousho_app/application/providers/friend_providers.dart';
 
 // ────────────────────────────────────────────────────────────────
 // Repository Providers（DI用）
 // ────────────────────────────────────────────────────────────────
 
 final Box<Map> _loanBox = Hive.box<Map>('loans');
-final Box<Map> _friendBox = Hive.box<Map>('friends');
 final Box<Map> _threadBox = Hive.box<Map>('threads');
 final Box<Map> _userBox = Hive.box<Map>('users');
 
@@ -35,50 +33,14 @@ void _seedLoansIfEmpty({required Box<Map> box}) {
   }
 }
 
-void _seedFriendsIfEmpty({required Box<Map> box}) {
-  final hasLive = box.values.any(
-    (raw) => Friend.fromMap(_castMap(raw)).deletedAt == null,
-  );
-  if (hasLive) return;
-  final userIds = _userIdsFromBox(_userBox);
-  final createdAtByUserId = _friendCreatedAtFromThreads(_threadBox);
-
-  for (final entry in createdAtByUserId.entries) {
-    final userId = entry.key;
-    if (!userIds.contains(userId)) continue;
-    final friend = Friend(userId: userId, createdAt: entry.value);
-    box.put(friend.userId, friend.toMap());
-  }
-
-  if (box.isNotEmpty) return;
-  // フォールバック（threads未投入時）: contacts_mock に寄せる
-  for (final contact in mockContacts) {
-    if (contact.ownerUserId != currentUserId) continue;
-    if (!userIds.contains(contact.peerUserId)) continue;
-    final friend = Friend(
-      userId: contact.peerUserId,
-      createdAt: contact.createdAt ?? DateTime(2024, 1, 1),
-    );
-    box.put(friend.userId, friend.toMap());
-  }
-}
-
 /// LoanRepository（Map保存）
 final loanRepositoryProvider = Provider<LoanRepository>((ref) {
-  // Ensure users/threads seed are initialized before friend/loan seeds.
+  // Ensure users/threads seed are initialized before loan seeds.
   ref.read(userListProvider);
   ref.read(threadListProvider);
+  ref.read(friendRepositoryProvider);
   _seedLoansIfEmpty(box: _loanBox);
   return HiveLoanRepository(loanBox: _loanBox);
-});
-
-/// FriendRepository（Map保存）
-final friendRepositoryProvider = Provider<FriendRepository>((ref) {
-  // Ensure users/threads seed are initialized before friend/loan seeds.
-  ref.read(userListProvider);
-  ref.read(threadListProvider);
-  _seedFriendsIfEmpty(box: _friendBox);
-  return HiveFriendRepository(friendBox: _friendBox);
 });
 
 // ────────────────────────────────────────────────────────────────
@@ -113,25 +75,6 @@ final loanTotalsProvider = FutureProvider<({int lentTotal, int borrowedTotal})>(
     return repo.calcTotals();
   },
 );
-
-// ────────────────────────────────────────────────────────────────
-// Friend Providers
-// ────────────────────────────────────────────────────────────────
-
-/// 全友達一覧
-final allFriendsProvider = FutureProvider<List<Friend>>((ref) async {
-  final repo = ref.watch(friendRepositoryProvider);
-  return repo.getAll();
-});
-
-/// 友達検索
-final friendSearchProvider = FutureProvider.family<List<Friend>, String>((
-  ref,
-  query,
-) async {
-  final repo = ref.watch(friendRepositoryProvider);
-  return repo.search(query);
-});
 
 // ────────────────────────────────────────────────────────────────
 // 友達別サマリー（FR0100用）
@@ -425,72 +368,3 @@ Set<String> _friendIdsFromThreads(Box<Map> threadBox) {
   }
   return ids;
 }
-
-Map<String, DateTime> _friendCreatedAtFromThreads(Box<Map> threadBox) {
-  final createdAtByUserId = <String, DateTime>{};
-  for (final raw in threadBox.values) {
-    final thread = Thread.fromMap(_castMap(raw));
-    if (thread.deletedAt != null) continue;
-    if (thread.type != 'personal') continue;
-    if (!thread.participantIds.contains(currentUserId)) continue;
-    final peer = thread.participantIds.firstWhere(
-      (id) => id != currentUserId,
-      orElse: () => '',
-    );
-    if (peer.isEmpty) continue;
-    final existing = createdAtByUserId[peer];
-    if (existing == null || thread.createdAt.isBefore(existing)) {
-      createdAtByUserId[peer] = thread.createdAt;
-    }
-  }
-  return createdAtByUserId;
-}
-
-// ────────────────────────────────────────────────────────────────
-// Friend Actions（状態変更用）
-// ────────────────────────────────────────────────────────────────
-
-/// 友達の操作を行うNotifier
-class FriendActionsNotifier extends Notifier<void> {
-  @override
-  void build() {}
-
-  FriendRepository get _repo => ref.read(friendRepositoryProvider);
-  UserRepository get _userRepo => ref.read(userRepositoryProvider);
-
-  /// 友達を追加
-  Future<void> addFriend(String input) async {
-    final resolved = _resolveUserId(input);
-    if (resolved == null) return;
-    await _repo.add(resolved);
-    _invalidateAll();
-  }
-
-  /// 友達を削除
-  Future<void> removeFriend(String input) async {
-    final resolved = _resolveUserId(input);
-    if (resolved == null) return;
-    await _repo.remove(resolved);
-    _invalidateAll();
-  }
-
-  void _invalidateAll() {
-    ref.invalidate(allFriendsProvider);
-    ref.invalidate(friendSummariesProvider);
-  }
-
-  String? _resolveUserId(String input) {
-    final trimmed = input.trim();
-    if (trimmed.isEmpty) return null;
-    final direct = _userRepo.getById(trimmed);
-    if (direct != null) return direct.id;
-    for (final user in _userRepo.getAll()) {
-      if (user.displayName == trimmed) return user.id;
-    }
-    return null;
-  }
-}
-
-final friendActionsProvider = NotifierProvider<FriendActionsNotifier, void>(
-  FriendActionsNotifier.new,
-);

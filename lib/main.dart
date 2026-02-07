@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,11 +71,61 @@ void main() {
   );
 }
 
-class App extends ConsumerWidget {
+class App extends ConsumerStatefulWidget {
   const App({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<App> createState() => _AppState();
+}
+
+class _AppState extends ConsumerState<App> {
+  late final AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _appLinks = AppLinks();
+    _initDeepLinks();
+  }
+
+  Future<void> _initDeepLinks() async {
+    // コールド起動時の初期リンク
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) _handleDeepLink(initialUri);
+    } catch (_) {
+      // MissingPluginException / PlatformException は無視
+      // （テスト実行時やプラグイン未登録環境で発生し得る）
+    }
+
+    // アプリ起動中のリンク受信
+    try {
+      _linkSub = _appLinks.uriLinkStream.listen(_handleDeepLink);
+    } catch (_) {
+      // プラグイン未登録時はストリームも失敗し得る
+    }
+  }
+
+  void _handleDeepLink(Uri uri) {
+    // shakuyousho://invite?code=SYY-XXXXX → /invite?code=SYY-XXXXX
+    if (uri.host == 'invite' || uri.path == '/invite') {
+      final code = uri.queryParameters['code'] ?? '';
+      if (code.isNotEmpty) {
+        final router = ref.read(appRouterProvider);
+        router.go('/invite?code=$code');
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _linkSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // 5) ルータ注入（定義は router/app_router.dart 側）。
     final router = ref.watch(appRouterProvider);
 

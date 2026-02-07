@@ -42,6 +42,12 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
 
+  # 友達追加機能用
+  app_links: ^6.3.3
+  mobile_scanner: ^6.0.2
+  qr_flutter: ^4.1.0
+  share_plus: ^10.1.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

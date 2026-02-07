@@ -6,28 +6,36 @@ class Friend {
   final DateTime createdAt;
   final DateTime? deletedAt;
 
+  /// 友達追加の経路（'code' / 'link' / 'qr' / null=既存）
+  final String? source;
+
   const Friend({
     required this.userId,
     required this.createdAt,
     this.deletedAt,
+    this.source,
   });
 
   Friend copyWith({
     String? userId,
     DateTime? createdAt,
     DateTime? deletedAt,
+    String? source,
   }) {
     return Friend(
       userId: userId ?? this.userId,
       createdAt: createdAt ?? this.createdAt,
       deletedAt: deletedAt ?? this.deletedAt,
+      source: source ?? this.source,
     );
   }
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Friend && runtimeType == other.runtimeType && userId == other.userId;
+      other is Friend &&
+          runtimeType == other.runtimeType &&
+          userId == other.userId;
 
   @override
   int get hashCode => userId.hashCode;
@@ -40,6 +48,7 @@ class Friend {
       'userId': userId,
       'createdAtMs': createdAt.millisecondsSinceEpoch,
       'deletedAtMs': deletedAt?.millisecondsSinceEpoch,
+      'source': source,
     };
   }
 
@@ -49,6 +58,7 @@ class Friend {
       userId: resolvedId,
       createdAt: _dateFrom(map['createdAtMs'] ?? map['createdAt']),
       deletedAt: _dateFromNullable(map['deletedAtMs'] ?? map['deletedAt']),
+      source: map['source'] as String?,
     );
   }
 }
