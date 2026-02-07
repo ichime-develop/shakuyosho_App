@@ -85,6 +85,7 @@ class CreateGroupUsecase {
       participantIds: List<String>.unmodifiable(memberIds),
       createdAt: createdAt,
       updatedAt: createdAt,
+      status: EventStatus.inProgress,
       deletedAt: null,
     );
     _eventRepository.upsertEventMeta(eventMeta);
