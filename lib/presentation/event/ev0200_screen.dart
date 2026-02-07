@@ -1,9 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/data/mock/users_mock.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
+import 'package:shakuyousho_app/presentation/common/strings.dart';
 
 /// EV0200: イベント詳細（支払い一覧）
 ///
@@ -66,7 +68,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
           title: Text('EV0200 $eventTitle'),
           actions: [
             IconButton(
-              icon: const Icon(Icons.delete_outline),
+              icon: const Icon(CupertinoIcons.trash),
               tooltip: 'イベントをけす',
               onPressed: () => _Controller.confirmAndDeleteEvent(
                 context: context,
@@ -117,7 +119,6 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                   eventId: eventId,
                   payment: p,
                 ),
-                onDelete: (p) => _onDeletePayment(ref, context, eventId, p.id),
               ),
           ],
         ),
@@ -129,46 +130,6 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  Future<void> _onDeletePayment(
-    WidgetRef ref,
-    BuildContext context,
-    String eventId,
-    String paymentId,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('おしはらいをけす'),
-        content: const Text(
-          'このおしはらいをけしていい？\n'
-          'もとにもどせないよ。（モック）',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('キャンセル'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('けす'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) {
-      return;
-    }
-    // Delete via provider so other screens update
-    ref.read(transactionRepositoryProvider).delete(paymentId);
-    // 再計算を促して一覧/詳細のズレを防ぐ
-    ref.invalidate(eventDetailProvider(eventId));
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('おしはらいをけしたよ')));
   }
 }
 
@@ -305,7 +266,7 @@ class _SummaryPanel extends StatelessWidget {
           _SummaryRow(
             label: 'ごうけい',
             value: _fmtYen(totalAmount).replaceAll('¥', ''),
-            unit: 'えん',
+            unit: AppStrings.amountUnit,
             labelStyle: theme.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: Colors.grey,
@@ -398,38 +359,29 @@ class _PaymentList extends StatelessWidget {
     required this.payments,
     required this.theme,
     required this.onTap,
-    required this.onDelete,
   });
 
   final List<Transaction> payments;
   final ThemeData theme;
   final void Function(Transaction) onTap;
-  final void Function(Transaction) onDelete;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade200),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        children: List.generate(payments.length, (index) {
-          final p = payments[index];
-          return Column(
-            children: [
-              _PaymentRow(
-                transaction: p,
-                theme: theme,
-                onTap: () => onTap(p),
-                onDelete: () => onDelete(p),
-              ),
-              if (index != payments.length - 1)
-                Divider(height: 1, thickness: 0.8, color: Colors.grey.shade200),
-            ],
-          );
-        }),
-      ),
+    return Column(
+      children: List.generate(payments.length, (index) {
+        final p = payments[index];
+        return Column(
+          children: [
+            _PaymentRow(
+              transaction: p,
+              theme: theme,
+              onTap: () => onTap(p),
+            ),
+            if (index != payments.length - 1)
+              Divider(height: 1, thickness: 0.8, color: Colors.grey.shade200),
+          ],
+        );
+      }),
     );
   }
 }
@@ -439,13 +391,11 @@ class _PaymentRow extends StatelessWidget {
     required this.transaction,
     required this.theme,
     required this.onTap,
-    required this.onDelete,
   });
 
   final Transaction transaction;
   final ThemeData theme;
   final VoidCallback onTap;
-  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -505,56 +455,14 @@ class _PaymentRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${transaction.totalAmount}円',
+                  AppStrings.amountWithUnitInt(transaction.totalAmount),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    _StatusChip(
-                      label: isExpense ? 'たてかえ' : 'へんさい',
-                      color: isExpense
-                          ? theme.colorScheme.primary
-                          : Colors.orangeAccent,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, size: 20),
-                      tooltip: 'おしはらいをけす',
-                      onPressed: onDelete,
-                    ),
-                  ],
-                ),
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: color,
         ),
       ),
     );

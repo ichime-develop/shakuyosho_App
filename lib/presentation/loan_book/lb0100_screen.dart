@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shakuyousho_app/presentation/common/strings.dart';
 
 /// LB0100: 借用書（個人起点のみ）作成・編集・プレビュー（モック）
 /// - 1対1（個人）の借用書を作る。イベント起点からは遷移しない。
@@ -87,14 +88,16 @@ class _Lb0100IouScreenState extends ConsumerState<Lb0100IouScreen> {
             const SizedBox(height: 8),
 
             _Labeled(
-              label: 'きんがく（ひっす・えん）',
+              label: 'きんがく（ひっす・${AppStrings.amountUnit}）',
               child: TextFormField(
                 controller: _amountCtrl,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(prefixText: '¥ '),
                 validator: (v) {
                   final n = int.tryParse((v ?? '').replaceAll(',', ''));
-                  if (n == null || n <= 0) return '1えんいじょうをいれてね';
+                  if (n == null || n <= 0) {
+                    return '1${AppStrings.amountUnit}いじょうをいれてね';
+                  }
                   return null;
                 },
               ),

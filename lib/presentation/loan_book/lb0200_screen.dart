@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/application/providers/loan_providers.dart';
 import 'package:shakuyousho_app/domain/models/loan_model.dart';
+import 'package:shakuyousho_app/presentation/common/strings.dart';
 
 /// LB0200: 取引の追加と編集（坂口モデル準拠）
 ///
@@ -115,9 +116,9 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
               controller: _amountController,
               keyboardType: TextInputType.number,
               placeholder: '0',
-              suffix: const Padding(
-                padding: EdgeInsets.only(right: 12),
-                child: Text('えん', style: TextStyle()),
+              suffix: Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Text(AppStrings.amountUnit, style: const TextStyle()),
               ),
               style: const TextStyle(fontSize: 24),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

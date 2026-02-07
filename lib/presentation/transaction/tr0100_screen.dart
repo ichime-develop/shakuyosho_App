@@ -1,18 +1,20 @@
 import 'dart:math';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/data/mock/users_mock.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
+import 'package:shakuyousho_app/presentation/common/strings.dart';
 import '../../application/usecases/event_share_service.dart';
 
 /// TR0100: イベント内の 1 つの支払い（取引）を入力・編集する画面
 ///
 /// スクショ「岡山ホテル」画面のイメージに合わせて、以下を入力できる:
 /// - イベント名（取引名）: テキスト入力
-/// - 支払い情報: 合計金額（円）
+/// - 支払い情報: 合計金額（えん）
 /// - 支払った人: イベント参加メンバーから 1 人選択
 /// - 内訳設定ゾーン:
 ///    - チェックボックス: この人を割り勘対象に含めるか
@@ -169,7 +171,13 @@ class _Tr0100TransactionScreenState
         title: Text(
           _eventTitle == null ? 'TR0100 おしはらいメモ' : 'TR0100 $_eventTitle',
         ),
-        actions: [TextButton(onPressed: _onTapSave, child: const Text('ほぞん'))],
+        actions: [
+          IconButton(
+            icon: const Icon(CupertinoIcons.trash),
+            tooltip: 'このきろくをけす',
+            onPressed: _onDeleteRecord,
+          ),
+        ],
       ),
       body: SafeArea(
         child: GestureDetector(
@@ -179,8 +187,6 @@ class _Tr0100TransactionScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _SectionLabel(text: 'なんのおかね？'),
-                const SizedBox(height: 8),
                 _SoftInputCard(
                   child: Row(
                     children: [
@@ -190,11 +196,12 @@ class _Tr0100TransactionScreenState
                         child: TextField(
                           controller: _titleController,
                           style: const TextStyle(
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
-                          decoration: const InputDecoration(
-                            hintText: 'れい：ランチ、タクシー…',
+                          decoration: InputDecoration(
+                            hintText: 'イベントをいれてね',
+                            hintStyle: TextStyle(color: Colors.grey.shade400),
                             border: InputBorder.none,
                           ),
                         ),
@@ -203,42 +210,32 @@ class _Tr0100TransactionScreenState
                   ),
                 ),
                 const SizedBox(height: 20),
-                const _SectionLabel(text: 'いくら？'),
-                const SizedBox(height: 8),
                 _SoftInputCard(
                   child: Row(
                     children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          '¥',
-                          style: TextStyle(
-                            color: theme.colorScheme.primary,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
                       Expanded(
                         child: TextField(
                           controller: _amountController,
                           keyboardType: TextInputType.number,
                           style: const TextStyle(
-                            fontSize: 32,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
-                          decoration: const InputDecoration(
-                            hintText: '0',
+                          decoration: InputDecoration(
+                            hintText: 'きんがく',
+                            hintStyle: TextStyle(color: Colors.grey.shade400),
                             border: InputBorder.none,
                           ),
                           onChanged: (_) => _recalcShares(),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        AppStrings.amountUnit,
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
@@ -306,8 +303,6 @@ class _Tr0100TransactionScreenState
                               },
                             ),
                             const SizedBox(width: 4),
-                            _IconInitial(name: s.name),
-                            const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 s.name,
@@ -335,7 +330,7 @@ class _Tr0100TransactionScreenState
                                   border: InputBorder.none,
                                   hintText: '0',
                                   isDense: true,
-                                  prefixText: '¥ ',
+                                  suffixText: AppStrings.amountUnit,
                                 ),
                               ),
                             ),
@@ -346,16 +341,25 @@ class _Tr0100TransactionScreenState
                   ),
                 ),
                 const SizedBox(height: 24),
-                TextButton.icon(
-                  onPressed: _onDeleteRecord,
-                  icon: const Icon(Icons.delete_outline),
-                  label: const Text('このきろくをけす'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.redAccent,
-                    textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
               ],
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          child: SizedBox(
+            width: double.infinity,
+            child: CupertinoButton(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              color: const Color(0xFF34C759),
+              borderRadius: BorderRadius.circular(12),
+              onPressed: _onTapSave,
+              child: const Text(
+                'ほぞん',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
             ),
           ),
         ),
@@ -393,7 +397,7 @@ class _Tr0100TransactionScreenState
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
                       isDense: true,
-                      prefixText: '¥',
+                      suffixText: AppStrings.amountUnit,
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -655,10 +659,10 @@ class _SoftInputCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         boxShadow: const [
           BoxShadow(
             color: Color.fromARGB(12, 0, 0, 0),
@@ -679,14 +683,14 @@ class _IconBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 56,
-      height: 56,
+      width: 44,
+      height: 44,
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
       ),
       alignment: Alignment.center,
-      child: Icon(icon, color: Colors.grey.shade600),
+      child: Icon(icon, color: Colors.grey.shade600, size: 20),
     );
   }
 }
@@ -828,21 +832,6 @@ class _AccordionCard extends StatelessWidget {
   }
 }
 
-class _IconInitial extends StatelessWidget {
-  const _IconInitial({required this.name});
-  final String name;
-
-  @override
-  Widget build(BuildContext context) {
-    final initial = name.isNotEmpty ? name.characters.first : '?';
-    return CircleAvatar(
-      radius: 18,
-      backgroundColor: Colors.grey.shade200,
-      child: Text(initial, style: const TextStyle(fontWeight: FontWeight.bold)),
-    );
-  }
-}
-
 /// ---------------------------
 /// 画面内だけで使うメンバー／内訳状態
 /// ---------------------------
@@ -875,5 +864,5 @@ String _fmtYen(int n) {
     buf.write(s[i]);
     if (r > 1 && r % 3 == 1) buf.write(',');
   }
-  return '¥${buf.toString()}';
+  return AppStrings.amountWithUnit(buf.toString());
 }

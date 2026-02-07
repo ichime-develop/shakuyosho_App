@@ -8,6 +8,7 @@ import 'package:shakuyousho_app/application/providers/loan_providers.dart';
 import 'package:shakuyousho_app/data/mock/users_mock.dart';
 import 'package:shakuyousho_app/domain/models/chat_message_model.dart';
 import 'package:shakuyousho_app/domain/models/loan_model.dart';
+import 'package:shakuyousho_app/presentation/common/strings.dart';
 
 /// FR0200: 友達との取引詳細（friends_page.dart FriendDetailPage 準拠）
 /// - チャット風タイムライン
@@ -502,9 +503,9 @@ class _Fr0200ThreadDetailScreenState
                   controller: controller,
                   keyboardType: TextInputType.number,
                   placeholder: 'きんがく',
-                  suffix: const Padding(
-                    padding: EdgeInsets.only(right: 8),
-                    child: Text('えん'),
+                  suffix: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Text(AppStrings.amountUnit),
                   ),
                 ),
               ],

@@ -755,7 +755,7 @@ class PersonalSummary {
 class FriendBalance {
   final String friendId;
   final String displayName;
-  final int netAmount; // 正=相手に貸してる / 負=自分が借りてる（円）
+  final int netAmount; // 正=相手に貸してる / 負=自分が借りてる（えん）
   final DateTime? dueAt; // 期限
   const FriendBalance({
     required this.friendId,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakuyousho_app/core/utils/app_logger.dart';
 import '../common/common_bottom_nav_bar.dart';
+import '../common/strings.dart';
 
 /// MY0100: じぶん（プロフィール/設定）
 /// - プロフィール表示（名前/ユーザーID）
@@ -97,7 +98,7 @@ class My0100Screen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.currency_yen),
                   title: const Text('つうか'),
-                  subtitle: const Text('JPY（にほんえん）'),
+                  subtitle: Text('JPY（にほん${AppStrings.amountUnit}）'),
                   onTap: () => _Controller.onChangeCurrency(context),
                 ),
                 const Divider(height: 1),
