@@ -243,7 +243,6 @@ class _Tr0100TransactionScreenState
                 ),
                 const SizedBox(height: 24),
                 _AccordionCard(
-                  icon: Icons.payments,
                   title: 'だれがはらった？',
                   summary: _payerUserId == null
                       ? 'えらんでね'
@@ -272,7 +271,6 @@ class _Tr0100TransactionScreenState
                 ),
                 const SizedBox(height: 12),
                 _AccordionCard(
-                  icon: Icons.call_split,
                   title: 'わりかんのせってい',
                   summary: _memberShares.every((s) => s.included)
                       ? 'ぜんいん'
@@ -741,7 +739,7 @@ class _EventErrorView extends StatelessWidget {
 
 class _AccordionCard extends StatelessWidget {
   const _AccordionCard({
-    required this.icon,
+    this.icon,
     required this.title,
     required this.summary,
     required this.expanded,
@@ -749,7 +747,7 @@ class _AccordionCard extends StatelessWidget {
     required this.child,
   });
 
-  final IconData icon;
+  final IconData? icon;
   final String title;
   final String? summary;
   final bool expanded;
@@ -786,8 +784,10 @@ class _AccordionCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
-                  Icon(icon, color: theme.hintColor),
-                  const SizedBox(width: 12),
+                  if (icon != null) ...[
+                    Icon(icon, color: theme.hintColor),
+                    const SizedBox(width: 12),
+                  ],
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

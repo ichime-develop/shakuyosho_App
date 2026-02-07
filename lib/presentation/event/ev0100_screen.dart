@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,17 +9,32 @@ import 'package:shakuyousho_app/presentation/common/common_bottom_nav_bar.dart';
 /// EV0100: イベント一覧画面
 /// - 旅行・飲み会などのイベント単位で、貸し借りを管理する入り口
 /// - 各イベントの概要と「詳細(EV0200)」「精算(SV0100)」への導線を提供
-class Ev0100EventListScreen extends ConsumerWidget {
+class Ev0100EventListScreen extends ConsumerStatefulWidget {
   const Ev0100EventListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<Ev0100EventListScreen> createState() =>
+      _Ev0100EventListScreenState();
+}
+
+class _Ev0100EventListScreenState
+    extends ConsumerState<Ev0100EventListScreen> {
+  String _searchQuery = '';
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final metas = ref
         .watch(eventMetaListProvider)
         .where((meta) => meta.deletedAt == null)
         .toList(growable: false);
-    final views = metas
+    final query = _searchQuery.trim().toLowerCase();
+    final filteredMetas = query.isEmpty
+        ? metas
+        : metas
+            .where((meta) => meta.title.toLowerCase().contains(query))
+            .toList(growable: false);
+    final views = filteredMetas
         .map((meta) {
           final txs = ref.watch(transactionsByEventProvider(meta.id));
           final summary = deriveEventSummary(meta, txs);
@@ -39,39 +55,72 @@ class Ev0100EventListScreen extends ConsumerWidget {
       body: Stack(
         children: [
           SafeArea(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 32, 20, 140),
+            child: Column(
               children: [
-                _SectionHeader(
-                  label: 'しんこうちゅう',
-                  accentColor: theme.colorScheme.primary,
-                ),
-                const SizedBox(height: 8),
-                if (ongoing.isEmpty)
-                  _EmptyMessage(message: 'まだしんこうちゅうのイベントはないよ。', theme: theme)
-                else
-                  _EventList(
-                    themes: theme,
-                    events: ongoing,
-                    onTap: (e) => _Controller.goDetail(context, e.meta.id),
-                    onAction: (e) =>
-                        _Controller.goSettlement(context, e.meta.id),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: CupertinoSearchTextField(
+                    placeholder: 'けんさく',
+                    style: const TextStyle(),
+                    onChanged: (value) {
+                      setState(() => _searchQuery = value.trim());
+                    },
                   ),
-                const SizedBox(height: 24),
-                _SectionHeader(
-                  label: 'せいさんずみ',
-                  accentColor: Colors.grey.shade400,
                 ),
-                const SizedBox(height: 8),
-                if (finished.isEmpty)
-                  _EmptyMessage(message: 'せいさんずみのイベントはまだありません。', theme: theme)
-                else
-                  _EventList(
-                    themes: theme,
-                    events: finished,
-                    isFinished: true,
-                    onTap: (e) => _Controller.goDetail(context, e.meta.id),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 140),
+                    children: [
+                      if (views.isEmpty)
+                        _EmptyMessage(
+                          message: query.isEmpty
+                              ? 'イベントはまだありません。'
+                              : 'けんさく けっかがないよ。',
+                          theme: theme,
+                        )
+                      else ...[
+                        _SectionHeader(
+                          label: 'しんこうちゅう',
+                          accentColor: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(height: 8),
+                        if (ongoing.isEmpty)
+                          _EmptyMessage(
+                            message: 'まだしんこうちゅうのイベントはないよ。',
+                            theme: theme,
+                          )
+                        else
+                          _EventList(
+                            themes: theme,
+                            events: ongoing,
+                            onTap: (e) =>
+                                _Controller.goDetail(context, e.meta.id),
+                            onAction: (e) =>
+                                _Controller.goSettlement(context, e.meta.id),
+                          ),
+                        const SizedBox(height: 24),
+                        _SectionHeader(
+                          label: 'せいさんずみ',
+                          accentColor: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 8),
+                        if (finished.isEmpty)
+                          _EmptyMessage(
+                            message: 'せいさんずみのイベントはまだありません。',
+                            theme: theme,
+                          )
+                        else
+                          _EventList(
+                            themes: theme,
+                            events: finished,
+                            isFinished: true,
+                            onTap: (e) =>
+                                _Controller.goDetail(context, e.meta.id),
+                          ),
+                      ],
+                    ],
                   ),
+                ),
               ],
             ),
           ),
@@ -209,14 +258,14 @@ class _EventRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      child: Opacity(
-        opacity: isFinished ? 0.55 : 1,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
+        child: Opacity(
+          opacity: isFinished ? 0.55 : 1,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

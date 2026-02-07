@@ -276,11 +276,6 @@ class _SummaryPanel extends StatelessWidget {
               color: Colors.black,
             ),
           ),
-          Divider(color: Colors.grey.shade200, height: 16),
-          Text(
-            'きろく $count 件',
-            style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
-          ),
         ],
       ),
     );
