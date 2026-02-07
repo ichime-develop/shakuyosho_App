@@ -38,17 +38,34 @@ class _Fr0200ThreadDetailScreenState
     super.dispose();
   }
 
-  void _scrollToBottom({bool force = false}) {
+  void _scrollToBottom({bool force = false, bool jump = false}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollController.hasClients) return;
       final pos = _scrollController.position;
       final distance = pos.maxScrollExtent - pos.pixels;
       if (!force && distance > 180) return;
+      if (jump) {
+        _scrollController.jumpTo(pos.maxScrollExtent);
+        return;
+      }
       _scrollController.animateTo(
         pos.maxScrollExtent,
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOut,
       );
+    });
+  }
+
+  void _scheduleInitialScroll() {
+    if (_didInitialScroll) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (!_scrollController.hasClients) {
+        _scheduleInitialScroll();
+        return;
+      }
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      _didInitialScroll = true;
     });
   }
 
@@ -113,18 +130,14 @@ class _Fr0200ThreadDetailScreenState
     List<Loan> loans,
     List<ChatMessage> messages,
   ) {
-    // 初回自動スクロール
-    if (!_didInitialScroll) {
-      _didInitialScroll = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToBottom(force: true);
-      });
-    }
+    // 初回表示は必ず最下部へ
+    _scheduleInitialScroll();
 
     return Stack(
       children: [
         Column(
           children: [
+            _buildLoanSummaryHeader(loans),
             // タイムライン
             Expanded(
               child: GestureDetector(
@@ -143,6 +156,55 @@ class _Fr0200ThreadDetailScreenState
         // みかえしチップ
         _buildUnpaidChip(loans),
       ],
+    );
+  }
+
+  Widget _buildLoanSummaryHeader(List<Loan> loans) {
+    var toPay = 0; // これから かえす（自分が借りた）
+    var toReceive = 0; // これから かえってくる（自分が貸した）
+    for (final loan in loans) {
+      if (loan.remainingYen == 0) continue;
+      if (loan.direction == LoanDirection.borrowed) {
+        toPay += loan.remainingYen;
+      } else {
+        toReceive += loan.remainingYen;
+      }
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'いまの じょうたい',
+            style: TextStyle(
+              fontSize: 12,
+              color: Color(0xFF6B7280),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'これから かえす：${AppStrings.amountWithUnit(_fmtYen(toPay))}',
+            style: const TextStyle(
+              fontSize: 14,
+            ),
+          ),
+          Text(
+            'これから かえってくる：${AppStrings.amountWithUnit(_fmtYen(toReceive))}',
+            style: const TextStyle(
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -10,11 +10,12 @@ class HiveLoanRepository implements LoanRepository {
 
   @override
   Future<List<Loan>> getAll() async {
-    final loans = _loanBox.values
-        .map((raw) => Loan.fromMap(_castMap(raw)))
-        .where((l) => l.deletedAt == null)
-        .toList()
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final loans =
+        _loanBox.values
+            .map((raw) => Loan.fromMap(_castMap(raw)))
+            .where((l) => l.deletedAt == null)
+            .toList()
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     return loans;
   }
 
@@ -28,13 +29,14 @@ class HiveLoanRepository implements LoanRepository {
 
   @override
   Future<List<Loan>> getByCounterparty(String counterpartyId) async {
-    final loans = _loanBox.values
-        .map((raw) => Loan.fromMap(_castMap(raw)))
-        .where(
-          (l) => l.counterpartyId == counterpartyId && l.deletedAt == null,
-        )
-        .toList()
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final loans =
+        _loanBox.values
+            .map((raw) => Loan.fromMap(_castMap(raw)))
+            .where(
+              (l) => l.counterpartyId == counterpartyId && l.deletedAt == null,
+            )
+            .toList()
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     return loans;
   }
 
@@ -59,6 +61,8 @@ class HiveLoanRepository implements LoanRepository {
     for (final raw in _loanBox.values) {
       final loan = Loan.fromMap(_castMap(raw));
       if (loan.deletedAt != null) continue;
+      // 承認済み（approved）のLoanのみ集計
+      if (loan.status != LoanStatus.approved) continue;
       if (loan.direction == LoanDirection.lent) {
         lent += loan.remainingYen;
       } else {

@@ -147,19 +147,24 @@ class FriendSummary {
     required this.lentTotal,
     required this.borrowedTotal,
     this.nearestDueDate,
+    this.lastActivityAt,
   });
 
   final String friendId;
   final String displayName;
-  final int lentTotal; // かした残額合計
-  final int borrowedTotal; // かりた残額合計
+  final int lentTotal; // かした残額合計（approvedのみ）
+  final int borrowedTotal; // かりた残額合計（approvedのみ）
   final DateTime? nearestDueDate; // 最も近い返済期限
+  final DateTime? lastActivityAt; // 最終アクティビティ日時（最近順ソート用）
 
   /// 差額（プラス=かした方が多い、マイナス=かりた方が多い）
   int get balance => lentTotal - borrowedTotal;
+
+  /// 未完済Loanがあるかどうか
+  bool get hasOutstanding => lentTotal > 0 || borrowedTotal > 0;
 }
 
-/// 全友達のサマリー一覧
+/// 全友達のサマリー一覧（未完済Loanがある友達のみ、最近順）
 final friendSummariesProvider = FutureProvider<List<FriendSummary>>((
   ref,
 ) async {
@@ -180,9 +185,18 @@ final friendSummariesProvider = FutureProvider<List<FriendSummary>>((
     var lentTotal = 0;
     var borrowedTotal = 0;
     DateTime? nearestDue;
+    DateTime? lastActivity;
 
     for (final loan in loans) {
-      if (loan.isRepaid) continue; // 完済済みは除外
+      // 最終アクティビティ日時を更新（全Loanから算出）
+      final loanActivity = _calcLastActivity(loan);
+      if (lastActivity == null || loanActivity.isAfter(lastActivity)) {
+        lastActivity = loanActivity;
+      }
+
+      // 完済済み or 未承認 は残高集計対象外
+      if (loan.isRepaid) continue;
+      if (loan.status != LoanStatus.approved) continue;
 
       if (loan.direction == LoanDirection.lent) {
         lentTotal += loan.remainingYen;
@@ -203,12 +217,31 @@ final friendSummariesProvider = FutureProvider<List<FriendSummary>>((
         lentTotal: lentTotal,
         borrowedTotal: borrowedTotal,
         nearestDueDate: nearestDue,
+        lastActivityAt: lastActivity,
       ),
     );
   }
 
+  // 最近順にソート（lastActivityAt降順）
+  summaries.sort((a, b) {
+    final aTime = a.lastActivityAt ?? DateTime(1970);
+    final bTime = b.lastActivityAt ?? DateTime(1970);
+    return bTime.compareTo(aTime);
+  });
+
   return summaries;
 });
+
+/// Loanの最終アクティビティ日時を算出（createdAt / repayments.paidAt の最大値）
+DateTime _calcLastActivity(Loan loan) {
+  var latest = loan.createdAt;
+  for (final r in loan.repayments) {
+    if (r.paidAt.isAfter(latest)) {
+      latest = r.paidAt;
+    }
+  }
+  return latest;
+}
 
 // ────────────────────────────────────────────────────────────────
 // Loan Actions（状態変更用）
