@@ -5,22 +5,20 @@ import 'package:hive/hive.dart';
 import 'package:shakuyousho_app/data/mock/event_meta_mock.dart'
     as event_meta_mock;
 import 'package:shakuyousho_app/data/mock/threads_mock.dart' as threads_mock;
-import 'package:shakuyousho_app/infrastructure/mock/mock_user_mapper.dart'
-    as mock_user_mapper;
 import 'package:shakuyousho_app/infrastructure/mock/mock_transaction_mapper.dart'
     as mock_transaction_mapper;
 import 'package:shakuyousho_app/infrastructure/repositories/hive_event_repository.dart';
 import 'package:shakuyousho_app/infrastructure/repositories/hive_transaction_repository.dart';
 import 'package:shakuyousho_app/infrastructure/repositories/hive_thread_repository.dart';
-import 'package:shakuyousho_app/infrastructure/repositories/hive_user_repository.dart';
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/thread_model.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
-import 'package:shakuyousho_app/domain/models/user_model.dart';
 import 'package:shakuyousho_app/domain/repositories/event_repository.dart';
 import 'package:shakuyousho_app/domain/repositories/thread_repository.dart';
 import 'package:shakuyousho_app/domain/repositories/transaction_repository.dart';
-import 'package:shakuyousho_app/domain/repositories/user_repository.dart';
+
+// User関連Providerはuser_providers.dartに集約（再エクスポート）
+export 'package:shakuyousho_app/application/providers/user_providers.dart';
 
 class EventDetail {
   const EventDetail({required this.meta, required this.transactions});
@@ -189,41 +187,7 @@ class ThreadListNotifier extends StateNotifier<List<Thread>>
   }
 }
 
-class UserListNotifier extends StateNotifier<List<User>>
-    implements UserRepository {
-  UserListNotifier({
-    required UserRepository userRepository,
-    required List<User> initialUsers,
-  }) : _userRepository = userRepository,
-       super(List<User>.from(initialUsers));
-
-  final UserRepository _userRepository;
-
-  @override
-  List<User> getAll() =>
-      List.unmodifiable(state.where((u) => u.deletedAt == null));
-
-  @override
-  User? getById(String userId) {
-    for (final user in state) {
-      if (user.id == userId && user.deletedAt == null) return user;
-    }
-    return null;
-  }
-
-  @override
-  void upsert(User user) {
-    _userRepository.upsert(user);
-    final updated = [...state];
-    final index = updated.indexWhere((u) => u.id == user.id);
-    if (index == -1) {
-      updated.add(user);
-    } else {
-      updated[index] = user;
-    }
-    state = updated;
-  }
-}
+// UserListNotifier は user_providers.dart に移動済み
 
 // モックデータ（初回投入用）
 final List<EventMeta> _mockEventMetas = List<EventMeta>.from(
@@ -235,9 +199,6 @@ final List<Transaction> _mockTransactions = List<Transaction>.from(
 );
 // スレッドモックの初期化（会話/グループ用）
 final List<Thread> _mockThreads = List<Thread>.from(threads_mock.mockThreads);
-// ユーザーモックの初期化（友達/参加者の表示用）
-final List<User> _mockUsers = List<User>.from(mock_user_mapper.mockDomainUsers);
-
 void _seedEventMetasIfEmpty(Box<Map> box) {
   if (box.isNotEmpty) return;
   for (final meta in _mockEventMetas) {
@@ -256,13 +217,6 @@ void _seedThreadsIfEmpty(Box<Map> box) {
   if (box.isNotEmpty) return;
   for (final thread in _mockThreads) {
     box.put(thread.id, thread.toMap());
-  }
-}
-
-void _seedUsersIfEmpty(Box<Map> box) {
-  if (box.isNotEmpty) return;
-  for (final user in _mockUsers) {
-    box.put(user.id, user.toMap());
   }
 }
 
@@ -304,15 +258,6 @@ final List<Thread> _initialThreads = (() {
       .map((raw) => Thread.fromMap(_castMap(raw)))
       .toList(growable: false);
 })();
-final Box<Map> _userBox = Hive.box<Map>('users');
-final UserRepository _userRepo = HiveUserRepository(userBox: _userBox);
-final List<User> _initialUsers = (() {
-  _seedUsersIfEmpty(_userBox);
-  return _userBox.values
-      .map((raw) => User.fromMap(_castMap(raw)))
-      .toList(growable: false);
-})();
-
 // Repository providers
 // UI/ユースケース層から「保存先（Repository）」として参照するための入口。
 // ここでは StateNotifier を Repository として公開しているため、
@@ -327,20 +272,6 @@ final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
 
 final threadRepositoryProvider = Provider<ThreadRepository>((ref) {
   return ref.read(threadListProvider.notifier);
-});
-
-final userRepositoryProvider = Provider<UserRepository>((ref) {
-  return ref.read(userListProvider.notifier);
-});
-
-/// ユーザーIDから表示名を引くProvider（全画面で使用）
-/// userListProvider を watch しているため、名前変更が自動で全画面に伝播する
-final userDisplayNameProvider = Provider.family<String, String>((ref, userId) {
-  final users = ref.watch(userListProvider);
-  for (final u in users) {
-    if (u.id == userId && u.deletedAt == null) return u.displayName;
-  }
-  return userId; // フォールバック: IDをそのまま返す
 });
 
 // State providers
@@ -371,15 +302,6 @@ final threadListProvider =
         initialThreads: _initialThreads,
       );
     });
-
-final userListProvider = StateNotifierProvider<UserListNotifier, List<User>>((
-  ref,
-) {
-  return UserListNotifier(
-    userRepository: _userRepo,
-    initialUsers: _initialUsers,
-  );
-});
 
 // Derived providers
 // 生データを「画面で使いやすい形」に加工したProvider群。

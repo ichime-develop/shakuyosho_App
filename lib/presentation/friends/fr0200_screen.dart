@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/chat_message_providers.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/application/providers/loan_providers.dart';
-import 'package:shakuyousho_app/data/mock/users_mock.dart';
+import 'package:shakuyousho_app/application/providers/user_providers.dart';
 import 'package:shakuyousho_app/domain/models/chat_message_model.dart';
 import 'package:shakuyousho_app/domain/models/loan_model.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
@@ -76,7 +76,7 @@ class _Fr0200ThreadDetailScreenState
         .read(chatMessageActionsProvider.notifier)
         .sendMessage(
           threadId: widget.friendId,
-          senderId: currentUserId,
+          senderId: ref.read(currentUserIdProvider),
           text: text,
         );
     _messageController.clear();
@@ -92,9 +92,7 @@ class _Fr0200ThreadDetailScreenState
       );
     }
 
-    final userRepo = ref.read(userRepositoryProvider);
-    final displayName =
-        userRepo.getById(widget.friendId)?.displayName ?? widget.friendId;
+    final displayName = ref.watch(userDisplayNameProvider(widget.friendId));
     final loansAsync = ref.watch(loansByCounterpartyProvider(widget.friendId));
 
     return Scaffold(
@@ -176,32 +174,23 @@ class _Fr0200ThreadDetailScreenState
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'いまの じょうたい',
-            style: TextStyle(
-              fontSize: 12,
-              color: Color(0xFF6B7280),
-            ),
+            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
           ),
           const SizedBox(height: 4),
           Text(
             'これから かえす：${AppStrings.amountWithUnit(_fmtYen(toPay))}',
-            style: const TextStyle(
-              fontSize: 14,
-            ),
+            style: const TextStyle(fontSize: 14),
           ),
           Text(
             'これから かえってくる：${AppStrings.amountWithUnit(_fmtYen(toReceive))}',
-            style: const TextStyle(
-              fontSize: 14,
-            ),
+            style: const TextStyle(fontSize: 14),
           ),
         ],
       ),
@@ -246,8 +235,9 @@ class _Fr0200ThreadDetailScreenState
 
       if (it.isLoan && it.loan != null) {
         final loan = it.loan!;
+        final myId = ref.read(currentUserIdProvider);
         final isMe = loan.createdBy.isNotEmpty
-            ? loan.createdBy == currentUserId
+            ? loan.createdBy == myId
             : loan.direction == LoanDirection.lent;
         children.add(
           _TxBubble(
@@ -266,9 +256,8 @@ class _Fr0200ThreadDetailScreenState
         );
       } else if (it.msg != null) {
         final msg = it.msg!;
-        children.add(
-          _ChatBubble(isMe: msg.senderId == currentUserId, text: msg.text),
-        );
+        final myId = ref.read(currentUserIdProvider);
+        children.add(_ChatBubble(isMe: msg.senderId == myId, text: msg.text));
       }
     }
 

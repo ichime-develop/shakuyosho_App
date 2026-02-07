@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shakuyousho_app/application/providers/my_profile_provider.dart';
+import 'package:shakuyousho_app/application/providers/user_providers.dart';
 import 'package:shakuyousho_app/core/utils/app_logger.dart';
-import 'package:shakuyousho_app/data/mock/users_mock.dart';
 import '../common/common_bottom_nav_bar.dart';
 
 /// MY0100: じぶん（プロフィール/設定）
@@ -20,7 +19,7 @@ class My0100Screen extends ConsumerWidget {
     AppLog.i('open screen', ctx: context, data: {'screen': 'MY0100'});
     final currentUser = ref.watch(currentUserProvider);
     final displayName = currentUser?.displayName ?? 'あなた';
-    final userId = currentUser?.id ?? currentUserId;
+    final userId = currentUser?.id ?? ref.watch(currentUserIdProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('まいぺーじ')),

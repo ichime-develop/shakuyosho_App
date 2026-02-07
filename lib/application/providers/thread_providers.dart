@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shakuyousho_app/data/mock/contacts_mock.dart' as contacts_mock;
-import 'package:shakuyousho_app/data/mock/threads_mock.dart' as threads_mock;
-import 'package:shakuyousho_app/data/mock/users_mock.dart' as users_mock;
+import 'package:shakuyousho_app/application/providers/event_providers.dart';
+import 'package:shakuyousho_app/application/providers/loan_providers.dart';
 import 'package:shakuyousho_app/domain/models/thread_model.dart';
 
 class PersonalThreadSummary {
@@ -50,18 +49,23 @@ class ThreadDetailView {
   final String? peerUserId;
 }
 
+/// 1対1スレッド一覧（友達ごと）
+/// - friendsProvider（Hive） + threadListProvider（Hive） + userListProvider を使用
+/// - mock直接参照なし
 final personalThreadsProvider = Provider<List<PersonalThreadSummary>>((ref) {
-  final results = <PersonalThreadSummary>[];
-  final contacts = contacts_mock.mockContacts
-      .where((c) => c.ownerUserId == users_mock.currentUserId)
-      .toList(growable: false);
+  final myId = ref.watch(currentUserIdProvider);
+  final threads = ref.watch(threadListProvider);
+  final friends = ref
+      .watch(allFriendsProvider)
+      .maybeWhen(data: (list) => list, orElse: () => <dynamic>[]);
 
-  for (final contact in contacts) {
-    final peerId = contact.peerUserId;
-    final user = users_mock.mockUsersById[peerId];
-    final displayName = user?.displayName ?? '???';
-    final thread = _findPersonalThread(peerId);
-    final updatedAt = thread?.updatedAt ?? contact.createdAt ?? _fallbackDate();
+  final results = <PersonalThreadSummary>[];
+
+  for (final friend in friends) {
+    final peerId = friend.userId;
+    final displayName = ref.watch(userDisplayNameProvider(peerId));
+    final thread = _findPersonalThread(threads, myId, peerId);
+    final updatedAt = thread?.updatedAt ?? friend.createdAt;
     final threadId = thread?.id ?? _virtualThreadId(peerId);
 
     results.add(
@@ -78,29 +82,37 @@ final personalThreadsProvider = Provider<List<PersonalThreadSummary>>((ref) {
   return List.unmodifiable(results);
 });
 
+/// グループスレッド一覧
 final groupThreadsProvider = Provider<List<GroupThreadSummary>>((ref) {
-  final results = threads_mock.mockThreads
-      .where((t) => t.type == 'group')
-      .map(
-        (t) => GroupThreadSummary(
-          threadId: t.id,
-          groupName: t.title,
-          memberCount: t.participantIds.length,
-          updatedAt: t.updatedAt,
-          updatedAtLabel: _formatDateTime(t.updatedAt),
-        ),
-      )
-      .toList(growable: false)
-    ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+  final threads = ref.watch(threadListProvider);
+  final results =
+      threads
+          .where((t) => t.type == 'group' && t.deletedAt == null)
+          .map(
+            (t) => GroupThreadSummary(
+              threadId: t.id,
+              groupName: t.title,
+              memberCount: t.participantIds.length,
+              updatedAt: t.updatedAt,
+              updatedAtLabel: _formatDateTime(t.updatedAt),
+            ),
+          )
+          .toList(growable: false)
+        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
   return results;
 });
 
+/// スレッド詳細（1対1 / グループ共通）
 final threadDetailProvider = Provider.family<ThreadDetailView?, String>((
   ref,
   threadId,
 ) {
-  Thread? thread = _findThreadById(threadId);
-  thread ??= _buildVirtualPersonalThread(threadId);
+  final myId = ref.watch(currentUserIdProvider);
+  final threads = ref.watch(threadListProvider);
+  final users = ref.watch(userListProvider);
+
+  Thread? thread = _findThreadById(threads, threadId);
+  thread ??= _buildVirtualPersonalThread(users, myId, threadId);
   if (thread == null) return null;
 
   final isGroup = thread.type == 'group';
@@ -110,9 +122,10 @@ final threadDetailProvider = Provider.family<ThreadDetailView?, String>((
   if (isGroup) {
     title = thread.title;
   } else {
-    peerUserId = _resolvePeerUserId(thread.participantIds);
-    title =
-        peerUserId == null ? thread.title : _displayNameFor(peerUserId) ?? '???';
+    peerUserId = _resolvePeerUserId(thread.participantIds, myId);
+    title = peerUserId == null
+        ? thread.title
+        : ref.watch(userDisplayNameProvider(peerUserId));
   }
 
   return ThreadDetailView(
@@ -124,33 +137,45 @@ final threadDetailProvider = Provider.family<ThreadDetailView?, String>((
   );
 });
 
-Thread? _findThreadById(String threadId) {
-  for (final thread in threads_mock.mockThreads) {
-    if (thread.id == threadId) return thread;
+// ── Private helpers ───────────────────────────────────────────
+
+Thread? _findThreadById(List<Thread> threads, String threadId) {
+  for (final thread in threads) {
+    if (thread.id == threadId && thread.deletedAt == null) return thread;
   }
   return null;
 }
 
-Thread? _findPersonalThread(String peerUserId) {
-  for (final thread in threads_mock.mockThreads) {
-    if (thread.type == 'group') continue;
+Thread? _findPersonalThread(
+  List<Thread> threads,
+  String myId,
+  String peerUserId,
+) {
+  for (final thread in threads) {
+    if (thread.type == 'group' || thread.deletedAt != null) continue;
     final ids = thread.participantIds;
-    if (ids.contains(users_mock.currentUserId) && ids.contains(peerUserId)) {
+    if (ids.contains(myId) && ids.contains(peerUserId)) {
       return thread;
     }
   }
   return null;
 }
 
-Thread? _buildVirtualPersonalThread(String threadId) {
+Thread? _buildVirtualPersonalThread(
+  List<dynamic> users,
+  String myId,
+  String threadId,
+) {
   if (!threadId.startsWith('virtual_personal_')) return null;
   final peerUserId = threadId.replaceFirst('virtual_personal_', '');
-  if (!users_mock.mockUsersById.containsKey(peerUserId)) return null;
+  // ユーザーが存在するか確認
+  final exists = users.any((u) => u.id == peerUserId && u.deletedAt == null);
+  if (!exists) return null;
   return Thread(
     id: threadId,
     type: 'personal',
-    title: _displayNameFor(peerUserId) ?? '???',
-    participantIds: [users_mock.currentUserId, peerUserId],
+    title: '', // 表示名はProviderで解決
+    participantIds: [myId, peerUserId],
     createdAt: _fallbackDate(),
     updatedAt: _fallbackDate(),
   );
@@ -158,12 +183,9 @@ Thread? _buildVirtualPersonalThread(String threadId) {
 
 String _virtualThreadId(String peerUserId) => 'virtual_personal_$peerUserId';
 
-String? _displayNameFor(String userId) =>
-    users_mock.mockUsersById[userId]?.displayName;
-
-String? _resolvePeerUserId(List<String> participantIds) {
+String? _resolvePeerUserId(List<String> participantIds, String myId) {
   for (final id in participantIds) {
-    if (id != users_mock.currentUserId) return id;
+    if (id != myId) return id;
   }
   return null;
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
-import 'package:shakuyousho_app/data/mock/users_mock.dart';
+import 'package:shakuyousho_app/application/providers/user_providers.dart';
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/thread_model.dart';
 
@@ -51,10 +51,14 @@ class _Ev0101EventCreateScreenState
     final canCreate = groupName.isNotEmpty;
 
     final friendQuery = _friendSearchCtrl.text.trim();
-    final friends = mockUsers.where((f) => f.userId != currentUserId).toList();
+    final myId = ref.watch(currentUserIdProvider);
+    final allUsers = ref
+        .watch(userListProvider)
+        .where((u) => u.id != myId && u.deletedAt == null)
+        .toList();
     final filteredFriends = friendQuery.isEmpty
-        ? friends
-        : friends
+        ? allUsers
+        : allUsers
               .where((f) => f.displayName.contains(friendQuery))
               .toList(growable: false);
 
@@ -160,7 +164,7 @@ class _Ev0101EventCreateScreenState
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
-                      '${friends.length}人',
+                      '${allUsers.length}人',
                       style: const TextStyle(
                         color: textSub,
                         fontWeight: FontWeight.w700,
@@ -232,7 +236,7 @@ class _Ev0101EventCreateScreenState
     final eventId = generateId(prefix: 'ev');
     final participants = <String>{
       ...memberIds,
-      currentUserId,
+      ref.read(currentUserIdProvider),
     }.toList(growable: false);
     final thread = Thread(
       id: threadId,
@@ -290,7 +294,7 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _FriendTile extends StatelessWidget {
-  final MockUser friend;
+  final User friend;
   final bool checked;
   final VoidCallback onToggle;
 
@@ -304,7 +308,7 @@ class _FriendTile extends StatelessWidget {
   Widget build(BuildContext context) {
     const textMain = Color(0xFF4A4F4B);
     const textSub = Color(0xFF8B9690);
-    final avatarColors = _avatarColorsFor(friend.userId);
+    final avatarColors = _avatarColorsFor(friend.id);
 
     return InkWell(
       onTap: onToggle,
@@ -371,7 +375,7 @@ class _FriendList extends StatelessWidget {
     required this.isChecked,
   });
 
-  final List<MockUser> friends;
+  final List<User> friends;
   final ValueChanged<String> onToggle;
   final bool Function(String) isChecked;
 
@@ -386,8 +390,8 @@ class _FriendList extends StatelessWidget {
         final friend = friends[index ~/ 2];
         return _FriendTile(
           friend: friend,
-          checked: isChecked(friend.userId),
-          onToggle: () => onToggle(friend.userId),
+          checked: isChecked(friend.id),
+          onToggle: () => onToggle(friend.id),
         );
       }),
     );

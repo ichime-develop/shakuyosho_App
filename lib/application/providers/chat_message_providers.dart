@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 
 import '../../data/mock/fr_chat_messages_mock.dart';
-import '../../data/mock/users_mock.dart';
 import '../../domain/models/chat_message_model.dart';
+import 'package:shakuyousho_app/application/providers/user_providers.dart';
 import '../../domain/repositories/chat_message_repository.dart';
 import '../../infrastructure/repositories/hive_chat_message_repository.dart';
 

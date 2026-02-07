@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shakuyousho_app/application/providers/event_providers.dart';
-import 'package:shakuyousho_app/application/providers/my_profile_provider.dart';
-import 'package:shakuyousho_app/data/mock/users_mock.dart';
-import 'package:shakuyousho_app/domain/models/user_model.dart';
+import 'package:shakuyousho_app/application/providers/user_providers.dart';
 
 class My0101NameEditScreen extends ConsumerStatefulWidget {
   const My0101NameEditScreen({super.key});
@@ -37,15 +34,12 @@ class _My0101NameEditScreenState extends ConsumerState<My0101NameEditScreen> {
   void _onSave() {
     final text = _controller.text.trim();
     if (text.isEmpty || text.length > 8) return;
+    final myId = ref.read(currentUserIdProvider);
     final repo = ref.read(userRepositoryProvider);
-    final current = repo.getById(currentUserId);
+    final current = repo.getById(myId);
     final updated =
         (current ??
-                User(
-                  id: currentUserId,
-                  displayName: text,
-                  createdAt: DateTime.now(),
-                ))
+                User(id: myId, displayName: text, createdAt: DateTime.now()))
             .copyWith(displayName: text);
     repo.upsert(updated);
     Navigator.of(context).pop();
