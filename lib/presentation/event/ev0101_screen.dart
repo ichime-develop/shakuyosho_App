@@ -249,6 +249,7 @@ class _Ev0101EventCreateScreenState
       participantIds: participants,
       createdAt: now,
       updatedAt: now,
+      status: EventStatus.inProgress,
       deletedAt: null,
     );
     ref.read(eventMetaListProvider.notifier).upsertEventMeta(eventMeta);

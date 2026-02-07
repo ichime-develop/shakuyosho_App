@@ -92,11 +92,14 @@ class TransactionListNotifier extends StateNotifier<List<Transaction>>
     implements TransactionRepository {
   TransactionListNotifier({
     required TransactionRepository transactionRepository,
+    required EventRepository eventRepository,
     required List<Transaction> initialTransactions,
   }) : _transactionRepository = transactionRepository,
+       _eventRepository = eventRepository,
        super(List<Transaction>.from(initialTransactions));
 
   final TransactionRepository _transactionRepository;
+  final EventRepository _eventRepository;
 
   @override
   List<Transaction> getByEventId(String eventId) {
@@ -114,10 +117,12 @@ class TransactionListNotifier extends StateNotifier<List<Transaction>>
       updated[index] = tx;
     }
     state = updated;
+    _markEventInProgressIfSettled(tx.eventId);
   }
 
   @override
   void delete(String txId) {
+    final eventId = _findEventId(txId);
     _transactionRepository.delete(txId);
     final now = DateTime.now();
     final updated = state
@@ -127,6 +132,24 @@ class TransactionListNotifier extends StateNotifier<List<Transaction>>
         })
         .toList(growable: false);
     state = updated;
+    _markEventInProgressIfSettled(eventId);
+  }
+
+  String? _findEventId(String txId) {
+    for (final tx in state) {
+      if (tx.id == txId) return tx.eventId;
+    }
+    return null;
+  }
+
+  void _markEventInProgressIfSettled(String? eventId) {
+    if (eventId == null || eventId.isEmpty) return;
+    final meta = _eventRepository.getEventMetaById(eventId);
+    if (meta == null) return;
+    if (meta.status != EventStatus.settled) return;
+    _eventRepository.upsertEventMeta(
+      meta.copyWith(status: EventStatus.inProgress, updatedAt: DateTime.now()),
+    );
   }
 }
 
@@ -326,6 +349,7 @@ final transactionListProvider =
     StateNotifierProvider<TransactionListNotifier, List<Transaction>>((ref) {
       return TransactionListNotifier(
         transactionRepository: _txRepo,
+        eventRepository: ref.read(eventMetaListProvider.notifier),
         initialTransactions: _initialTransactions,
       );
     });
@@ -424,8 +448,7 @@ final settlementProvider = Provider.family<SettlementSummary?, String>((
 EventDerivedSummary deriveEventSummary(EventMeta meta, List<Transaction> txs) {
   final participantIds = _mergeParticipantIds(meta.participantIds, txs);
   final lastUpdatedAt = _latestUpdatedAt(meta.updatedAt, txs);
-  final net = _calcNetBalances(txs, participantIds);
-  final isSettled = txs.isNotEmpty && net.values.every((v) => v == 0);
+  final isSettled = meta.status == EventStatus.settled;
   return EventDerivedSummary(
     participantIds: participantIds,
     lastUpdatedAt: lastUpdatedAt,

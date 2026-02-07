@@ -102,8 +102,7 @@ class _Controller {
   }
 
   static void goSettlement(BuildContext context, String eventId) {
-    final uri = Uri(path: '/sv0100', queryParameters: {'eventId': eventId});
-    context.push(uri.toString());
+    context.push('/sv0100/$eventId');
   }
 
   static void onCreateEvent(BuildContext context) {
@@ -210,12 +209,14 @@ class _EventRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
+      child: Opacity(
+        opacity: isFinished ? 0.55 : 1,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -288,8 +289,9 @@ class _EventRow extends StatelessWidget {
                 if (isFinished || onAction == null)
                   const SizedBox(height: 0, width: 0),
               ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

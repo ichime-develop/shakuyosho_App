@@ -37,6 +37,7 @@ final List<EventMeta> mockEventMetas = List<EventMeta>.unmodifiable([
     participantIds: ['u_001', 'u_003', 'u_005', 'u_009'],
     createdAt: DateTime(2024, 3, 28, 11, 0),
     updatedAt: DateTime(2024, 3, 30, 16, 20),
+    status: EventStatus.settled,
   ),
   EventMeta(
     id: 'ev_006',
@@ -58,5 +59,6 @@ final List<EventMeta> mockEventMetas = List<EventMeta>.unmodifiable([
     participantIds: ['u_001', 'u_003', 'u_007', 'u_009', 'u_010'],
     createdAt: DateTime(2024, 9, 15, 11, 0),
     updatedAt: DateTime(2024, 9, 15, 19, 30),
+    status: EventStatus.settled,
   ),
 ]);

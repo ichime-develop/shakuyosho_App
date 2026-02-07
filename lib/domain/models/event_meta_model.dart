@@ -1,4 +1,6 @@
 // イベントの基本情報（メタデータ）を表すモデル。保存・一覧の基礎データ。
+enum EventStatus { inProgress, settled }
+
 class EventMeta {
   EventMeta({
     required this.id,
@@ -6,6 +8,7 @@ class EventMeta {
     required this.participantIds,
     required this.createdAt,
     required this.updatedAt,
+    this.status = EventStatus.inProgress,
     this.deletedAt,
   });
 
@@ -14,6 +17,7 @@ class EventMeta {
   final List<String> participantIds;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final EventStatus status;
   final DateTime? deletedAt;
 
   EventMeta copyWith({
@@ -22,6 +26,7 @@ class EventMeta {
     List<String>? participantIds,
     DateTime? createdAt,
     DateTime? updatedAt,
+    EventStatus? status,
     DateTime? deletedAt,
   }) {
     return EventMeta(
@@ -30,6 +35,7 @@ class EventMeta {
       participantIds: participantIds ?? this.participantIds,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      status: status ?? this.status,
       deletedAt: deletedAt ?? this.deletedAt,
     );
   }
@@ -41,6 +47,7 @@ class EventMeta {
       'participantIds': participantIds,
       'createdAtMs': createdAt.millisecondsSinceEpoch,
       'updatedAtMs': updatedAt.millisecondsSinceEpoch,
+      'status': status.name,
       'deletedAtMs': deletedAt?.millisecondsSinceEpoch,
     };
   }
@@ -57,9 +64,20 @@ class EventMeta {
       participantIds: participants,
       createdAt: _dateFrom(map['createdAtMs'] ?? map['createdAt']),
       updatedAt: _dateFrom(map['updatedAtMs'] ?? map['updatedAt']),
+      status: _statusFrom(map['status']),
       deletedAt: _dateFromNullable(map['deletedAtMs'] ?? map['deletedAt']),
     );
   }
+}
+
+EventStatus _statusFrom(dynamic raw) {
+  if (raw is EventStatus) return raw;
+  if (raw is String && raw.isNotEmpty) {
+    for (final value in EventStatus.values) {
+      if (value.name == raw) return value;
+    }
+  }
+  return EventStatus.inProgress;
 }
 
 DateTime _dateFrom(dynamic raw) {

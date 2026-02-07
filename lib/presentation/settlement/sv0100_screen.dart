@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/data/mock/users_mock.dart';
+import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 
 /// SV0100: イベント精算画面
@@ -79,9 +80,7 @@ class _Sv0100SettlementScreenState
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         child: ElevatedButton.icon(
-          onPressed: transfers.isEmpty
-              ? null
-              : () => _goApplySettlement(transfers),
+          onPressed: () => _goApplySettlement(transfers),
           style: ElevatedButton.styleFrom(
             backgroundColor: theme.colorScheme.primary,
             foregroundColor: Colors.white,
@@ -116,10 +115,17 @@ class _Sv0100SettlementScreenState
   }
 
   void _goApplySettlement(List<SettlementInstruction> list) {
+    final eventId = widget.eventId;
+    final meta = ref.read(eventMetaProvider(eventId));
+    if (meta != null) {
+      ref.read(eventMetaListProvider.notifier).upsertEventMeta(
+        meta.copyWith(status: EventStatus.settled, updatedAt: DateTime.now()),
+      );
+    }
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('かくてい')));
-    context.go('/to0100/event');
+    context.go('/ev0100');
   }
 
   String _currentEventTitle() {
