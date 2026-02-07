@@ -337,6 +337,46 @@ final transactionsByEventProvider = Provider.family<List<Transaction>, String>((
   return sorted;
 });
 
+/// 進行中イベントを「取引があった順（最近順）」で返す
+/// - 対象: deletedAt == null かつ status == inProgress
+/// - 並び順: そのイベントに紐づく最新取引日時(tx.updatedAt ?? tx.date) の降順
+/// - 取引が無いイベントは末尾（epoch扱い）
+final inProgressEventMetasByRecentTxProvider = Provider<List<EventMeta>>((ref) {
+  final metas = ref.watch(eventMetaListProvider);
+  final txs = ref.watch(transactionListProvider);
+
+  final latestTxAtByEventId = <String, DateTime>{};
+  for (final tx in txs) {
+    if (tx.deletedAt != null) continue;
+    final eventId = tx.eventId;
+    if (eventId == null || eventId.isEmpty) continue;
+    final candidate = tx.updatedAt ?? tx.date;
+
+    latestTxAtByEventId.update(
+      eventId,
+      (prev) => candidate.isAfter(prev) ? candidate : prev,
+      ifAbsent: () => candidate,
+    );
+  }
+
+  final inProgress = metas
+      .where((e) => e.deletedAt == null && e.status == EventStatus.inProgress)
+      .toList(growable: false);
+
+  final epoch = DateTime.fromMillisecondsSinceEpoch(0);
+
+  final sorted = List<EventMeta>.from(inProgress)
+    ..sort((a, b) {
+      final aKey = latestTxAtByEventId[a.id] ?? epoch;
+      final bKey = latestTxAtByEventId[b.id] ?? epoch;
+      final byTx = bKey.compareTo(aKey);
+      if (byTx != 0) return byTx;
+      return a.id.compareTo(b.id);
+    });
+
+  return sorted;
+});
+
 // eventDetailProvider
 // - 役割: イベント詳細画面に必要な「メタ + 取引」をまとめて返す
 // - 取引は新しい順に並び替え

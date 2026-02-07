@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/application/providers/loan_providers.dart';
 import 'package:shakuyousho_app/core/utils/app_logger.dart';
-import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import '../common/common_bottom_nav_bar.dart';
 
 /// TO0100: ホーム（こじん / いべんと タブ）
@@ -238,17 +237,12 @@ class _EventTabView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final metas = ref.watch(eventMetaListProvider);
-
-    // 進行中（status == inProgress）のイベントのみ、最近順で上位5件
-    final inProgress =
-        metas
-            .where(
-              (e) => e.deletedAt == null && e.status == EventStatus.inProgress,
-            )
-            .toList()
-          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-    final top5 = inProgress.take(5).toList();
+    // 進行中（status == inProgress）のイベントのみ、
+    // 「取引があった順（最近順）」で上位5件
+    final top5 = ref
+        .watch(inProgressEventMetasByRecentTxProvider)
+        .take(5)
+        .toList();
 
     return ListView(
       key: const PageStorageKey('to0100_event'),
