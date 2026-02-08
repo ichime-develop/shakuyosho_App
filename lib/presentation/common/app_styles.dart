@@ -53,6 +53,12 @@ class AppColors {
   static const Color addButtonBackground = Colors.white;
   static const Color addButtonBorder = Color(0xFFE0E0E0);
   static const Color addButtonIcon = Color(0xFF6B7280);
+
+  /// ラジオボタン/チェックボックス選択時の色
+  static const Color selectionActive = Colors.black;
+  static const Color selectionInactive = iconDefault;
+  static const Color selectionBorder = iconDefault;
+  static const Color selectionCheck = Colors.white;
 }
 
 class AppRadii {
@@ -158,5 +164,36 @@ class AppButtonStyles {
         side: const BorderSide(color: AppColors.addButtonBorder, width: 1.2),
         padding: const EdgeInsets.all(12),
         shape: const CircleBorder(),
+      );
+}
+
+/// チェックボックス・ラジオボタンのテーマ
+class AppControlThemes {
+  const AppControlThemes._();
+
+  static WidgetStateProperty<Color?> get _selectionFillWhiteInactive =>
+      WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return AppColors.selectionActive;
+        }
+        return Colors.white;
+      });
+
+  static WidgetStateProperty<Color?> get _selectionFill =>
+      WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return AppColors.selectionActive;
+        }
+        return AppColors.selectionInactive;
+      });
+
+  static CheckboxThemeData get checkbox => CheckboxThemeData(
+        fillColor: _selectionFillWhiteInactive,
+        checkColor: WidgetStateProperty.all(AppColors.selectionCheck),
+        side: const BorderSide(color: AppColors.selectionBorder, width: 1.2),
+      );
+
+  static RadioThemeData get radio => RadioThemeData(
+        fillColor: _selectionFill,
       );
 }

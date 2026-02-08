@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
 import '../../application/usecases/event_share_service.dart';
 
@@ -162,14 +163,26 @@ class _Tr0100TransactionScreenState
 
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => context.pop(),
-        ),
+    final localTheme = theme.copyWith(
+      checkboxTheme: AppControlThemes.checkbox,
+      radioTheme: AppControlThemes.radio,
+      unselectedWidgetColor: AppColors.selectionBorder,
+    );
+
+    return Theme(
+      data: localTheme,
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => context.pop(),
+          ),
         title: Text(
           _eventTitle == null ? 'TR0100 おしはらいメモ' : 'TR0100 $_eventTitle',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontSize: AppTextSizes.title,
+            fontWeight: AppFontWeights.appBarTitle,
+          ),
         ),
         actions: [
           IconButton(
@@ -195,13 +208,16 @@ class _Tr0100TransactionScreenState
                       Expanded(
                         child: TextField(
                           controller: _titleController,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontSize: AppTextSizes.section,
+                            fontWeight: AppFontWeights.listTitle,
                           ),
                           decoration: InputDecoration(
                             hintText: 'イベントをいれてね',
-                            hintStyle: TextStyle(color: Colors.grey.shade400),
+                            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                              fontSize: AppTextSizes.body,
+                              color: theme.hintColor,
+                            ),
                             border: InputBorder.none,
                           ),
                         ),
@@ -217,13 +233,16 @@ class _Tr0100TransactionScreenState
                         child: TextField(
                           controller: _amountController,
                           keyboardType: TextInputType.number,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontSize: AppTextSizes.section,
+                            fontWeight: AppFontWeights.listTitle,
                           ),
                           decoration: InputDecoration(
                             hintText: 'きんがく',
-                            hintStyle: TextStyle(color: Colors.grey.shade400),
+                            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                              fontSize: AppTextSizes.body,
+                              color: theme.hintColor,
+                            ),
                             border: InputBorder.none,
                           ),
                           onChanged: (_) => _recalcShares(),
@@ -232,10 +251,10 @@ class _Tr0100TransactionScreenState
                       const SizedBox(width: 8),
                       Text(
                         AppStrings.amountUnit,
-                        style: TextStyle(
-                          color: theme.colorScheme.primary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: AppTextSizes.body,
+                          fontWeight: AppFontWeights.label,
+                          color: AppColors.iconDefault,
                         ),
                       ),
                     ],
@@ -263,7 +282,10 @@ class _Tr0100TransactionScreenState
                         },
                         title: Text(
                           m.displayName,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: AppTextSizes.body,
+                            fontWeight: AppFontWeights.listSubtitle,
+                          ),
                         ),
                       );
                     }).toList(),
@@ -304,8 +326,9 @@ class _Tr0100TransactionScreenState
                             Expanded(
                               child: Text(
                                 s.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontSize: AppTextSizes.body,
+                                  fontWeight: AppFontWeights.listSubtitle,
                                 ),
                               ),
                             ),
@@ -317,16 +340,26 @@ class _Tr0100TransactionScreenState
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadii.card,
+                                ),
                               ),
                               child: TextField(
                                 controller: s.controller,
                                 enabled: s.included,
                                 textAlign: TextAlign.right,
                                 keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontSize: AppTextSizes.small,
+                                  fontWeight: AppFontWeights.listSubtitle,
+                                ),
+                                decoration: InputDecoration(
                                   border: InputBorder.none,
                                   hintText: '0',
+                                  hintStyle: theme.textTheme.bodySmall?.copyWith(
+                                    fontSize: AppTextSizes.small,
+                                    color: theme.hintColor,
+                                  ),
                                   isDense: true,
                                   suffixText: AppStrings.amountUnit,
                                 ),
@@ -349,19 +382,22 @@ class _Tr0100TransactionScreenState
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
           child: SizedBox(
             width: double.infinity,
-            child: CupertinoButton(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              color: const Color(0xFF34C759),
-              borderRadius: BorderRadius.circular(12),
+            child: ElevatedButton(
               onPressed: _onTapSave,
-              child: const Text(
+              style: AppButtonStyles.primaryPill,
+              child: Text(
                 'ほぞん',
-                style: TextStyle(fontSize: 18, color: Colors.white),
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontSize: AppTextSizes.body,
+                  fontWeight: AppFontWeights.label,
+                  color: AppColors.primaryActionText,
+                ),
               ),
             ),
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -384,7 +420,13 @@ class _Tr0100TransactionScreenState
                   },
                 ),
                 Expanded(
-                  child: Text(s.name, style: theme.textTheme.bodyMedium),
+                  child: Text(
+                    s.name,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: AppTextSizes.body,
+                      fontWeight: AppFontWeights.listSubtitle,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 SizedBox(
@@ -393,10 +435,18 @@ class _Tr0100TransactionScreenState
                     controller: s.controller,
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.right,
-                    decoration: const InputDecoration(
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: AppTextSizes.small,
+                      fontWeight: AppFontWeights.listSubtitle,
+                    ),
+                    decoration: InputDecoration(
                       isDense: true,
                       suffixText: AppStrings.amountUnit,
                       border: OutlineInputBorder(),
+                      hintStyle: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: AppTextSizes.small,
+                        color: theme.hintColor,
+                      ),
                     ),
                   ),
                 ),
@@ -649,7 +699,10 @@ class _SectionLabel extends StatelessWidget {
     final theme = Theme.of(context);
     return Text(
       text,
-      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontSize: AppTextSizes.section,
+        fontWeight: AppFontWeights.sectionTitle,
+      ),
     );
   }
 }
@@ -664,14 +717,8 @@ class _SoftInputCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromARGB(12, 0, 0, 0),
-            blurRadius: 20,
-            offset: Offset(0, 8),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        boxShadow: AppShadows.subtle,
       ),
       child: child,
     );
@@ -689,10 +736,10 @@ class _IconBadge extends StatelessWidget {
       height: 44,
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.card),
       ),
       alignment: Alignment.center,
-      child: Icon(icon, color: Colors.grey.shade600, size: 20),
+      child: Icon(icon, color: AppColors.iconDefault, size: 20),
     );
   }
 }
@@ -721,13 +768,24 @@ class _EventErrorView extends StatelessWidget {
             icon: const Icon(Icons.arrow_back),
             onPressed: onBack,
           ),
-          title: Text(title),
+          title: Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: AppTextSizes.title,
+                  fontWeight: AppFontWeights.appBarTitle,
+                ),
+          ),
         ),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(message),
+              Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: AppTextSizes.body,
+                    ),
+              ),
               const SizedBox(height: 12),
               TextButton(onPressed: onBack, child: const Text('EV0100にもどる')),
             ],
@@ -761,32 +819,26 @@ class _AccordionCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadii.card),
         border: Border.all(
           color: expanded
-              ? theme.colorScheme.primary.withOpacity(0.4)
-              : Colors.grey.shade200,
+              ? AppColors.accentGreenBorder
+              : AppColors.listBorder,
           style: expanded ? BorderStyle.solid : BorderStyle.solid,
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromARGB(10, 0, 0, 0),
-            blurRadius: 16,
-            offset: Offset(0, 6),
-          ),
-        ],
+        boxShadow: AppShadows.subtle,
       ),
       child: Column(
         children: [
           InkWell(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppRadii.card),
             onTap: () => onToggle(!expanded),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, color: theme.hintColor),
+                    Icon(icon, color: AppColors.iconDefault),
                     const SizedBox(width: 12),
                   ],
                   Expanded(
@@ -795,12 +847,17 @@ class _AccordionCard extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: AppTextSizes.body,
+                            fontWeight: AppFontWeights.sectionTitle,
+                          ),
                         ),
                         if (summary != null)
                           Text(
                             summary!,
                             style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: AppTextSizes.small,
+                              fontWeight: AppFontWeights.listSubtitle,
                               color: theme.hintColor,
                             ),
                           ),

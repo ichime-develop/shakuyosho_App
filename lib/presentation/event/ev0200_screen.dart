@@ -178,7 +178,7 @@ class _Controller {
     required BuildContext context,
     required String eventId,
   }) {
-    context.push('/ev0300/$eventId');
+    context.pushNamed('EV0300', pathParameters: {'eventId': eventId});
   }
 
   /// 追加ボタン → TR0100（新規）

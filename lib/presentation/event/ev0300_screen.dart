@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/application/providers/user_providers.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 
 /// EV0300: イベント参加メンバー一覧
 class Ev0300EventMembersScreen extends ConsumerWidget {
@@ -39,7 +40,13 @@ class Ev0300EventMembersScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        title: const Text('EV0300 メンバー'),
+        title: Text(
+          'EV0300 メンバー',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontSize: AppTextSizes.title,
+            fontWeight: AppFontWeights.appBarTitle,
+          ),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -47,7 +54,8 @@ class Ev0300EventMembersScreen extends ConsumerWidget {
           Text(
             detail.meta.title,
             style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
+              fontSize: AppTextSizes.section,
+              fontWeight: AppFontWeights.sectionTitle,
             ),
           ),
           const SizedBox(height: 12),
@@ -55,6 +63,7 @@ class Ev0300EventMembersScreen extends ConsumerWidget {
             Text(
               'メンバーがいないよ',
               style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: AppTextSizes.body,
                 color: theme.hintColor,
               ),
             )
@@ -67,10 +76,16 @@ class Ev0300EventMembersScreen extends ConsumerWidget {
                   children: [
                     ListTile(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                      title: Text(name),
+                      title: Text(
+                        name,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: AppTextSizes.body,
+                          fontWeight: AppFontWeights.listSubtitle,
+                        ),
+                      ),
                     ),
                     if (index != memberIds.length - 1)
-                      const Divider(height: 1),
+                      const Divider(height: 1, color: AppColors.listBorder),
                   ],
                 );
               }),
@@ -137,13 +152,24 @@ class _EventErrorView extends StatelessWidget {
             icon: const Icon(Icons.arrow_back),
             onPressed: onBack,
           ),
-          title: Text(title),
+          title: Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: AppTextSizes.title,
+                  fontWeight: AppFontWeights.appBarTitle,
+                ),
+          ),
         ),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(message),
+              Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: AppTextSizes.body,
+                    ),
+              ),
               const SizedBox(height: 12),
               TextButton(onPressed: onBack, child: const Text('EV0100にもどる')),
             ],
