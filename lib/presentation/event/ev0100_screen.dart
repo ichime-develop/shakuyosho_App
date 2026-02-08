@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/presentation/common/common_bottom_nav_bar.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 
 /// EV0100: イベント一覧画面
 /// - 旅行・飲み会などのイベント単位で、貸し借りを管理する入り口
@@ -51,7 +52,16 @@ class _Ev0100EventListScreenState
       );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('EV0100 イベント一覧'), centerTitle: false),
+      appBar: AppBar(
+        title: Text(
+          'EV0100 イベント一覧',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontSize: AppTextSizes.title,
+            fontWeight: AppFontWeights.appBarTitle,
+          ),
+        ),
+        centerTitle: false,
+      ),
       body: Stack(
         children: [
           SafeArea(
@@ -61,7 +71,6 @@ class _Ev0100EventListScreenState
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                   child: CupertinoSearchTextField(
                     placeholder: 'けんさく',
-                    style: const TextStyle(),
                     onChanged: (value) {
                       setState(() => _searchQuery = value.trim());
                     },
@@ -81,7 +90,7 @@ class _Ev0100EventListScreenState
                       else ...[
                         _SectionHeader(
                           label: 'しんこうちゅう',
-                          accentColor: theme.colorScheme.primary,
+                          accentColor: Colors.black,
                         ),
                         const SizedBox(height: 8),
                         if (ongoing.isEmpty)
@@ -101,7 +110,7 @@ class _Ev0100EventListScreenState
                         const SizedBox(height: 24),
                         _SectionHeader(
                           label: 'せいさんずみ',
-                          accentColor: Colors.grey.shade400,
+                          accentColor: AppColors.iconDefault,
                         ),
                         const SizedBox(height: 8),
                         if (finished.isEmpty)
@@ -188,7 +197,8 @@ class _SectionHeader extends StatelessWidget {
             Text(
               label,
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+                fontSize: AppTextSizes.section,
+                fontWeight: AppFontWeights.sectionTitle,
               ),
             ),
           ],
@@ -229,7 +239,11 @@ class _EventList extends StatelessWidget {
               onAction: isFinished ? null : () => onAction?.call(event),
             ),
             if (index != events.length - 1)
-              Divider(height: 1, thickness: 0.8, color: Colors.grey.shade200),
+              const Divider(
+                height: 1,
+                thickness: 0.8,
+                color: AppColors.listBorder,
+              ),
           ],
         );
       }),
@@ -258,86 +272,94 @@ class _EventRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-        child: Opacity(
-          opacity: isFinished ? 0.55 : 1,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        _fmtDate(summary.lastUpdatedAt),
-                        style: theme.textTheme.labelSmall?.copyWith(
+      child: Opacity(
+        opacity: isFinished ? 0.55 : 1,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          _fmtDate(summary.lastUpdatedAt),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: AppTextSizes.small,
                           color: theme.hintColor,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: AppFontWeights.listSubtitle,
                         ),
-                      ),
-                      if (isFinished)
-                        Container(
-                          margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(
-                                Icons.check_circle,
-                                size: 14,
-                                color: Colors.green,
+                        ),
+                        if (isFinished)
+                          Container(
+                            margin: const EdgeInsets.only(left: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.accentGreenFill,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: AppColors.accentGreenBorder,
                               ),
-                              SizedBox(width: 4),
-                              Text(
-                                'せいさんOK',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.check_circle,
+                                  size: 14,
+                                  color: AppColors.accentGreen,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 4),
+                                Text(
+                                  'せいさんOK',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontSize: AppTextSizes.tiny,
+                                    fontWeight: AppFontWeights.label,
+                                    color: AppColors.accentGreen,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    meta.title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                      ],
                     ),
-                  ),
-                  Text(
-                    'さんか ${summary.participantIds.length} にん',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
+                    const SizedBox(height: 4),
+                    Text(
+                      meta.title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontSize: AppTextSizes.section,
+                        fontWeight: AppFontWeights.listTitle,
+                      ),
                     ),
-                  ),
-                ],
+                    Text(
+                      'さんか ${summary.participantIds.length} にん',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: AppTextSizes.small,
+                        color: theme.hintColor,
+                        fontWeight: AppFontWeights.listSubtitle,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (!isFinished && onAction != null)
-                  IconButton(
-                    onPressed: onAction,
-                    icon: const Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                if (isFinished || onAction == null)
-                  const SizedBox(height: 0, width: 0),
-              ],
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (!isFinished && onAction != null)
+                    IconButton(
+                      onPressed: onAction,
+                      icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                      color: AppColors.iconDefault,
+                    ),
+                  if (isFinished || onAction == null)
+                    const SizedBox(height: 0, width: 0),
+                ],
               ),
             ],
           ),
@@ -358,7 +380,10 @@ class _EmptyMessage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Text(
         message,
-        style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontSize: AppTextSizes.body,
+          color: theme.hintColor,
+        ),
       ),
     );
   }
@@ -370,19 +395,10 @@ class _CreateFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton.icon(
+    return OutlinedButton(
       onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF13EC80),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: const StadiumBorder(),
-        elevation: 8,
-      ),
-      icon: const Icon(Icons.add, size: 28, color: Color(0xFF102219)),
-      label: const Text(
-        'あたらしくつくる',
-        style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF102219)),
-      ),
+      style: AppButtonStyles.addCircle,
+      child: const Icon(Icons.add, size: 26),
     );
   }
 }

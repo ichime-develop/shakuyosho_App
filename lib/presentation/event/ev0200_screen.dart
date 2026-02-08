@@ -6,6 +6,7 @@ import 'package:shakuyousho_app/application/providers/event_providers.dart';
 
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
 
 /// EV0200: イベント詳細（支払い一覧）
@@ -71,7 +72,13 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.go('/ev0100'),
           ),
-          title: Text('EV0200 $eventTitle'),
+          title: Text(
+            'EV0200 $eventTitle',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontSize: AppTextSizes.title,
+              fontWeight: AppFontWeights.appBarTitle,
+            ),
+          ),
           actions: [
             IconButton(
               icon: const Icon(CupertinoIcons.trash),
@@ -103,7 +110,8 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
             Text(
               'きろく',
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+                fontSize: AppTextSizes.section,
+                fontWeight: AppFontWeights.sectionTitle,
               ),
             ),
             const SizedBox(height: 8),
@@ -114,6 +122,7 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
                   'このイベントのおしはらいはまだないよ。\n「＋」ボタンからメモできるよ。',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: AppTextSizes.body,
                     color: theme.hintColor,
                   ),
                 ),
@@ -147,19 +156,10 @@ class _CreateFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton.icon(
+    return OutlinedButton(
       onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF13EC80),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: const StadiumBorder(),
-        elevation: 8,
-      ),
-      icon: const Icon(Icons.add, size: 28, color: Color(0xFF102219)),
-      label: const Text(
-        'あたらしくつくる',
-        style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF102219)),
-      ),
+      style: AppButtonStyles.addCircle,
+      child: const Icon(Icons.add, size: 26),
     );
   }
 }
@@ -268,15 +268,9 @@ class _SummaryPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromARGB(20, 0, 0, 0),
-            blurRadius: 15,
-            offset: Offset(0, 8),
-          ),
-        ],
+        color: AppColors.summaryCardBackground,
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        boxShadow: AppShadows.subtle,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,17 +280,17 @@ class _SummaryPanel extends StatelessWidget {
             value:
                 '${_fmtYen(totalAmount).replaceAll('¥', '')}${AppStrings.amountUnit}',
             textStyle: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
+              fontSize: AppTextSizes.body,
+              fontWeight: AppFontWeights.label,
             ),
           ),
-          const Divider(height: 12, color: Color(0xFFE5E7EB)),
+          const Divider(height: 12, color: AppColors.listBorder),
           _SummaryListRow(
             label: 'めんばー',
             value: memberText,
             textStyle: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
+              fontSize: AppTextSizes.body,
+              fontWeight: AppFontWeights.label,
             ),
             showArrow: true,
             onTap: onMembersPressed,
@@ -330,9 +324,10 @@ class _SummaryListRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontSize: AppTextSizes.small,
+              fontWeight: AppFontWeights.label,
+              color: AppColors.iconDefault,
             ),
           ),
           const SizedBox(width: 12),
@@ -354,7 +349,7 @@ class _SummaryListRow extends StatelessWidget {
                   const Icon(
                     Icons.chevron_right,
                     size: 18,
-                    color: Color(0xFF9CA3AF),
+                    color: AppColors.iconDefault,
                   ),
                 ],
               ],
@@ -381,16 +376,21 @@ class _PrimaryButton extends StatelessWidget {
       child: ElevatedButton.icon(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF111814),
-          foregroundColor: Colors.white,
+          backgroundColor: AppColors.accentGreenFill,
+          foregroundColor: AppColors.accentGreen,
+          side: const BorderSide(color: AppColors.accentGreenBorder, width: 1.2),
           shape: const StadiumBorder(),
-          elevation: 6,
+          elevation: 2,
           padding: const EdgeInsets.symmetric(horizontal: 18),
         ),
-        icon: const Icon(Icons.payments, size: 18),
-        label: const Text(
+        icon: const Icon(Icons.payments, size: 18, color: AppColors.accentGreen),
+        label: Text(
           'せいさんする',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            fontSize: AppTextSizes.body,
+            fontWeight: AppFontWeights.label,
+            color: AppColors.accentGreen,
+          ),
         ),
       ),
     );
@@ -417,7 +417,11 @@ class _PaymentList extends StatelessWidget {
           children: [
             _PaymentRow(transaction: p, theme: theme, onTap: () => onTap(p)),
             if (index != payments.length - 1)
-              Divider(height: 1, thickness: 0.8, color: Colors.grey.shade200),
+              const Divider(
+                height: 1,
+                thickness: 0.8,
+                color: AppColors.listBorder,
+              ),
           ],
         );
       }),
@@ -461,27 +465,21 @@ class _PaymentRow extends ConsumerWidget {
                   Text(
                     transaction.title,
                     style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                      fontSize: AppTextSizes.section,
+                      fontWeight: AppFontWeights.listTitle,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: Colors.grey,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
                       Text(
                         isExpense
-                            ? '$payerName • ${_fmtMonthDay(transaction.date)}'
-                            : '$fromName → $toName • ${_fmtMonthDay(transaction.date)}',
+                            ? '$payerName   ${_fmtMonthDay(transaction.date)}'
+                            : '$fromName → $toName   ${_fmtMonthDay(transaction.date)}',
                         style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: AppTextSizes.small,
                           color: theme.hintColor,
+                          fontWeight: AppFontWeights.listSubtitle,
                         ),
                       ),
                     ],
@@ -496,7 +494,8 @@ class _PaymentRow extends ConsumerWidget {
                 Text(
                   AppStrings.amountWithUnitInt(transaction.totalAmount),
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontSize: AppTextSizes.section,
+                    fontWeight: AppFontWeights.listTitle,
                   ),
                 ),
               ],
@@ -532,13 +531,24 @@ class _EventErrorView extends StatelessWidget {
             icon: const Icon(Icons.arrow_back),
             onPressed: onBack,
           ),
-          title: Text(title),
+          title: Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontSize: AppTextSizes.title,
+              fontWeight: AppFontWeights.appBarTitle,
+            ),
+          ),
         ),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(message),
+              Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: AppTextSizes.body,
+                    ),
+              ),
               const SizedBox(height: 12),
               TextButton(onPressed: onBack, child: const Text('EV0100にもどる')),
             ],

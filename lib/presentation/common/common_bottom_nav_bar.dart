@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/core/utils/app_logger.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 
 class CommonBottomNavBar extends StatelessWidget {
   const CommonBottomNavBar({super.key, required this.currentIndex});
@@ -26,17 +27,32 @@ class CommonBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final items = [
-      _NavItemData(icon: Icons.home, label: 'ほーむ'),
-      _NavItemData(icon: Icons.group, label: 'ともだち'),
-      _NavItemData(icon: Icons.event_note, label: 'いべんと'),
-      _NavItemData(icon: Icons.person, label: 'じぶん'),
+      _NavItemData(
+        iconFilled: Icons.home,
+        iconOutlined: Icons.home_outlined,
+        label: 'ほーむ',
+      ),
+      _NavItemData(
+        iconFilled: Icons.group,
+        iconOutlined: Icons.group_outlined,
+        label: 'ともだち',
+      ),
+      _NavItemData(
+        iconFilled: Icons.event_note,
+        iconOutlined: Icons.event_note_outlined,
+        label: 'いべんと',
+      ),
+      _NavItemData(
+        iconFilled: Icons.person,
+        iconOutlined: Icons.person_outline,
+        label: 'じぶん',
+      ),
     ];
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: const [
           BoxShadow(
@@ -52,8 +68,9 @@ class CommonBottomNavBar extends StatelessWidget {
           final selected = currentIndex == index;
           final data = items[index];
           final color = selected
-              ? theme.colorScheme.primary
-              : theme.colorScheme.onSurface.withOpacity(0.5);
+              ? AppColors.navSelectedIcon
+              : AppColors.navUnselectedIcon;
+          final iconData = selected ? data.iconFilled : data.iconOutlined;
           return Expanded(
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
@@ -63,7 +80,7 @@ class CommonBottomNavBar extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(data.icon, color: color, size: 24),
+                    Icon(iconData, color: color, size: 24),
                     const SizedBox(height: 6),
                     Text(
                       data.label,
@@ -71,7 +88,7 @@ class CommonBottomNavBar extends StatelessWidget {
                         fontSize: 11,
                         fontWeight:
                             selected ? FontWeight.bold : FontWeight.w500,
-                        color: color,
+                        color: Colors.black,
                       ),
                     ),
                   ],
@@ -86,7 +103,12 @@ class CommonBottomNavBar extends StatelessWidget {
 }
 
 class _NavItemData {
-  const _NavItemData({required this.icon, required this.label});
-  final IconData icon;
+  const _NavItemData({
+    required this.iconFilled,
+    required this.iconOutlined,
+    required this.label,
+  });
+  final IconData iconFilled;
+  final IconData iconOutlined;
   final String label;
 }
