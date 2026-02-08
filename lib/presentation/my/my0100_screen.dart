@@ -61,11 +61,14 @@ class _My0100ScreenState extends ConsumerState<My0100Screen> {
                         // ── ともだちコード ──
                         Row(
                           children: [
-                            Text(
-                              'ともだちコード: $myCode',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF374151),
+                            Expanded(
+                              child: Text(
+                                'ともだちコード: $myCode',
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF374151),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 4),
@@ -119,7 +122,16 @@ class _My0100ScreenState extends ConsumerState<My0100Screen> {
           const SizedBox(height: 12),
 
           // ── なまえをへんしゅう
-          Card(),
+          Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.edit),
+                title: const Text('なまえをへんしゅう'),
+                onTap: () => _Controller.onEditProfile(context),
+              ),
+              const Divider(height: 1),
+            ],
+          ),
           const SizedBox(height: 12),
 
           // ── あぷりじょうほう / りようきやく / ぷらいばしー（カードではなく単一のリスト）

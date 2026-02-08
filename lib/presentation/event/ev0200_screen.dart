@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 
+import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
 
@@ -48,6 +49,11 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
     final eventTitle = eventMeta.title;
 
     final payments = detail.transactions;
+    final memberIds = _collectParticipantIds(eventMeta, payments);
+    final memberNames = memberIds
+        .map((id) => ref.watch(userDisplayNameProvider(id)))
+        .toList(growable: false);
+    final memberText = memberNames.isEmpty ? 'なし' : memberNames.join('　');
 
     final theme = Theme.of(context);
     final totalAmount = payments
@@ -84,7 +90,9 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
             _SummaryPanel(
               theme: theme,
               totalAmount: totalAmount,
-              count: payments.length,
+              memberText: memberText,
+              onMembersPressed: () =>
+                  _Controller.goMembers(context: context, eventId: eventId),
             ),
             const SizedBox(height: 20),
             _PrimaryButton(
@@ -165,6 +173,14 @@ class _Controller {
     context.push('/sv0100/$eventId');
   }
 
+  /// メンバー一覧 → EV0300
+  static void goMembers({
+    required BuildContext context,
+    required String eventId,
+  }) {
+    context.push('/ev0300/$eventId');
+  }
+
   /// 追加ボタン → TR0100（新規）
   static void goAddEventTransaction({
     required BuildContext context,
@@ -238,12 +254,14 @@ class _SummaryPanel extends StatelessWidget {
   const _SummaryPanel({
     required this.theme,
     required this.totalAmount,
-    required this.count,
+    required this.memberText,
+    required this.onMembersPressed,
   });
 
   final ThemeData theme;
   final int totalAmount;
-  final int count;
+  final String memberText;
+  final VoidCallback onMembersPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -263,18 +281,25 @@ class _SummaryPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SummaryRow(
+          _SummaryListRow(
             label: 'ごうけい',
-            value: _fmtYen(totalAmount).replaceAll('¥', ''),
-            unit: AppStrings.amountUnit,
-            labelStyle: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-            valueStyle: theme.textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.bold,
+            value:
+                '${_fmtYen(totalAmount).replaceAll('¥', '')}${AppStrings.amountUnit}',
+            textStyle: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
               color: Colors.black,
             ),
+          ),
+          const Divider(height: 12, color: Color(0xFFE5E7EB)),
+          _SummaryListRow(
+            label: 'めんばー',
+            value: memberText,
+            textStyle: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+            showArrow: true,
+            onTap: onMembersPressed,
           ),
         ],
       ),
@@ -282,42 +307,65 @@ class _SummaryPanel extends StatelessWidget {
   }
 }
 
-class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({
+class _SummaryListRow extends StatelessWidget {
+  const _SummaryListRow({
     required this.label,
     required this.value,
-    required this.unit,
-    required this.labelStyle,
-    required this.valueStyle,
+    required this.textStyle,
+    this.onTap,
+    this.showArrow = false,
   });
 
   final String label;
   final String value;
-  final String unit;
-  final TextStyle? labelStyle;
-  final TextStyle? valueStyle;
+  final TextStyle? textStyle;
+  final VoidCallback? onTap;
+  final bool showArrow;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: labelStyle),
-        Row(
-          children: [
-            Text(value, style: valueStyle),
-            const SizedBox(width: 4),
-            Text(
-              unit,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.grey,
-              ),
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
             ),
-          ],
-        ),
-      ],
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Flexible(
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: textStyle,
+                  ),
+                ),
+                if (showArrow) ...[
+                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: Color(0xFF9CA3AF),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
+
+    if (onTap == null) return row;
+    return InkWell(onTap: onTap, child: row);
   }
 }
 
@@ -503,3 +551,38 @@ class _EventErrorView extends StatelessWidget {
 
 String _fmtMonthDay(DateTime d) =>
     '${d.month}/${d.day.toString().padLeft(2, '0')}';
+
+List<String> _collectParticipantIds(
+  EventMeta meta,
+  List<Transaction> transactions,
+) {
+  final ids = <String>[];
+  final seen = <String>{};
+
+  void addIfMissing(String id) {
+    if (id.isEmpty) return;
+    if (seen.add(id)) ids.add(id);
+  }
+
+  for (final id in meta.participantIds) {
+    addIfMissing(id);
+  }
+
+  for (final tx in transactions) {
+    if (tx.type == TxType.expense) {
+      final paidBy = tx.paidBy;
+      if (paidBy != null) addIfMissing(paidBy);
+      final shares = tx.shares;
+      if (shares != null) {
+        for (final id in shares.keys) {
+          addIfMissing(id);
+        }
+      }
+    } else {
+      if (tx.fromUserId != null) addIfMissing(tx.fromUserId!);
+      if (tx.toUserId != null) addIfMissing(tx.toUserId!);
+    }
+  }
+
+  return ids;
+}

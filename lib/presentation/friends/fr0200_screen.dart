@@ -544,11 +544,11 @@ class _Fr0200ThreadDetailScreenState
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          loan.isRepaid ? 'へんさいずみ' : 'みへんさい',
+                          loan.remainingYen == 0 ? 'しはらいかんりょう' : 'みへんさい',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: loan.isRepaid
+                            color: loan.remainingYen == 0
                                 ? const Color(0xFF059669)
                                 : const Color(0xFFD97706),
                           ),
@@ -592,11 +592,23 @@ class _Fr0200ThreadDetailScreenState
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
                   ),
                   // 返済状況
+                  const SizedBox(height: 12),
+                  Text(
+                    'のこり：¥${_fmtYen(loan.remainingYen)}',
+                    style: const TextStyle(fontSize: 14),
+                  ),
                   if (loan.repayments.isNotEmpty) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
                     Text(
                       'へんさい：¥${_fmtYen(loan.repaidYen)} / ¥${_fmtYen(loan.amountYen)}',
-                      style: const TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ],
+                  if (loan.remainingYen == 0) ...[
+                    const SizedBox(height: 6),
+                    const Text(
+                      'しはらいかんりょう',
+                      style: TextStyle(fontSize: 13, color: Color(0xFF059669)),
                     ),
                   ],
                   const SizedBox(height: 20),

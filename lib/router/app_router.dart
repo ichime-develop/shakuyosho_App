@@ -12,6 +12,7 @@ import 'package:shakuyousho_app/presentation/my/my0100_screen.dart';
 import 'package:shakuyousho_app/presentation/my/my0101_screen.dart';
 import 'package:shakuyousho_app/presentation/event/ev0100_screen.dart';
 import 'package:shakuyousho_app/presentation/event/ev0200_screen.dart';
+import 'package:shakuyousho_app/presentation/event/ev0300_screen.dart';
 import 'package:shakuyousho_app/presentation/settlement/sv0100_screen.dart';
 import 'package:shakuyousho_app/presentation/common/app_route_loading_gate.dart';
 
@@ -251,6 +252,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               // TODO: 外部データ取得を導入したら、ここで prefetch Future を待つ
               load: () async {},
               child: Ev0200EventDetailScreen(eventId: eventId),
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/ev0300/:eventId',
+        name: 'EV0300',
+        pageBuilder: (context, state) {
+          final eventId = state.pathParameters['eventId'];
+          if (eventId == null || eventId.isEmpty) {
+            return NoTransitionPage(
+              key: state.pageKey,
+              child: const _MissingParamScreen(
+                param: 'eventId',
+                screen: 'EV0300',
+              ),
+            );
+          }
+          return NoTransitionPage(
+            key: state.pageKey,
+            child: AppRouteLoadingGate(
+              load: () async {},
+              child: Ev0300EventMembersScreen(eventId: eventId),
             ),
           );
         },

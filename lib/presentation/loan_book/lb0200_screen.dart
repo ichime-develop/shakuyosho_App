@@ -364,6 +364,18 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                   ),
                   const SizedBox(height: 24),
                   _DetailTextBlock(
+                    label: 'のこり',
+                    value: '¥${_fmtYen(loan.remainingYen)}',
+                  ),
+                  if (loan.repayments.isNotEmpty)
+                    _DetailTextBlock(
+                      label: 'へんさい',
+                      value:
+                          '¥${_fmtYen(loan.repaidYen)} / ¥${_fmtYen(loan.amountYen)}',
+                    ),
+                  if (loan.remainingYen == 0)
+                    const _DetailTextBlock(label: 'じょうたい', value: 'しはらいかんりょう'),
+                  _DetailTextBlock(
                     label: 'ようと',
                     value: loan.purpose.isEmpty ? 'なし' : loan.purpose,
                   ),
