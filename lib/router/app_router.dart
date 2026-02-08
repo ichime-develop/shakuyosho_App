@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakuyousho_app/core/utils/route_logger.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shakuyousho_app/presentation/loan_book/lb0100_screen.dart';
 import 'package:shakuyousho_app/presentation/transaction/tr0100_screen.dart';
 import 'package:shakuyousho_app/presentation/top/to0100_screen.dart';
 import 'package:shakuyousho_app/presentation/friends/fr0100_screen.dart';
@@ -123,30 +122,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 eventId: eventId,
                 transactionId: transactionId,
               ),
-            ),
-          );
-        },
-      ),
-      GoRoute(
-        path: '/lb0100/:friendId',
-        name: 'LB0100',
-        pageBuilder: (context, state) {
-          final friendId = state.pathParameters['friendId'];
-          if (friendId == null || friendId.isEmpty) {
-            return NoTransitionPage(
-              key: state.pageKey,
-              child: const _MissingParamScreen(
-                param: 'friendId',
-                screen: 'LB0100',
-              ),
-            );
-          }
-          return NoTransitionPage(
-            key: state.pageKey,
-            child: AppRouteLoadingGate(
-              // TODO: 外部データ取得を導入したら、ここで prefetch Future を待つ
-              load: () async {},
-              child: Lb0100IouScreen(friendId: friendId),
             ),
           );
         },

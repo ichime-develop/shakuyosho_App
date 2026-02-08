@@ -192,7 +192,7 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
             ),
             const SizedBox(height: 40),
 
-            // 送るボタン（LB0100 と同様の UI）
+            // 送るボタン（既存の借用書UIと同様）
             SizedBox(
               width: double.infinity,
               child: GestureDetector(

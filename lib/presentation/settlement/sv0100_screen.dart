@@ -10,7 +10,7 @@ import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 /// - メンバーの支払総額と負担割合からネット残高を算出
 /// - "誰が誰へいくら払うか" の最小送金案（ヒューリスティック）を提示
 /// - 各提案から「取引へ(TR0100)」へ遷移（モック）
-/// - ※ この画面から借用書(LB0100)には遷移しない
+/// - ※ この画面から借用書には遷移しない
 class Sv0100SettlementScreen extends ConsumerStatefulWidget {
   const Sv0100SettlementScreen({super.key, required this.eventId});
 

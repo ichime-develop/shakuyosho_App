@@ -21,7 +21,7 @@ import 'package:shakuyousho_app/presentation/common/strings.dart';
 /// 3. 下部ボタン:
 ///    - 「追加」: TR0100 へ遷移（新規）
 ///    - 「清算」: SV0100 へ遷移
-/// ※ この画面から借用書(LB0100)には遷移しない
+/// ※ この画面から借用書には遷移しない
 class Ev0200EventDetailScreen extends ConsumerWidget {
   const Ev0200EventDetailScreen({super.key, required this.eventId});
 
