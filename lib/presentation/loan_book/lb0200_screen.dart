@@ -318,7 +318,8 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
               _DetailRow(label: 'ようけん', value: loan.purpose),
               const SizedBox(height: 16),
               // 備考
-              if (loan.note.isNotEmpty) ...[                _DetailRow(label: 'びこう', value: loan.note),
+              if (loan.note.isNotEmpty) ...[
+                _DetailRow(label: 'びこう', value: loan.note),
                 const SizedBox(height: 16),
               ],
               // めやすのひ

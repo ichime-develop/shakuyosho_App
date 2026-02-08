@@ -270,9 +270,7 @@ class _Fr0200ThreadDetailScreenState
         final myId = ref.read(currentUserIdProvider);
         final isMe = loan.lenderUserId == myId;
         final friendName = ref.read(userDisplayNameProvider(widget.friendId));
-        final label = isMe
-            ? '$friendName さんに かした'
-            : '$friendName さんから かりた';
+        final label = isMe ? '$friendName さんに かした' : '$friendName さんから かりた';
         children.add(
           _TxBubble(
             isMe: isMe,
@@ -312,7 +310,8 @@ class _Fr0200ThreadDetailScreenState
           // 借用書追加ボタン
           IconButton(
             icon: const Icon(CupertinoIcons.doc_text, color: Color(0xFF34C759)),
-            onPressed: () => context.push('/lb0200?friendId=${widget.friendId}'),
+            onPressed: () =>
+                context.push('/lb0200?friendId=${widget.friendId}'),
           ),
           const SizedBox(width: 10),
           // テキスト入力
@@ -403,7 +402,10 @@ class _Fr0200ThreadDetailScreenState
               onTap: () => _showReceivableListSheet(loans),
               child: Container(
                 width: 110,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -458,7 +460,10 @@ class _Fr0200ThreadDetailScreenState
               onTap: () => _showUnpaidListSheet(loans),
               child: Container(
                 width: 110,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -480,10 +485,7 @@ class _Fr0200ThreadDetailScreenState
                   children: [
                     const Text(
                       'みへんさい',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Color(0xFF9CA3AF),
-                      ),
+                      style: TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -741,13 +743,7 @@ class _Fr0200ThreadDetailScreenState
   void _showReceivableListSheet(List<Loan> loans) {
     final myId = ref.read(currentUserIdProvider);
     final receivable =
-        loans
-            .where(
-              (l) =>
-                  l.lenderUserId == myId &&
-                  !l.isRepaid,
-            )
-            .toList()
+        loans.where((l) => l.lenderUserId == myId && !l.isRepaid).toList()
           ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
     if (receivable.isEmpty) return;
@@ -840,13 +836,7 @@ class _Fr0200ThreadDetailScreenState
   void _showUnpaidListSheet(List<Loan> loans) {
     final myId = ref.read(currentUserIdProvider);
     final unpaid =
-        loans
-            .where(
-              (l) =>
-                  l.lenderUserId != myId &&
-                  !l.isRepaid,
-            )
-            .toList()
+        loans.where((l) => l.lenderUserId != myId && !l.isRepaid).toList()
           ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
     if (unpaid.isEmpty) return;
@@ -1030,16 +1020,14 @@ class _TxBubble extends StatelessWidget {
     final align = isMe ? Alignment.centerRight : Alignment.centerLeft;
 
     final bubbleColor = isMe
-      ? const Color(0xFF34C759).withOpacity(0.18)
-      : const Color(0xFFF3F4F6);
+        ? const Color(0xFF34C759).withOpacity(0.18)
+        : const Color(0xFFF3F4F6);
 
     final borderColor = isMe
-      ? const Color(0xFF34C759).withOpacity(0.6)
-      : const Color(0xFF4B5563).withOpacity(0.15);
+        ? const Color(0xFF34C759).withOpacity(0.6)
+        : const Color(0xFF4B5563).withOpacity(0.15);
 
-    final labelColor = isMe
-        ? const Color(0xFF166534)
-        : const Color(0xFF6B7280);
+    final labelColor = isMe ? const Color(0xFF166534) : const Color(0xFF6B7280);
 
     final borderRadius = BorderRadius.only(
       topLeft: const Radius.circular(18),
@@ -1065,10 +1053,7 @@ class _TxBubble extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ラベル（〇〇さんに かした / 〇〇さんから かりた）
-              Text(
-                label,
-                style: TextStyle(fontSize: 11, color: labelColor),
-              ),
+              Text(label, style: TextStyle(fontSize: 11, color: labelColor)),
               const SizedBox(height: 8),
               // 金額（中央揃え・大きく）
               Center(
@@ -1088,10 +1073,7 @@ class _TxBubble extends StatelessWidget {
               if (!isMe)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Divider(
-                    height: 1,
-                    color: Colors.grey.shade300,
-                  ),
+                  child: Divider(height: 1, color: Colors.grey.shade300),
                 ),
               // ようと
               Text(

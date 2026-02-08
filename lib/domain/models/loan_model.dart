@@ -14,13 +14,12 @@ class Repayment {
     final amountRaw = map['amountYen'];
     final paidAtRaw = map['paidAtMs'];
 
-    final amount =
-        amountRaw is int ? amountRaw : int.tryParse('$amountRaw') ?? 0;
-    final paidAtMs =
-        paidAtRaw is int
-            ? paidAtRaw
-            : int.tryParse('$paidAtRaw') ??
-                DateTime.now().millisecondsSinceEpoch;
+    final amount = amountRaw is int
+        ? amountRaw
+        : int.tryParse('$amountRaw') ?? 0;
+    final paidAtMs = paidAtRaw is int
+        ? paidAtRaw
+        : int.tryParse('$paidAtRaw') ?? DateTime.now().millisecondsSinceEpoch;
 
     return Repayment(
       amountYen: amount,
@@ -166,10 +165,9 @@ class Loan {
         borrowerUserId = counterparty;
       } else if (dirStr == 'borrowed') {
         lenderUserId = counterparty.isNotEmpty ? counterparty : createdBy;
-        borrowerUserId =
-            (createdBy.isNotEmpty && createdBy != counterparty)
-                ? createdBy
-                : 'u_001';
+        borrowerUserId = (createdBy.isNotEmpty && createdBy != counterparty)
+            ? createdBy
+            : 'u_001';
         if (createdBy == counterparty || createdBy.isEmpty) {
           borrowerUserId = 'u_001';
         }
@@ -185,25 +183,23 @@ class Loan {
         '';
 
     final amountRaw = map['amountYen'];
-    final amountYen =
-        amountRaw is int ? amountRaw : int.tryParse('$amountRaw') ?? 0;
+    final amountYen = amountRaw is int
+        ? amountRaw
+        : int.tryParse('$amountRaw') ?? 0;
 
     final purpose = (map['purpose'] as String?) ?? '';
     final note = (map['note'] as String?) ?? '';
 
     final dueMsRaw = map['dueMs'];
-    final dueMs =
-        dueMsRaw is int
-            ? dueMsRaw
-            : int.tryParse('$dueMsRaw') ??
-                DateTime.now().millisecondsSinceEpoch;
+    final dueMs = dueMsRaw is int
+        ? dueMsRaw
+        : int.tryParse('$dueMsRaw') ?? DateTime.now().millisecondsSinceEpoch;
     final dueDate = DateTime.fromMillisecondsSinceEpoch(dueMs);
 
     final createdMsRaw = map['createdMs'];
-    final createdMs =
-        createdMsRaw is int
-            ? createdMsRaw
-            : int.tryParse('$createdMsRaw') ?? dueMs;
+    final createdMs = createdMsRaw is int
+        ? createdMsRaw
+        : int.tryParse('$createdMsRaw') ?? dueMs;
     final createdAt = DateTime.fromMillisecondsSinceEpoch(createdMs);
 
     final iouNo = (map['iouNo'] as String?) ?? _fallbackIouNo(resolvedId);
@@ -220,10 +216,9 @@ class Loan {
       }
     } else {
       final legacyRepaid = map['repaidYen'];
-      final repaid =
-          legacyRepaid is int
-              ? legacyRepaid
-              : int.tryParse('$legacyRepaid') ?? 0;
+      final repaid = legacyRepaid is int
+          ? legacyRepaid
+          : int.tryParse('$legacyRepaid') ?? 0;
       if (repaid > 0) {
         repaymentsList.add(Repayment(amountYen: repaid, paidAt: createdAt));
       }
