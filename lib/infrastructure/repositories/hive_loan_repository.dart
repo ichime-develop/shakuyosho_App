@@ -61,9 +61,9 @@ class HiveLoanRepository implements LoanRepository {
     for (final raw in _loanBox.values) {
       final loan = Loan.fromMap(_castMap(raw));
       if (loan.deletedAt != null) continue;
-      // 承認済み（approved）のLoanのみ集計
-      if (loan.status != LoanStatus.approved) continue;
-      if (loan.direction == LoanDirection.lent) {
+      if (loan.isRepaid) continue;
+      // lenderUserId が u_001（currentUser）なら「かした」
+      if (loan.lenderUserId == 'u_001') {
         lent += loan.remainingYen;
       } else {
         borrowed += loan.remainingYen;

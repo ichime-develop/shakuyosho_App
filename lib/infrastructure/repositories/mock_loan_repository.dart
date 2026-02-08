@@ -45,7 +45,8 @@ class MockLoanRepository implements LoanRepository {
     var borrowed = 0;
 
     for (final l in _loans.values) {
-      if (l.direction == LoanDirection.lent) {
+      if (l.isRepaid) continue;
+      if (l.lenderUserId == currentUserId) {
         lent += l.remainingYen;
       } else {
         borrowed += l.remainingYen;
@@ -62,58 +63,50 @@ class MockLoanRepository implements LoanRepository {
   // デフォルトモックデータ
   // ────────────────────────────────────────────────────────────────
   static final _defaultLoans = <Loan>[
-    // Bさんに かした（自分→Bさん）
     Loan(
       id: 'loan_001',
-      direction: LoanDirection.lent,
+      lenderUserId: currentUserId,
+      borrowerUserId: 'u_002',
       counterpartyId: 'u_002',
-      createdBy: currentUserId,
       amountYen: 10000,
       purpose: 'おこのみやき の だい',
       dueDate: DateTime(2026, 3, 1),
-      status: LoanStatus.approved,
       createdAt: DateTime(2026, 1, 15),
       iouNo: 'IOU-8G5X-3Q2M',
       repayments: const [],
     ),
-    // Cさんから かりた（Cさん→自分）
     Loan(
       id: 'loan_002',
-      direction: LoanDirection.borrowed,
+      lenderUserId: 'u_003',
+      borrowerUserId: currentUserId,
       counterpartyId: 'u_003',
-      createdBy: 'u_003',
       amountYen: 5000,
       purpose: 'でんしゃちん',
       dueDate: DateTime(2026, 2, 15),
-      status: LoanStatus.approved,
       createdAt: DateTime(2026, 1, 20),
       iouNo: 'IOU-9H2K-7L1N',
       repayments: const [],
     ),
-    // Bさんに かした（2件目・部分返済あり）
     Loan(
       id: 'loan_003',
-      direction: LoanDirection.lent,
+      lenderUserId: currentUserId,
+      borrowerUserId: 'u_002',
       counterpartyId: 'u_002',
-      createdBy: currentUserId,
       amountYen: 3000,
       purpose: 'らんち だい',
       dueDate: DateTime(2026, 2, 28),
-      status: LoanStatus.approved,
       createdAt: DateTime(2026, 1, 25),
       iouNo: 'IOU-4K7P-2R9S',
       repayments: [Repayment(amountYen: 1000, paidAt: DateTime(2026, 1, 30))],
     ),
-    // Dさんから かりた（pending状態）
     Loan(
       id: 'loan_004',
-      direction: LoanDirection.borrowed,
+      lenderUserId: 'u_004',
+      borrowerUserId: currentUserId,
       counterpartyId: 'u_004',
-      createdBy: 'u_004',
       amountYen: 2000,
       purpose: 'コンビニ',
       dueDate: DateTime(2026, 2, 10),
-      status: LoanStatus.pending,
       createdAt: DateTime(2026, 2, 1),
       iouNo: 'IOU-5M3N-8T4V',
       repayments: const [],

@@ -1,10 +1,3 @@
-/// 貸借の向き
-enum LoanDirection { lent, borrowed }
-
-/// 申請ステータス
-/// pending: しんせいちゅう / approved: しょうにんずみ / rejected: きゃっか
-enum LoanStatus { pending, approved, rejected }
-
 /// 返済の1件（承認済みのみ記録）
 class Repayment {
   final int amountYen;
@@ -21,12 +14,13 @@ class Repayment {
     final amountRaw = map['amountYen'];
     final paidAtRaw = map['paidAtMs'];
 
-    final amount = amountRaw is int
-        ? amountRaw
-        : int.tryParse('$amountRaw') ?? 0;
-    final paidAtMs = paidAtRaw is int
-        ? paidAtRaw
-        : int.tryParse('$paidAtRaw') ?? DateTime.now().millisecondsSinceEpoch;
+    final amount =
+        amountRaw is int ? amountRaw : int.tryParse('$amountRaw') ?? 0;
+    final paidAtMs =
+        paidAtRaw is int
+            ? paidAtRaw
+            : int.tryParse('$paidAtRaw') ??
+                DateTime.now().millisecondsSinceEpoch;
 
     return Repayment(
       amountYen: amount,
@@ -42,25 +36,26 @@ class Repayment {
   }
 }
 
-/// 借用書（坂口モデル準拠）
-/// - direction で「かした/かりた」を区別
-/// - counterpartyId で相手（友達）を特定
-/// - repayments に返済履歴を埋め込み
+/// 借用書
+///
+/// - lenderUserId : 貸した側（借用書を発行した側）のユーザーID
+/// - borrowerUserId : 借りた側のユーザーID
+/// - counterpartyId : 相手のユーザーID（getByCounterparty 用。
+///   lenderUserId == currentUser なら borrowerUserId、逆なら lenderUserId）
+/// - isSettled : 完済フラグ（返済合計 >= 元金 で自動算出）
+///
+/// direction / LoanStatus は廃止。
 class Loan {
   final String id;
-  final LoanDirection direction;
 
-  /// 相手（友達）のユーザーID
+  /// 貸した側のユーザーID
+  final String lenderUserId;
+
+  /// 借りた側のユーザーID
+  final String borrowerUserId;
+
+  /// 相手（友達）のユーザーID（検索・絞り込み用に保持）
   final String counterpartyId;
-
-  /// 作成者（送信者）のユーザーID
-  final String createdBy;
-
-  final String _legacyCounterpartyName;
-
-  /// 相手（友達）の名前（後方互換）
-  @Deprecated('Use counterpartyId')
-  String get counterpartyName => _legacyCounterpartyName;
 
   /// 元金
   final int amountYen;
@@ -68,11 +63,11 @@ class Loan {
   /// 用途
   final String purpose;
 
+  /// 備考（自由記入）
+  final String note;
+
   /// 返済期限
   final DateTime dueDate;
-
-  /// 申請状態
-  final LoanStatus status;
 
   /// 作成日
   final DateTime createdAt;
@@ -88,31 +83,29 @@ class Loan {
 
   const Loan({
     required this.id,
-    required this.direction,
+    required this.lenderUserId,
+    required this.borrowerUserId,
     required this.counterpartyId,
-    required this.createdBy,
-    String legacyCounterpartyName = '',
-    @Deprecated('Use counterpartyId') String? counterpartyName,
     required this.amountYen,
     required this.purpose,
+    this.note = '',
     required this.dueDate,
-    required this.status,
     required this.createdAt,
     this.deletedAt,
     required this.iouNo,
     this.repayments = const [],
-  }) : _legacyCounterpartyName = counterpartyName ?? legacyCounterpartyName;
+  });
 
   /// 空のLoan（検索結果が無いときのダミー）
   factory Loan.empty() => Loan(
     id: '',
-    direction: LoanDirection.lent,
+    lenderUserId: '',
+    borrowerUserId: '',
     counterpartyId: '',
-    createdBy: '',
     amountYen: 0,
     purpose: '',
+    note: '',
     dueDate: DateTime.now(),
-    status: LoanStatus.pending,
     createdAt: DateTime.now(),
     deletedAt: null,
     iouNo: '',
@@ -128,19 +121,21 @@ class Loan {
   /// 残額
   int get remainingYen => (amountYen - repaidYen).clamp(0, amountYen);
 
-  /// 完済
+  /// 完済（返済合計が元金以上）
   bool get isRepaid => amountYen > 0 && remainingYen == 0;
+
+  /// isSettled は isRepaid のエイリアス
+  bool get isSettled => isRepaid;
 
   Map<String, dynamic> toMap() => {
     'id': id,
-    'direction': direction.name,
+    'lenderUserId': lenderUserId,
+    'borrowerUserId': borrowerUserId,
     'counterpartyId': counterpartyId,
-    'createdBy': createdBy,
-    'counterpartyName': _legacyCounterpartyName,
     'amountYen': amountYen,
     'purpose': purpose,
+    'note': note,
     'dueMs': dueDate.millisecondsSinceEpoch,
-    'status': status.name,
     'createdMs': createdAt.millisecondsSinceEpoch,
     'deletedAtMs': deletedAt?.millisecondsSinceEpoch,
     'iouNo': iouNo,
@@ -152,100 +147,113 @@ class Loan {
 
   static Loan fromMap(Map<dynamic, dynamic> map, {String? id}) {
     final resolvedId = id ?? map['id'] as String? ?? '';
-    // direction
-    final dirStr = map['direction'] as String?;
-    final direction = (dirStr != null && dirStr.isNotEmpty)
-        ? LoanDirection.values.byName(dirStr)
-        : LoanDirection.lent;
 
-    // status（無ければ direction から推定）
-    final statusStr = map['status'] as String?;
-    final status = statusStr == null
-        ? (direction == LoanDirection.borrowed
-              ? LoanStatus.pending
-              : LoanStatus.approved)
-        : LoanStatus.values.byName(statusStr);
+    // --- 新フォーマット: lenderUserId / borrowerUserId ---
+    var lenderUserId = (map['lenderUserId'] as String?) ?? '';
+    var borrowerUserId = (map['borrowerUserId'] as String?) ?? '';
 
-    final counterpartyName = (map['counterpartyName'] as String?) ?? '';
+    // --- 旧フォーマット互換: direction + counterpartyId + createdBy ---
+    if (lenderUserId.isEmpty && borrowerUserId.isEmpty) {
+      final dirStr = (map['direction'] as String?) ?? '';
+      final counterparty =
+          (map['counterpartyId'] as String?) ??
+          (map['counterpartyName'] as String?) ??
+          '';
+      final createdBy = (map['createdBy'] as String?) ?? '';
+
+      if (dirStr == 'lent') {
+        lenderUserId = createdBy.isNotEmpty ? createdBy : 'u_001';
+        borrowerUserId = counterparty;
+      } else if (dirStr == 'borrowed') {
+        lenderUserId = counterparty.isNotEmpty ? counterparty : createdBy;
+        borrowerUserId =
+            (createdBy.isNotEmpty && createdBy != counterparty)
+                ? createdBy
+                : 'u_001';
+        if (createdBy == counterparty || createdBy.isEmpty) {
+          borrowerUserId = 'u_001';
+        }
+      } else {
+        lenderUserId = createdBy.isNotEmpty ? createdBy : 'u_001';
+        borrowerUserId = counterparty;
+      }
+    }
+
     final counterpartyId =
         (map['counterpartyId'] as String?) ??
-        (counterpartyName.isNotEmpty ? counterpartyName : 'ゲスト');
-
-    final createdBy = (map['createdBy'] as String?) ?? '';
+        (map['counterpartyName'] as String?) ??
+        '';
 
     final amountRaw = map['amountYen'];
-    final amountYen = amountRaw is int
-        ? amountRaw
-        : int.tryParse('$amountRaw') ?? 0;
+    final amountYen =
+        amountRaw is int ? amountRaw : int.tryParse('$amountRaw') ?? 0;
 
     final purpose = (map['purpose'] as String?) ?? '';
+    final note = (map['note'] as String?) ?? '';
 
     final dueMsRaw = map['dueMs'];
-    final dueMs = dueMsRaw is int
-        ? dueMsRaw
-        : int.tryParse('$dueMsRaw') ?? DateTime.now().millisecondsSinceEpoch;
+    final dueMs =
+        dueMsRaw is int
+            ? dueMsRaw
+            : int.tryParse('$dueMsRaw') ??
+                DateTime.now().millisecondsSinceEpoch;
     final dueDate = DateTime.fromMillisecondsSinceEpoch(dueMs);
 
-    // createdAt（無ければ dueDate と同じ）
     final createdMsRaw = map['createdMs'];
-    final createdMs = createdMsRaw is int
-        ? createdMsRaw
-        : int.tryParse('$createdMsRaw') ?? dueMs;
+    final createdMs =
+        createdMsRaw is int
+            ? createdMsRaw
+            : int.tryParse('$createdMsRaw') ?? dueMs;
     final createdAt = DateTime.fromMillisecondsSinceEpoch(createdMs);
 
-    // iouNo（無ければ id 末尾から生成）
     final iouNo = (map['iouNo'] as String?) ?? _fallbackIouNo(resolvedId);
 
-    // deletedAt
     final deletedAtRaw = map['deletedAtMs'] ?? map['deletedAt'];
     final deletedAt = _dateFromNullable(deletedAtRaw);
 
     // repayments
-    final repayments = <Repayment>[];
+    final repaymentsList = <Repayment>[];
     final listRaw = map['repayments'];
     if (listRaw is List) {
       for (final e in listRaw) {
-        if (e is Map) repayments.add(Repayment.fromMap(e));
+        if (e is Map) repaymentsList.add(Repayment.fromMap(e));
       }
     } else {
-      // 旧データ互換
       final legacyRepaid = map['repaidYen'];
-      final repaid = legacyRepaid is int
-          ? legacyRepaid
-          : int.tryParse('$legacyRepaid') ?? 0;
+      final repaid =
+          legacyRepaid is int
+              ? legacyRepaid
+              : int.tryParse('$legacyRepaid') ?? 0;
       if (repaid > 0) {
-        repayments.add(Repayment(amountYen: repaid, paidAt: createdAt));
+        repaymentsList.add(Repayment(amountYen: repaid, paidAt: createdAt));
       }
     }
 
     return Loan(
       id: resolvedId,
-      direction: direction,
+      lenderUserId: lenderUserId,
+      borrowerUserId: borrowerUserId,
       counterpartyId: counterpartyId,
-      createdBy: createdBy,
-      legacyCounterpartyName: counterpartyName,
       amountYen: amountYen,
       purpose: purpose,
+      note: note,
       dueDate: dueDate,
-      status: status,
       createdAt: createdAt,
       deletedAt: deletedAt,
       iouNo: iouNo,
-      repayments: repayments,
+      repayments: repaymentsList,
     );
   }
 
   Loan copyWith({
     String? id,
-    LoanDirection? direction,
+    String? lenderUserId,
+    String? borrowerUserId,
     String? counterpartyId,
-    String? createdBy,
-    String? legacyCounterpartyName,
-    @Deprecated('Use counterpartyId') String? counterpartyName,
     int? amountYen,
     String? purpose,
+    String? note,
     DateTime? dueDate,
-    LoanStatus? status,
     DateTime? createdAt,
     DateTime? deletedAt,
     String? iouNo,
@@ -253,15 +261,13 @@ class Loan {
   }) {
     return Loan(
       id: id ?? this.id,
-      direction: direction ?? this.direction,
+      lenderUserId: lenderUserId ?? this.lenderUserId,
+      borrowerUserId: borrowerUserId ?? this.borrowerUserId,
       counterpartyId: counterpartyId ?? this.counterpartyId,
-      createdBy: createdBy ?? this.createdBy,
-      legacyCounterpartyName:
-          legacyCounterpartyName ?? counterpartyName ?? _legacyCounterpartyName,
       amountYen: amountYen ?? this.amountYen,
       purpose: purpose ?? this.purpose,
+      note: note ?? this.note,
       dueDate: dueDate ?? this.dueDate,
-      status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       deletedAt: deletedAt ?? this.deletedAt,
       iouNo: iouNo ?? this.iouNo,

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>しゃくよーしょ詳細</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#475569", // Softer slate/navy
+                        "background-light": "#FFFBE6", // Warmer, brighter cream/beige from reference
+                        "background-dark": "#1C1C1E",
+                        "text-main": "#44403C", // Warm dark gray
+                        "text-sub": "#78716C", // Warm medium gray
+                        "accent": "#D97706", // Warm amber for numbers if needed, or keep slate
+                    },
+                    fontFamily: {
+                        display: ["'Zen Maru Gothic'", "sans-serif"],
+                        body: ["'Zen Maru Gothic'", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "24px",
+                        'lg': '1rem',
+                        'xl': '1.5rem',
+                        '2xl': '2rem',
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }::-webkit-scrollbar {
+            display: none;
+        }body {
+            -ms-overflow-style: none;scrollbar-width: none;}
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-gray-200 min-h-screen flex flex-col items-center">
+<header class="w-full px-6 pt-12 pb-2 flex items-center justify-between sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
+<button class="w-10 h-10 flex items-center justify-start rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+<span class="text-2xl font-bold text-primary">&lt;</span>
+</button>
+<h1 class="text-sm font-bold tracking-tight text-primary/50">しゃくよーしょ 詳細</h1>
+<div class="w-10"></div>
+</header>
+<main class="w-full max-w-md flex-1 px-8 pb-32 overflow-y-auto">
+<div class="mt-2 mb-6">
+<div class="flex flex-col items-start gap-0.5">
+<span class="text-xs text-text-sub font-medium">かりたひと</span>
+<span class="text-2xl font-bold text-text-main">〇〇 さま</span>
+</div>
+</div>
+<div class="mb-8 text-center">
+<div class="text-xs text-text-sub mb-0.5">きんがく</div>
+<div class="flex items-baseline justify-center gap-1 text-primary dark:text-gray-100 leading-none">
+<span class="text-3xl font-bold">¥</span>
+<span class="text-6xl font-bold tracking-tighter">10,000</span>
+<span class="text-2xl font-bold ml-1">-</span>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex flex-col gap-0.5">
+<span class="text-xs text-text-sub">ようと</span>
+<span class="text-lg font-medium text-text-main leading-tight">のみかい の だいきん</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<span class="text-xs text-text-sub">へんさい きげん</span>
+<span class="text-lg font-medium text-text-main leading-tight">2024ねん 12がつ 31にち</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<span class="text-xs text-text-sub">つくった ひ</span>
+<span class="text-lg font-medium text-text-main leading-tight">2024ねん 10がつ 15にち</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<span class="text-xs text-text-sub">ばんごう</span>
+<span class="text-sm font-mono tracking-widest text-text-sub/80 leading-tight">No. 0023-9912</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<span class="text-xs text-text-sub">びこうらん</span>
+<p class="text-base text-text-main leading-snug whitespace-pre-line">こないだの ぶん も いれて おいたよ。
+むりしないで かえしてね。</p>
+</div>
+<div class="pt-4 pb-2">
+<div class="flex flex-col items-start gap-0.5">
+<span class="text-xs text-text-sub font-medium">かしたひと</span>
+<span class="text-xl font-bold text-text-main">わたし</span>
+</div>
+</div>
+</div>
+</main>
+<div class="fixed bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-background-light dark:from-background-dark via-background-light/90 dark:via-background-dark/90 to-transparent flex justify-center pointer-events-none">
+<div class="w-full max-w-md pointer-events-auto">
+<button class="w-full h-14 bg-white text-gray-500 border border-gray-200 rounded-lg shadow-sm font-medium text-lg active:scale-95 transition-all hover:bg-gray-50 tracking-wider flex items-center justify-center">
+                おくる
+            </button>
+<div class="h-4"></div>
+</div>
+</div>
+<div class="fixed top-3 left-1/2 -translate-x-1/2 w-[120px] h-[35px] bg-black rounded-[20px] z-50 pointer-events-none"></div>
+</body></html>

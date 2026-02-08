@@ -27,9 +27,9 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
   bool get isCreating => widget.loanId == null;
 
   // 新規作成用フォーム
-  LoanDirection _direction = LoanDirection.lent;
   final _amountController = TextEditingController();
   final _purposeController = TextEditingController();
+  final _noteController = TextEditingController();
   DateTime _dueDate = DateTime.now().add(const Duration(days: 7));
   String _friendId = '';
   String _friendInput = '';
@@ -48,6 +48,7 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
   void dispose() {
     _amountController.dispose();
     _purposeController.dispose();
+    _noteController.dispose();
     super.dispose();
   }
 
@@ -78,15 +79,22 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // かす / かりる トグル
+            // かす（固定）
             const Text(
               'しゅべつ',
               style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
             ),
             const SizedBox(height: 8),
-            _DirectionToggle(
-              value: _direction,
-              onChanged: (d) => setState(() => _direction = d),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDCFCE7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'かす',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
             ),
             const SizedBox(height: 24),
 
@@ -139,6 +147,25 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
               controller: _purposeController,
               placeholder: 'ごはんだい など',
               style: const TextStyle(fontSize: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // 備考
+            const Text(
+              'びこう',
+              style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+            ),
+            const SizedBox(height: 8),
+            CupertinoTextField(
+              controller: _noteController,
+              placeholder: 'めもなど（にんい）',
+              style: const TextStyle(fontSize: 16),
+              maxLines: 3,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -254,16 +281,31 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
           body: ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              // ステータス
+              // 状態
               _DetailRow(
                 label: 'じょうたい',
-                child: _StatusBadge(status: loan.status),
-              ),
-              const SizedBox(height: 16),
-              // かした/かりた
-              _DetailRow(
-                label: 'しゅべつ',
-                value: loan.direction == LoanDirection.lent ? 'かした' : 'かりた',
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: loan.isRepaid
+                        ? const Color(0xFFDCFCE7)
+                        : const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    loan.isRepaid ? 'へんさいずみ' : 'みへんさい',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: loan.isRepaid
+                          ? const Color(0xFF059669)
+                          : const Color(0xFFD97706),
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
               // 相手
@@ -275,6 +317,10 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
               // 目的
               _DetailRow(label: 'ようけん', value: loan.purpose),
               const SizedBox(height: 16),
+              // 備考
+              if (loan.note.isNotEmpty) ...[                _DetailRow(label: 'びこう', value: loan.note),
+                const SizedBox(height: 16),
+              ],
               // めやすのひ
               _DetailRow(label: 'めやすのひ', value: _fmtDate(loan.dueDate)),
               const SizedBox(height: 16),
@@ -410,10 +456,10 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
     ref
         .read(loanActionsProvider.notifier)
         .createLoan(
-          direction: _direction,
           counterpartyId: resolvedId,
           amountYen: amount,
           purpose: purpose,
+          note: _noteController.text.trim(),
           dueDate: _dueDate,
         );
 
@@ -467,38 +513,6 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
       ref.read(loanActionsProvider.notifier).deleteLoan(loan.id);
       if (context.mounted) context.pop();
     }
-  }
-}
-
-/// かす/かりる トグル
-class _DirectionToggle extends StatelessWidget {
-  const _DirectionToggle({required this.value, required this.onChanged});
-
-  final LoanDirection value;
-  final ValueChanged<LoanDirection> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoSlidingSegmentedControl<LoanDirection>(
-      groupValue: value,
-      backgroundColor: Colors.white,
-      thumbColor: value == LoanDirection.lent
-          ? const Color(0xFFDCFCE7)
-          : const Color(0xFFFEE2E2),
-      children: const {
-        LoanDirection.lent: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: Text('かす', style: TextStyle(fontSize: 16)),
-        ),
-        LoanDirection.borrowed: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: Text('かりる', style: TextStyle(fontSize: 16)),
-        ),
-      },
-      onValueChanged: (d) {
-        if (d != null) onChanged(d);
-      },
-    );
   }
 }
 
@@ -565,50 +579,6 @@ class _DetailRow extends StatelessWidget {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-/// ステータスバッジ
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
-
-  final LoanStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, bgColor, textColor) = switch (status) {
-      LoanStatus.pending => (
-        'しんせいちゅう',
-        const Color(0xFFFEF3C7),
-        const Color(0xFFD97706),
-      ),
-      LoanStatus.approved => (
-        'しょうにんずみ',
-        const Color(0xFFDCFCE7),
-        const Color(0xFF059669),
-      ),
-      LoanStatus.rejected => (
-        'きょひ',
-        const Color(0xFFFEE2E2),
-        const Color(0xFFDC2626),
-      ),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: textColor,
-        ),
       ),
     );
   }

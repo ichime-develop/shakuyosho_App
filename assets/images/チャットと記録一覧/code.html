@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>チャットと記録一覧 - しゃくよーしょ</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&amp;family=M+PLUS+Rounded+1c:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#86efac", // Soft Green seen in screenshot
+                        secondary: "#fca5a5", // Soft Red/Pink seen in screenshot
+                        "background-light": "#fffdf5", // Beige
+                        "background-dark": "#1c1917", // Warm dark gray
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#292524",
+                        "text-light": "#44403c",
+                        "text-dark": "#e7e5e4",
+                        "accent-purple": "#ddd6fe", // For the purple badge
+                        "card-green-light": "#dcfce7",
+                        "card-green-dark": "#064e3b",
+                        "card-gray-light": "#f3f4f6",
+                        "card-gray-dark": "#374151",
+                    },
+                    fontFamily: {
+                        display: ['"M PLUS Rounded 1c"', '"Kiwi Maru"', 'sans-serif'],
+                        body: ['"M PLUS Rounded 1c"', 'sans-serif'],
+                    },
+                    borderRadius: {
+                        DEFAULT: "12px",
+                        'xl': "1rem",
+                        '2xl': "1.5rem",
+                        '3xl': "2rem",
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-feature-settings: "palt";
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-body min-h-screen flex flex-col antialiased transition-colors duration-200">
+<header class="sticky top-0 z-50 bg-[#fffdf5]/90 dark:bg-[#1c1917]/90 backdrop-blur-md border-b border-stone-200 dark:border-stone-800">
+<div class="h-12 w-full flex items-center justify-between px-6 pt-2">
+<span class="text-sm font-medium">9:41</span>
+<div class="flex items-center space-x-2">
+<span class="material-symbols-rounded text-sm">signal_cellular_alt</span>
+<span class="material-symbols-rounded text-sm">wifi</span>
+<span class="material-symbols-rounded text-sm">battery_full</span>
+</div>
+</div>
+<div class="px-4 pb-3 flex items-center justify-between">
+<button class="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors">
+<span class="material-symbols-rounded text-2xl">arrow_back_ios_new</span>
+</button>
+<h1 class="text-lg font-bold font-display tracking-wide">あおいさん</h1>
+<button class="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors">
+<span class="material-symbols-rounded text-2xl">more_horiz</span>
+</button>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark py-3 px-6 mx-4 mb-2 rounded-2xl shadow-sm border border-stone-100 dark:border-stone-700">
+<div class="text-xs text-stone-500 dark:text-stone-400 mb-1">いまの じょうたい</div>
+<div class="flex flex-col space-y-1">
+<div class="flex justify-between items-center">
+<span class="text-sm font-medium">これから かえす</span>
+<span class="font-bold text-secondary dark:text-red-300">¥50,000</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm font-medium">これから かえってくる</span>
+<span class="font-bold text-primary dark:text-green-300">¥1,000</span>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto px-4 py-4 space-y-6 scrollbar-hide pb-32">
+<div class="flex justify-center my-4">
+<span class="bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 text-xs px-3 py-1 rounded-full">2026/02/08</span>
+</div>
+<div class="flex justify-end">
+<div class="max-w-[85%]">
+<div class="bg-card-green-light dark:bg-card-green-dark border border-green-200 dark:border-green-800 rounded-2xl p-4 shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 w-16 h-16 bg-green-300/20 dark:bg-green-500/10 rounded-bl-full -mr-2 -mt-2"></div>
+<div class="relative z-10">
+<div class="text-xs text-green-800 dark:text-green-100 mb-2 opacity-80">あおい さんに かした</div>
+<div class="text-center py-2">
+<span class="text-2xl font-bold font-display text-green-900 dark:text-white">¥1,000</span>
+</div>
+<div class="mt-2 space-y-1">
+<div class="text-xs text-green-800 dark:text-green-200">ようと : なし</div>
+<div class="text-xs text-red-500 dark:text-red-300 font-medium">きげん : 2026/02/08</div>
+</div>
+</div>
+</div>
+<div class="text-[10px] text-stone-400 text-right mt-1 mr-1">13:45</div>
+</div>
+</div>
+<div class="flex justify-start">
+<div class="w-8 h-8 rounded-full bg-stone-200 dark:bg-stone-700 flex-shrink-0 mr-2 flex items-center justify-center text-xs font-bold text-stone-500">あ</div>
+<div class="max-w-[85%]">
+<div class="bg-card-gray-light dark:bg-card-gray-dark border border-stone-200 dark:border-stone-600 rounded-2xl p-4 shadow-sm relative">
+<div class="text-xs text-stone-500 dark:text-stone-400 mb-2">あおい さんから かりた</div>
+<div class="text-center py-2 relative">
+<div class="absolute inset-0 flex items-center justify-center opacity-0 pointer-events-none">
+<div class="bg-black/60 text-white p-2 rounded-full flex gap-4 backdrop-blur-sm">
+<span class="material-symbols-rounded text-sm">do_not_disturb_on</span>
+<span class="material-symbols-rounded text-sm">volume_off</span>
+<span class="material-symbols-rounded text-sm">more_vert</span>
+</div>
+</div>
+<span class="text-2xl font-bold font-display text-stone-800 dark:text-stone-100">¥50,000</span>
+</div>
+<div class="mt-2 space-y-1 border-t border-stone-200 dark:border-stone-600 pt-2">
+<div class="text-xs text-stone-600 dark:text-stone-400">ようと : なし</div>
+<div class="text-xs text-red-400 dark:text-red-300">きげん : 2026/02/08</div>
+</div>
+</div>
+<div class="text-[10px] text-stone-400 ml-1 mt-1">14:02</div>
+</div>
+</div>
+<div class="flex justify-end">
+<div class="max-w-[75%]">
+<div class="bg-primary text-green-900 px-4 py-2 rounded-2xl rounded-tr-sm shadow-sm">
+<p class="text-sm">おっけー！こんど返すね。</p>
+</div>
+<div class="text-[10px] text-stone-400 text-right mt-1 mr-1">14:05 既読</div>
+</div>
+</div>
+<div class="fixed bottom-24 right-4 flex flex-col items-end gap-2 z-10">
+<div class="bg-surface-light dark:bg-surface-dark border border-purple-200 dark:border-purple-800 shadow-lg rounded-2xl p-3 w-28 text-center animate-bounce duration-[3000ms]">
+<div class="text-[10px] font-bold text-purple-600 dark:text-purple-300 mb-1">みうけとり</div>
+<div class="text-xs text-stone-500 dark:text-stone-400 mb-0.5">2 件</div>
+<div class="text-sm font-bold text-purple-600 dark:text-purple-300">¥1,000</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark border border-stone-200 dark:border-stone-700 shadow-lg rounded-2xl p-3 w-28 text-center">
+<div class="text-[10px] text-stone-500 dark:text-stone-400 mb-1">みへんさい</div>
+<div class="text-sm font-bold text-stone-800 dark:text-stone-200">¥50,000</div>
+</div>
+</div>
+</main>
+<footer class="fixed bottom-0 w-full bg-background-light dark:bg-background-dark border-t border-stone-100 dark:border-stone-800 pb-8 pt-3 px-4 z-50">
+<div class="flex items-end gap-3 max-w-lg mx-auto">
+<button aria-label="借用書を作成" class="flex-shrink-0 w-10 h-10 mb-0.5 rounded-full bg-primary hover:bg-green-400 transition-colors flex items-center justify-center text-green-900 shadow-sm">
+<span class="material-symbols-rounded text-2xl font-semibold">add</span>
+</button>
+<div class="flex-1 bg-surface-light dark:bg-surface-dark rounded-3xl border border-stone-200 dark:border-stone-700 flex items-center px-4 py-2 shadow-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+<input class="w-full bg-transparent border-none outline-none text-sm text-stone-700 dark:text-stone-200 placeholder-stone-400 focus:ring-0 p-0" placeholder="めっせーじ を 入力" type="text"/>
+<button class="ml-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition-colors">
+<span class="material-symbols-rounded text-xl">sentiment_satisfied</span>
+</button>
+</div>
+<button class="flex-shrink-0 h-10 px-4 mb-0.5 rounded-full bg-stone-800 dark:bg-stone-700 text-white text-sm font-bold shadow-sm hover:opacity-90 transition-opacity flex items-center justify-center">
+                おくる
+            </button>
+</div>
+</footer>
+</body></html>

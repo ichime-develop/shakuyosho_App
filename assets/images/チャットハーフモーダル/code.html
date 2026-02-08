@@ -1,0 +1,160 @@
+<html lang="ja"><head><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background-light dark:bg-background-dark text-text-primary-light dark:text-text-primary-dark min-h-screen relative overflow-hidden flex flex-col items-center justify-center">```html
+
+
+
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>みへんさい一覧 (モーダル)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#22c55e", // Green seen in screenshot for active buttons
+                        "background-light": "#E8E4D9", // Beige background from screenshot
+                        "background-dark": "#1f1f1f",
+                        "modal-light": "#ffffff",
+                        "modal-dark": "#2d2d2d",
+                        "text-primary-light": "#1f2937",
+                        "text-primary-dark": "#f3f4f6",
+                        "text-secondary-light": "#6b7280",
+                        "text-secondary-dark": "#9ca3af",
+                        "status-red": "#ef4444",
+                    },
+                    fontFamily: {
+                        display: ["'Zen Maru Gothic'", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "1rem",
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+        }.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+
+
+<div class="relative w-full max-w-md h-[844px] bg-background-light dark:bg-background-dark shadow-2xl overflow-hidden sm:rounded-[3rem] border-0 sm:border-8 border-gray-900 dark:border-gray-600">
+<div class="absolute top-0 w-full h-12 flex justify-between items-center px-6 pt-2 z-10 text-gray-900 dark:text-white">
+<span class="font-bold text-sm">1:25</span>
+<div class="flex gap-2 items-center">
+<span class="material-icons-round text-sm">signal_cellular_alt</span>
+<span class="material-icons-round text-sm">wifi</span>
+<span class="material-icons-round text-sm -rotate-90">battery_full</span>
+</div>
+</div>
+<div class="absolute top-2 left-1/2 transform -translate-x-1/2 w-28 h-8 bg-black rounded-full z-20"></div>
+<div class="pt-16 px-4 pb-4 h-full flex flex-col opacity-50 pointer-events-none transition-opacity">
+<div class="flex items-center justify-between mb-6 px-2">
+<span class="material-icons-round text-2xl text-gray-700 dark:text-gray-300">arrow_back_ios</span>
+<h1 class="text-lg font-medium tracking-wide text-gray-700 dark:text-gray-300">URL</h1>
+<div class="w-6"></div> 
+</div>
+<div class="mb-4 px-2 space-y-2">
+<p class="text-sm text-gray-500 dark:text-gray-400">いまの じょうたい</p>
+<div class="flex justify-between items-center text-gray-800 dark:text-gray-200">
+<span>これから かえす :</span>
+<span class="font-bold">¥580,600</span>
+</div>
+<div class="flex justify-between items-center text-gray-800 dark:text-gray-200">
+<span>これから かえってくる :</span>
+<span class="font-bold">¥11,500</span>
+</div>
+</div>
+<div class="bg-primary/20 p-3 text-center mb-8 rounded-lg border border-primary/30">
+<span class="text-xl font-bold text-gray-800 dark:text-gray-200">¥1,000</span>
+</div>
+</div>
+<div class="absolute inset-0 bg-black/40 z-30 flex items-end justify-center">
+<div class="w-full bg-modal-light dark:bg-modal-dark rounded-t-[2rem] shadow-xl max-h-[85%] flex flex-col h-full transform transition-transform duration-300 ease-out">
+<div class="w-full flex justify-center pt-3 pb-2">
+<div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+</div>
+<div class="px-6 pb-4 pt-2 border-b border-gray-100 dark:border-gray-700/50">
+<h2 class="text-lg font-bold text-gray-800 dark:text-white">みかえし （未返済）</h2>
+</div>
+<div class="flex-1 overflow-y-auto px-6 py-2 no-scrollbar space-y-6">
+<div class="flex justify-between items-start py-3 border-b border-gray-100 dark:border-gray-700/50">
+<div class="flex flex-col space-y-1">
+<span class="text-xl font-bold text-gray-900 dark:text-white tracking-tight">¥80,000</span>
+<div class="flex flex-col text-sm space-y-0.5">
+<span class="text-status-red dark:text-red-400">きげん : 2026/01/12</span>
+<span class="text-gray-500 dark:text-gray-400 text-xs">pあちんこ</span>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<button class="w-16 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg"></button>
+<button class="w-16 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg"></button>
+</div>
+</div>
+<div class="flex justify-between items-start py-3 border-b border-gray-100 dark:border-gray-700/50">
+<div class="flex flex-col space-y-1">
+<span class="text-xl font-bold text-gray-900 dark:text-white tracking-tight">¥500,000</span>
+<div class="flex flex-col text-sm space-y-0.5">
+<span class="text-status-red dark:text-red-400">きげん : 2026/01/17</span>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<button class="w-16 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg"></button>
+<button class="w-16 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg"></button>
+</div>
+</div>
+<div class="flex justify-between items-start py-3 border-b border-gray-100 dark:border-gray-700/50">
+<div class="flex flex-col space-y-1">
+<span class="text-xl font-bold text-gray-900 dark:text-white tracking-tight">¥500</span>
+<div class="flex flex-col text-sm space-y-0.5">
+<span class="text-status-red dark:text-red-400">きげん : 2026/02/08</span>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<button class="w-16 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg"></button>
+<button class="w-16 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg"></button>
+</div>
+</div>
+<div class="flex justify-between items-start py-3 border-b border-transparent"> 
+<div class="flex flex-col space-y-1">
+<span class="text-xl font-bold text-gray-900 dark:text-white tracking-tight">¥100</span>
+<div class="flex flex-col text-sm space-y-0.5">
+<span class="text-status-red dark:text-red-400">きげん : 2026/02/08</span>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<button class="w-16 h-10 bg-gray-800 dark:bg-gray-600 text-white rounded-xl text-xs font-medium flex items-center justify-center">
+                                いちぶ
+                            </button>
+<button class="w-16 h-10 bg-primary text-white rounded-xl text-xs font-medium shadow-md shadow-green-200 dark:shadow-none flex items-center justify-center">
+                                かえす
+                            </button>
+</div>
+</div>
+<div class="h-4"></div>
+</div>
+<div class="p-4 border-t border-gray-50 dark:border-gray-700/30 bg-modal-light dark:bg-modal-dark pb-8 rounded-b-[2rem]">
+<button class="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold py-4 rounded-2xl transition-colors duration-200">
+                        とじる
+                    </button>
+</div>
+</div>
+</div>
+</div>
+
+</body></html>

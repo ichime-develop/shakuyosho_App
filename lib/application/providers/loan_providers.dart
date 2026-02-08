@@ -135,11 +135,10 @@ final friendSummariesProvider = FutureProvider<List<FriendSummary>>((
         lastActivity = loanActivity;
       }
 
-      // 完済済み or 未承認 は残高集計対象外
+      // 完済済みは残高集計対象外
       if (loan.isRepaid) continue;
-      if (loan.status != LoanStatus.approved) continue;
 
-      if (loan.direction == LoanDirection.lent) {
+      if (loan.lenderUserId == currentUserId) {
         lentTotal += loan.remainingYen;
       } else {
         borrowedTotal += loan.remainingYen;
@@ -195,30 +194,23 @@ class LoanActionsNotifier extends Notifier<void> {
 
   LoanRepository get _repo => ref.read(loanRepositoryProvider);
 
-  /// 借用書を作成
+  /// 借用書を作成（自分が貸す側＝lender）
   Future<Loan> createLoan({
-    required LoanDirection direction,
     required String counterpartyId,
     required int amountYen,
     required String purpose,
+    String note = '',
     required DateTime dueDate,
   }) async {
-    final userRepo = ref.read(userRepositoryProvider);
-    final counterpartyName =
-        userRepo.getById(counterpartyId)?.displayName ?? counterpartyId;
-
     final loan = Loan(
       id: _repo.newId(),
-      direction: direction,
+      lenderUserId: currentUserId,
+      borrowerUserId: counterpartyId,
       counterpartyId: counterpartyId,
-      createdBy: currentUserId,
-      legacyCounterpartyName: counterpartyName,
       amountYen: amountYen,
       purpose: purpose,
+      note: note,
       dueDate: dueDate,
-      status: direction == LoanDirection.borrowed
-          ? LoanStatus.pending
-          : LoanStatus.approved,
       createdAt: DateTime.now(),
       iouNo:
           'IOU-${DateTime.now().millisecondsSinceEpoch.toRadixString(36).toUpperCase()}',
@@ -231,47 +223,6 @@ class LoanActionsNotifier extends Notifier<void> {
     return loan;
   }
 
-  /// 返済を申請（status → pending）
-  Future<void> requestRepay(String loanId) async {
-    final loan = await _repo.getById(loanId);
-    if (loan == null) return;
-
-    final updated = loan.copyWith(status: LoanStatus.pending);
-    await _repo.upsert(updated);
-    _invalidateAll();
-    _invalidateCounterparty(loan.counterpartyId);
-  }
-
-  /// 返済を承認（repayments追加 + status → approved）
-  Future<void> approveRepay(String loanId, int repayYen) async {
-    final loan = await _repo.getById(loanId);
-    if (loan == null) return;
-
-    final newRepayments = [
-      ...loan.repayments,
-      Repayment(amountYen: repayYen, paidAt: DateTime.now()),
-    ];
-
-    final updated = loan.copyWith(
-      status: LoanStatus.approved,
-      repayments: newRepayments,
-    );
-    await _repo.upsert(updated);
-    _invalidateAll();
-    _invalidateCounterparty(loan.counterpartyId);
-  }
-
-  /// 返済を却下（status → approved に戻す）
-  Future<void> rejectRepay(String loanId) async {
-    final loan = await _repo.getById(loanId);
-    if (loan == null) return;
-
-    final updated = loan.copyWith(status: LoanStatus.approved);
-    await _repo.upsert(updated);
-    _invalidateAll();
-    _invalidateCounterparty(loan.counterpartyId);
-  }
-
   /// 借用書を削除
   Future<void> deleteLoan(String loanId) async {
     final loan = await _repo.getById(loanId);
@@ -280,30 +231,6 @@ class LoanActionsNotifier extends Notifier<void> {
     if (loan != null) {
       _invalidateCounterparty(loan.counterpartyId);
     }
-  }
-
-  /// 借用書を承認（pending → approved）
-  Future<void> approveLoan(String loanId) async {
-    final loan = await _repo.getById(loanId);
-    if (loan == null) return;
-    if (loan.status != LoanStatus.pending) return;
-
-    final updated = loan.copyWith(status: LoanStatus.approved);
-    await _repo.upsert(updated);
-    _invalidateAll();
-    _invalidateCounterparty(loan.counterpartyId);
-  }
-
-  /// 借用書を却下（pending → rejected）
-  Future<void> rejectLoan(String loanId) async {
-    final loan = await _repo.getById(loanId);
-    if (loan == null) return;
-    if (loan.status != LoanStatus.pending) return;
-
-    final updated = loan.copyWith(status: LoanStatus.rejected);
-    await _repo.upsert(updated);
-    _invalidateAll();
-    _invalidateCounterparty(loan.counterpartyId);
   }
 
   /// 返済を追加
