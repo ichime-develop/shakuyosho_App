@@ -1080,7 +1080,7 @@ class _ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final align = isMe ? Alignment.centerRight : Alignment.centerLeft;
     final bubbleColor = isMe
-        ? const Color(0xFF34C759).withOpacity(0.18)
+        ? const Color(0xFF34C759).withValues(alpha: 0.18)
         : const Color(0xFFF3F4F6);
     final radius = BorderRadius.only(
       topLeft: const Radius.circular(16),
@@ -1138,12 +1138,12 @@ class _TxBubble extends StatelessWidget {
     final align = isMe ? Alignment.centerRight : Alignment.centerLeft;
 
     final bubbleColor = isMe
-        ? const Color(0xFF34C759).withOpacity(0.18)
+        ? const Color(0xFF34C759).withValues(alpha: 0.18)
         : const Color(0xFFF3F4F6);
 
     final borderColor = isMe
-        ? const Color(0xFF34C759).withOpacity(0.6)
-        : const Color(0xFF4B5563).withOpacity(0.15);
+        ? const Color(0xFF34C759).withValues(alpha: 0.6)
+        : const Color(0xFF4B5563).withValues(alpha: 0.15);
 
     final labelColor = const Color(0xFF6B7280);
 

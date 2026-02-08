@@ -332,7 +332,7 @@ class _AvatarBadge extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: baseColor.withOpacity(0.15),
+                  color: baseColor.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
@@ -388,10 +388,11 @@ class _EventErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
         onBack();
-        return false;
       },
       child: Scaffold(
         appBar: AppBar(

@@ -685,10 +685,11 @@ class _EventErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
         onBack();
-        return false;
       },
       child: Scaffold(
         appBar: AppBar(
@@ -749,7 +750,7 @@ class _AccordionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadii.card),
         border: Border.all(
           color: expanded
-              ? AppColors.accentGreenBorder
+              ? AppColors.secondaryActionBorder
               : AppColors.listBorder,
           style: expanded ? BorderStyle.solid : BorderStyle.solid,
         ),

@@ -184,7 +184,7 @@ class _PersonalTabViewState extends ConsumerState<_PersonalTabView> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.summaryCardBackground,
+                  color: AppColors.appBackground,
                   borderRadius: BorderRadius.circular(AppRadii.card),
                   boxShadow: AppShadows.subtle,
                 ),

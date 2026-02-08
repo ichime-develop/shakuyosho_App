@@ -51,7 +51,7 @@ class _My0100ScreenState extends ConsumerState<My0100Screen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.summaryCardBackground,
+              color: AppColors.appBackground,
               borderRadius: BorderRadius.circular(AppRadii.card),
               boxShadow: AppShadows.subtle,
             ),

@@ -359,10 +359,10 @@ class _EventRow extends StatelessWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.accentGreenFill,
+                              color: AppColors.secondaryActionFill,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: AppColors.accentGreenBorder,
+                                color: AppColors.secondaryActionBorder,
                               ),
                             ),
                             child: Row(
@@ -371,7 +371,7 @@ class _EventRow extends StatelessWidget {
                                 const Icon(
                                   Icons.check_circle,
                                   size: 14,
-                                  color: AppColors.accentGreen,
+                                  color: AppColors.primaryActionFill,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
@@ -379,7 +379,7 @@ class _EventRow extends StatelessWidget {
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     fontSize: AppTextSizes.tiny,
                                     fontWeight: AppFontWeights.label,
-                                    color: AppColors.accentGreen,
+                                    color: AppColors.primaryActionFill,
                                   ),
                                 ),
                               ],

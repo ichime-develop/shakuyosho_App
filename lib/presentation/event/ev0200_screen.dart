@@ -97,10 +97,11 @@ class _Ev0200EventDetailScreenState
         .where((p) => p.type == TxType.expense)
         .fold<int>(0, (sum, p) => sum + p.totalAmount);
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
         context.go('/ev0100');
-        return false;
       },
       child: Scaffold(
         appBar: AppBar(
@@ -277,7 +278,7 @@ class _SummaryPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.summaryCardBackground,
+        color: AppColors.appBackground,
         borderRadius: BorderRadius.circular(AppRadii.card),
         boxShadow: AppShadows.subtle,
       ),
@@ -384,10 +385,10 @@ class _PrimaryButton extends StatelessWidget {
       child: ElevatedButton.icon(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accentGreenFill,
-          foregroundColor: AppColors.accentGreen,
+          backgroundColor: AppColors.secondaryActionFill,
+          foregroundColor: AppColors.secondaryActionText,
           side: const BorderSide(
-            color: AppColors.accentGreenBorder,
+            color: AppColors.secondaryActionBorder,
             width: 1.2,
           ),
           shape: const StadiumBorder(),
@@ -397,14 +398,14 @@ class _PrimaryButton extends StatelessWidget {
         icon: const Icon(
           Icons.payments,
           size: 18,
-          color: AppColors.accentGreen,
+          color: AppColors.secondaryActionText,
         ),
         label: Text(
           'せいさんする',
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
             fontSize: AppTextSizes.body,
             fontWeight: AppFontWeights.label,
-            color: AppColors.accentGreen,
+            color: AppColors.secondaryActionText,
           ),
         ),
       ),
@@ -537,10 +538,11 @@ class _EventErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
         onBack();
-        return false;
       },
       child: Scaffold(
         appBar: AppBar(
