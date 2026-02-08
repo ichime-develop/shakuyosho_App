@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:shakuyousho_app/application/providers/friend_providers.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 
 /// QR コード読み取り画面
 class QrScannerScreen extends ConsumerStatefulWidget {
@@ -26,11 +27,18 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('QR コードを よみとる'),
+        title: Text(
+          'QR コードを よみとる',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: AppTextSizes.title,
+                fontWeight: AppFontWeights.appBarTitle,
+              ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
+        centerTitle: true,
       ),
       body: Stack(
         children: [

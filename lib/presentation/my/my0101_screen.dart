@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakuyousho_app/application/providers/user_providers.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 
 class My0101NameEditScreen extends ConsumerStatefulWidget {
   const My0101NameEditScreen({super.key});
@@ -49,11 +50,18 @@ class _My0101NameEditScreenState extends ConsumerState<My0101NameEditScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('なまえをへんしゅう'),
+        title: Text(
+          'なまえをへんしゅう',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: AppTextSizes.title,
+                fontWeight: AppFontWeights.appBarTitle,
+              ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -63,11 +71,40 @@ class _My0101NameEditScreenState extends ConsumerState<My0101NameEditScreen> {
             TextField(
               controller: _controller,
               maxLength: 8,
-              decoration: const InputDecoration(
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: AppTextSizes.body,
+                  ),
+              decoration: InputDecoration(
                 hintText: 'なまえをいれてね',
+                hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: AppTextSizes.small,
+                      color: AppColors.iconDefault,
+                    ),
                 counterText: '',
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadii.card),
+                  borderSide: const BorderSide(color: AppColors.listBorder),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadii.card),
+                  borderSide: const BorderSide(color: AppColors.listBorder),
+                ),
               ),
               onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '※ 8もじ まで',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: AppTextSizes.small,
+                    color: AppColors.iconDefault,
+                  ),
             ),
             const Spacer(),
             Row(
@@ -75,14 +112,30 @@ class _My0101NameEditScreenState extends ConsumerState<My0101NameEditScreen> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('もどる'),
+                    style: AppButtonStyles.secondaryPill,
+                    child: Text(
+                      'もどる',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            fontSize: AppTextSizes.body,
+                            fontWeight: AppFontWeights.label,
+                            color: AppColors.secondaryActionText,
+                          ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _isValid ? _onSave : null,
-                    child: const Text('ほぞん'),
+                    style: AppButtonStyles.primaryPill,
+                    child: Text(
+                      'ほぞん',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            fontSize: AppTextSizes.body,
+                            fontWeight: AppFontWeights.label,
+                            color: AppColors.primaryActionText,
+                          ),
+                    ),
                   ),
                 ),
               ],

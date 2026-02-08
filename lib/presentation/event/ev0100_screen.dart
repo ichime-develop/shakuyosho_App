@@ -55,13 +55,13 @@ class _Ev0100EventListScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'EV0100 イベント一覧',
+          'イベントいちらん',
           style: theme.textTheme.titleMedium?.copyWith(
             fontSize: AppTextSizes.title,
             fontWeight: AppFontWeights.appBarTitle,
           ),
         ),
-        centerTitle: false,
+        centerTitle: true,
       ),
       body: Stack(
         children: [

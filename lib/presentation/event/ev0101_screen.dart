@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/thread_model.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 
 /// EV0101: イベント新規作成画面（作成者向け・モック）
 ///
@@ -38,13 +39,7 @@ class _Ev0101EventCreateScreenState
 
   @override
   Widget build(BuildContext context) {
-    // HTMLの淡いベージュ系に寄せた配色（必要ならアプリテーマへ寄せる）
-    const bg = Color(0xFFFDFDF6);
-    const surface = Color(0xFFF4F4EE);
-    const textMain = Color(0xFF4A4F4B);
-    const textSub = Color(0xFF8B9690);
-    const primary = Color(0xFF36E28C);
-    const primaryContent = Color(0xFF111714);
+    final theme = Theme.of(context);
 
     final groupName = _groupNameCtrl.text.trim();
     final canCreate = groupName.isNotEmpty;
@@ -62,19 +57,18 @@ class _Ev0101EventCreateScreenState
               .toList(growable: false);
 
     return Scaffold(
-      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: bg,
-        surfaceTintColor: bg,
-        elevation: 0,
         leading: IconButton(
           tooltip: 'もどる',
           onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back_ios_new),
         ),
-        title: const Text(
+        title: Text(
           'イベントをつくる／しょうたい',
-          style: TextStyle(fontWeight: FontWeight.w800, color: textMain),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: AppTextSizes.title,
+                fontWeight: AppFontWeights.appBarTitle,
+              ),
         ),
         centerTitle: true,
       ),
@@ -92,26 +86,30 @@ class _Ev0101EventCreateScreenState
               TextField(
                 controller: _groupNameCtrl,
                 textInputAction: TextInputAction.done,
-                style: const TextStyle(
-                  color: textMain,
-                  fontWeight: FontWeight.w600,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: AppTextSizes.body,
+                  fontWeight: AppFontWeights.listSubtitle,
+                  color: const Color(0xFF111827),
                 ),
                 decoration: InputDecoration(
                   hintText: 'りょこう、BBQなど',
-                  hintStyle: const TextStyle(color: textSub),
+                  hintStyle: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: AppTextSizes.small,
+                    color: AppColors.iconDefault,
+                  ),
                   filled: true,
-                  fillColor: surface,
+                  fillColor: Colors.white,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 18,
                     vertical: 16,
                   ),
                   border: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadii.card),
+                    borderSide: const BorderSide(color: AppColors.listBorder),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: primary, width: 2),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadii.card),
+                    borderSide: const BorderSide(color: AppColors.listBorder),
                   ),
                 ),
                 onChanged: (_) => setState(() {}),
@@ -120,37 +118,34 @@ class _Ev0101EventCreateScreenState
 
               SizedBox(
                 height: 48,
-                child: FilledButton.icon(
+                child: ElevatedButton.icon(
                   onPressed: canCreate ? _onCreateGroup : null,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: primary,
-                    foregroundColor: primaryContent,
-                    shape: const StadiumBorder(),
-                    disabledBackgroundColor: primary.withOpacity(0.35),
-                    disabledForegroundColor: primaryContent.withOpacity(0.7),
-                  ),
+                  style: AppButtonStyles.primaryPill,
                   icon: const Icon(Icons.add_circle),
-                  label: const Text(
+                  label: Text(
                     'イベントをつくる',
-                    style: TextStyle(fontWeight: FontWeight.w800),
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontSize: AppTextSizes.body,
+                      fontWeight: AppFontWeights.label,
+                      color: AppColors.primaryActionText,
+                    ),
                   ),
                 ),
               ),
 
               const SizedBox(height: 24),
-              Container(height: 1, color: surface),
+              Container(height: 1, color: AppColors.listBorder),
               const SizedBox(height: 18),
 
               // --- Friends section ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'ともだちをさがす',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                      color: textMain,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontSize: AppTextSizes.section,
+                      fontWeight: AppFontWeights.sectionTitle,
                     ),
                   ),
                   Container(
@@ -159,15 +154,16 @@ class _Ev0101EventCreateScreenState
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: surface,
-                      borderRadius: BorderRadius.circular(999),
+                      color: AppColors.addButtonBackground,
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
+                      border: Border.all(color: AppColors.listBorder),
                     ),
                     child: Text(
                       '${allUsers.length}人',
-                      style: const TextStyle(
-                        color: textSub,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.iconDefault,
+                        fontWeight: AppFontWeights.listSubtitle,
+                        fontSize: AppTextSizes.small,
                       ),
                     ),
                   ),
@@ -177,27 +173,34 @@ class _Ev0101EventCreateScreenState
 
               TextField(
                 controller: _friendSearchCtrl,
-                style: const TextStyle(
-                  color: textMain,
-                  fontWeight: FontWeight.w600,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: AppTextSizes.body,
+                  fontWeight: AppFontWeights.listSubtitle,
+                  color: const Color(0xFF111827),
                 ),
                 decoration: InputDecoration(
                   hintText: 'なまえでさがす',
-                  hintStyle: const TextStyle(color: textSub),
+                  hintStyle: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: AppTextSizes.small,
+                    color: AppColors.iconDefault,
+                  ),
                   filled: true,
-                  fillColor: surface,
-                  prefixIcon: const Icon(Icons.search, color: textSub),
+                  fillColor: Colors.white,
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    color: AppColors.iconDefault,
+                  ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 14,
                   ),
                   border: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppRadii.card),
+                    borderSide: const BorderSide(color: AppColors.listBorder),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: primary, width: 2),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppRadii.card),
+                    borderSide: const BorderSide(color: AppColors.listBorder),
                   ),
                 ),
                 onChanged: (_) => setState(() {}),
@@ -282,11 +285,11 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(left: 6),
       child: Text(
         text,
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w800,
-          color: Color(0xFF4A4F4B),
-        ),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontSize: AppTextSizes.small,
+              fontWeight: AppFontWeights.sectionTitle,
+              color: AppColors.iconDefault,
+            ),
       ),
     );
   }
@@ -305,9 +308,8 @@ class _FriendTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const textMain = Color(0xFF4A4F4B);
-    const textSub = Color(0xFF8B9690);
     final avatarColors = _avatarColorsFor(friend.id);
+    final theme = Theme.of(context);
 
     return InkWell(
       onTap: onToggle,
@@ -325,11 +327,11 @@ class _FriendTile extends StatelessWidget {
               alignment: Alignment.center,
               child: Text(
                 friend.displayName.characters.first,
-                style: TextStyle(
-                  color: avatarColors.foreground,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: avatarColors.foreground,
+                      fontSize: AppTextSizes.section,
+                      fontWeight: AppFontWeights.listTitle,
+                    ),
               ),
             ),
             const SizedBox(width: 12),
@@ -341,18 +343,10 @@ class _FriendTile extends StatelessWidget {
                     friend.displayName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: textMain,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'ともだち',
-                    style: const TextStyle(
-                      color: textSub,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: AppTextSizes.section,
+                      fontWeight: AppFontWeights.listTitle,
+                      color: const Color(0xFF111827),
                     ),
                   ),
                 ],
@@ -384,7 +378,7 @@ class _FriendList extends StatelessWidget {
     return Column(
       children: List.generate(friends.length * 2 - 1, (index) {
         if (index.isOdd) {
-          return Divider(height: 1, color: Colors.grey.shade200);
+          return const Divider(height: 1, color: AppColors.listBorder);
         }
         final friend = friends[index ~/ 2];
         return _FriendTile(
@@ -405,33 +399,37 @@ class _CircleCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFF36E28C);
-
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 32,
-        height: 32,
+        width: 28,
+        height: 28,
         child: Stack(
           alignment: Alignment.center,
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 160),
-              width: 24,
-              height: 24,
+              width: 20,
+              height: 20,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: checked ? primary : Colors.transparent,
+                color: checked ? AppColors.selectionActive : Colors.white,
                 border: Border.all(
-                  color: checked ? primary : const Color(0xFFBDBDBD),
-                  width: 2,
+                  color: checked
+                      ? AppColors.selectionActive
+                      : AppColors.selectionBorder,
+                  width: 1.6,
                 ),
               ),
             ),
             AnimatedOpacity(
               duration: const Duration(milliseconds: 160),
               opacity: checked ? 1 : 0,
-              child: const Icon(Icons.check, size: 16, color: Colors.white),
+              child: const Icon(
+                Icons.check,
+                size: 12,
+                color: AppColors.selectionCheck,
+              ),
             ),
           ],
         ),

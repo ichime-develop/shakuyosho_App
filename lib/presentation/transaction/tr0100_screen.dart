@@ -155,7 +155,7 @@ class _Tr0100TransactionScreenState
   Widget build(BuildContext context) {
     if (_missingEventId) {
       return _EventErrorView(
-        title: 'TR0100',
+        title: 'おしはらいメモ',
         message: 'eventIdが未指定です。',
         onBack: () => context.go('/ev0100'),
       );
@@ -177,21 +177,22 @@ class _Tr0100TransactionScreenState
             icon: const Icon(Icons.close),
             onPressed: () => context.pop(),
           ),
-        title: Text(
-          _eventTitle == null ? 'TR0100 おしはらいメモ' : 'TR0100 $_eventTitle',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontSize: AppTextSizes.title,
-            fontWeight: AppFontWeights.appBarTitle,
+          title: Text(
+            _eventTitle == null ? 'おしはらいメモ' : _eventTitle!,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontSize: AppTextSizes.title,
+              fontWeight: AppFontWeights.appBarTitle,
+            ),
           ),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(CupertinoIcons.trash),
+              tooltip: 'このきろくをけす',
+              onPressed: _onDeleteRecord,
+            ),
+          ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(CupertinoIcons.trash),
-            tooltip: 'このきろくをけす',
-            onPressed: _onDeleteRecord,
-          ),
-        ],
-      ),
       body: SafeArea(
         child: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
@@ -775,6 +776,7 @@ class _EventErrorView extends StatelessWidget {
                   fontWeight: AppFontWeights.appBarTitle,
                 ),
           ),
+          centerTitle: true,
         ),
         body: Center(
           child: Column(
@@ -787,7 +789,7 @@ class _EventErrorView extends StatelessWidget {
                     ),
               ),
               const SizedBox(height: 12),
-              TextButton(onPressed: onBack, child: const Text('EV0100にもどる')),
+              TextButton(onPressed: onBack, child: const Text('もどる')),
             ],
           ),
         ),

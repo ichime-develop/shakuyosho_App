@@ -16,7 +16,7 @@ class Ev0300EventMembersScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (eventId.isEmpty) {
       return _EventErrorView(
-        title: 'EV0300',
+        title: 'めんばー',
         message: 'eventIdが未指定です。',
         onBack: () => context.go('/ev0100'),
       );
@@ -25,7 +25,7 @@ class Ev0300EventMembersScreen extends ConsumerWidget {
     final detail = ref.watch(eventDetailProvider(eventId));
     if (detail == null) {
       return _EventErrorView(
-        title: 'EV0300',
+        title: 'めんばー',
         message: 'イベントが見つかりません。',
         onBack: () => context.go('/ev0100'),
       );
@@ -41,12 +41,13 @@ class Ev0300EventMembersScreen extends ConsumerWidget {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'EV0300 メンバー',
+          'めんばー',
           style: theme.textTheme.titleMedium?.copyWith(
             fontSize: AppTextSizes.title,
             fontWeight: AppFontWeights.appBarTitle,
           ),
         ),
+        centerTitle: true,
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -159,6 +160,7 @@ class _EventErrorView extends StatelessWidget {
                   fontWeight: AppFontWeights.appBarTitle,
                 ),
           ),
+          centerTitle: true,
         ),
         body: Center(
           child: Column(
@@ -171,7 +173,7 @@ class _EventErrorView extends StatelessWidget {
                     ),
               ),
               const SizedBox(height: 12),
-              TextButton(onPressed: onBack, child: const Text('EV0100にもどる')),
+              TextButton(onPressed: onBack, child: const Text('もどる')),
             ],
           ),
         ),

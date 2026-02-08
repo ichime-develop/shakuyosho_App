@@ -73,6 +73,7 @@ class _To0100ScreenState extends ConsumerState<To0100Screen>
             fontWeight: AppFontWeights.appBarTitle,
           ),
         ),
+        centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.black,

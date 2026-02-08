@@ -6,6 +6,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shakuyousho_app/application/providers/friend_providers.dart';
 import 'package:shakuyousho_app/application/providers/user_providers.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 
 /// FR0100 から呼ばれるともだち追加 BottomSheet を表示する。
 ///
@@ -51,6 +52,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
     final currentUser = ref.watch(currentUserProvider);
     final myCode = currentUser?.myCode ?? '---';
     final inviteUrl = 'shakuyousho://invite?code=$myCode';
+    final theme = Theme.of(context);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.75,
@@ -78,13 +80,12 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
               const SizedBox(height: 16),
 
               // タイトル
-              const Center(
+              Center(
                 child: Text(
                   'ともだち を ついか',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF111827),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontSize: AppTextSizes.title,
+                    fontWeight: AppFontWeights.appBarTitle,
                   ),
                 ),
               ),
@@ -103,7 +104,13 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                         horizontal: 12,
                         vertical: 10,
                       ),
-                      style: const TextStyle(fontSize: 16),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: AppTextSizes.body,
+                      ),
+                      placeholderStyle: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: AppTextSizes.small,
+                        color: AppColors.iconDefault,
+                      ),
                       textCapitalization: TextCapitalization.characters,
                     ),
                   ),
@@ -112,16 +119,14 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                     height: 40,
                     child: FilledButton(
                       onPressed: _processing ? null : _onAddByCode,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF36E28C),
-                        foregroundColor: const Color(0xFF111714),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
+                      style: AppButtonStyles.primaryPill,
+                      child: Text(
                         'ついか',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontSize: AppTextSizes.body,
+                          fontWeight: AppFontWeights.label,
+                          color: AppColors.primaryActionText,
+                        ),
                       ),
                     ),
                   ),
@@ -132,11 +137,11 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                 Text(
                   _resultMessage!,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: AppTextSizes.small,
                     color: _resultIsError
                         ? Colors.red.shade600
-                        : const Color(0xFF36E28C),
-                    fontWeight: FontWeight.w600,
+                        : AppColors.primaryActionFill,
+                    fontWeight: AppFontWeights.listSubtitle,
                   ),
                 ),
               ],
@@ -155,13 +160,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                   onPressed: () => Navigator.of(context).pop('qr'),
                   icon: const Icon(Icons.camera_alt_outlined),
                   label: const Text('QR コードを よみとる'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF374151),
-                    side: const BorderSide(color: Color(0xFFD1D5DB)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
+                  style: AppButtonStyles.secondaryPill,
                 ),
               ),
               const SizedBox(height: 24),
@@ -201,11 +200,11 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                       // コード文字
                       SelectableText(
                         myCode,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontSize: AppTextSizes.title,
+                          fontWeight: AppFontWeights.listTitle,
                           letterSpacing: 2,
-                          color: Color(0xFF111827),
+                          color: const Color(0xFF111827),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -223,8 +222,8 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                             label: Text(_copied ? 'コピーしました' : 'コピー'),
                             style: TextButton.styleFrom(
                               foregroundColor: _copied
-                                  ? const Color(0xFF36E28C)
-                                  : const Color(0xFF374151),
+                                  ? AppColors.primaryActionFill
+                                  : AppColors.iconDefault,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -237,7 +236,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                             icon: const Icon(Icons.share, size: 18),
                             label: const Text('きょうゆう'),
                             style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFF374151),
+                              foregroundColor: AppColors.iconDefault,
                             ),
                           ),
                         ],
@@ -314,16 +313,17 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       children: [
-        Icon(icon, size: 18, color: const Color(0xFF6B7280)),
+        Icon(icon, size: 18, color: AppColors.iconDefault),
         const SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF6B7280),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontSize: AppTextSizes.body,
+            fontWeight: AppFontWeights.sectionTitle,
+            color: AppColors.iconDefault,
           ),
         ),
       ],

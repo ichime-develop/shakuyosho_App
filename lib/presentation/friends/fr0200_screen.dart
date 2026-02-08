@@ -1221,12 +1221,13 @@ class _ErrorView extends StatelessWidget {
             onPressed: onBack,
           ),
           title: Text(
-            'FR0200',
+            'ともだち',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontSize: AppTextSizes.title,
                   fontWeight: AppFontWeights.appBarTitle,
                 ),
           ),
+          centerTitle: true,
         ),
         body: Center(
           child: Column(

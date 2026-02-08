@@ -42,6 +42,7 @@ class _My0100ScreenState extends ConsumerState<My0100Screen> {
             fontWeight: AppFontWeights.appBarTitle,
           ),
         ),
+        centerTitle: true,
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -56,7 +57,14 @@ class _My0100ScreenState extends ConsumerState<My0100Screen> {
             ),
             child: Row(
               children: [
-                const CircleAvatar(radius: 28, child: Icon(Icons.person)),
+                const CircleAvatar(
+                  radius: 28,
+                  backgroundColor: Color(0xFFE5E7EB),
+                  child: Icon(
+                    Icons.person,
+                    color: Colors.black,
+                  ),
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(

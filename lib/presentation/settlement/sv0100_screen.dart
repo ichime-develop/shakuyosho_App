@@ -31,7 +31,7 @@ class _Sv0100SettlementScreenState
     final eventId = widget.eventId;
     if (eventId.isEmpty) {
       return _EventErrorView(
-        title: 'SV0100 おかねまとめ',
+        title: 'おかねまとめ',
         message: 'eventIdが未指定です。',
         onBack: () => context.go('/ev0100'),
       );
@@ -40,7 +40,7 @@ class _Sv0100SettlementScreenState
     final eventMeta = ref.watch(eventMetaProvider(eventId));
     if (eventMeta == null) {
       return _EventErrorView(
-        title: 'SV0100 おかねまとめ',
+        title: 'おかねまとめ',
         message: 'イベントが見つかりません。',
         onBack: () => context.go('/ev0100'),
       );
@@ -57,11 +57,14 @@ class _Sv0100SettlementScreenState
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        title: Text('SV0100 おかねまとめ：$eventTitle'),
+        title: Text(
+          eventTitle.isEmpty ? 'おかねまとめ' : 'おかねまとめ：$eventTitle',
+        ),
         titleTextStyle: theme.textTheme.titleMedium?.copyWith(
           fontSize: AppTextSizes.title,
           fontWeight: AppFontWeights.appBarTitle,
         ),
+        centerTitle: true,
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 140),
@@ -393,6 +396,7 @@ class _EventErrorView extends StatelessWidget {
                   fontWeight: AppFontWeights.appBarTitle,
                 ),
           ),
+          centerTitle: true,
         ),
         body: Center(
           child: Column(
@@ -405,7 +409,7 @@ class _EventErrorView extends StatelessWidget {
                     ),
               ),
               const SizedBox(height: 12),
-              TextButton(onPressed: onBack, child: const Text('EV0100にもどる')),
+              TextButton(onPressed: onBack, child: const Text('もどる')),
             ],
           ),
         ),

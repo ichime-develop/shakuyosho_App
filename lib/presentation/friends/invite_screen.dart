@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/friend_providers.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 
 /// 招待リンク経由で開かれる確認画面
 /// shakuyousho://invite?code=SYY-XXXXX
@@ -28,11 +29,18 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ともだち しょうたい'),
+        title: Text(
+          'ともだち しょうたい',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: AppTextSizes.title,
+                fontWeight: AppFontWeights.appBarTitle,
+              ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.go('/fr0100'),
         ),
+        centerTitle: true,
       ),
       body: Center(
         child: Padding(

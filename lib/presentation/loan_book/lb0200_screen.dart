@@ -82,7 +82,7 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'とりひき を ついか',
+          'しゃくよーしょ さくせい',
           style: theme.textTheme.titleMedium?.copyWith(
             fontSize: AppTextSizes.title,
             fontWeight: AppFontWeights.appBarTitle,
@@ -269,6 +269,7 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => context.pop(),
               ),
+              centerTitle: true,
             ),
             body: Center(
               child: Text(
@@ -296,11 +297,10 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
               onPressed: () => context.pop(),
             ),
             title: Text(
-              'しゃくよーしょ 詳細',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: AppTextSizes.tiny,
-                fontWeight: AppFontWeights.listSubtitle,
-                color: const Color(0xFF94A3B8),
+              'しゃくよーしょ しょうさい',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontSize: AppTextSizes.title,
+                fontWeight: AppFontWeights.appBarTitle,
               ),
             ),
             centerTitle: true,
