@@ -28,6 +28,7 @@ class AppMessageId {
   static const s001 = 'S001'; // network
   static const s002 = 'S002'; // notFound
   static const s003 = 'S003'; // unknown
+  static const s004 = 'S004'; // read failed
 
   // EV0200
   static const ev0200_001 = 'ev0200_001';
@@ -64,6 +65,13 @@ class AppMessages {
     AppMessageId.s003: AppDialogMessage(
       title: 'えらー',
       message: 'よきせぬエラーが はっせいしました',
+      buttons: [
+        AppDialogButton(label: 'OK', role: AppDialogButtonRole.primary),
+      ],
+    ),
+    AppMessageId.s004: AppDialogMessage(
+      title: 'えらー',
+      message: '読み込みに失敗しました。',
       buttons: [
         AppDialogButton(label: 'OK', role: AppDialogButtonRole.primary),
       ],

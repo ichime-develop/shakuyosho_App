@@ -74,3 +74,10 @@ String displayNameOf(String userId) {
   assert(user != null, 'Unknown userId referenced in mock data: $userId');
   return user?.displayName ?? '???';
 }
+
+/// モックデータ生成用（画面表示では使用しない）
+String mockDisplayNameOf(String userId) {
+  final user = mockUsersById[userId];
+  assert(user != null, 'Unknown userId referenced in mock data: $userId');
+  return user?.displayName ?? '???';
+}

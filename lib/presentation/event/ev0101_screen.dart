@@ -5,6 +5,9 @@ import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/thread_model.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';
 
 /// EV0101: イベント新規作成画面（作成者向け・モック）
 ///
@@ -46,10 +49,45 @@ class _Ev0101EventCreateScreenState
 
     final friendQuery = _friendSearchCtrl.text.trim();
     final myId = ref.watch(currentUserIdProvider);
-    final allUsers = ref
-        .watch(userListProvider)
-        .where((u) => u.id != myId && u.deletedAt == null)
-        .toList();
+    List<User> allUsers;
+    try {
+      allUsers = ref
+          .watch(userListProvider)
+          .where((u) => u.id != myId && u.deletedAt == null)
+          .toList();
+    } catch (e, st) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final err = toAppError(e, st);
+        await showAppErrorDialog(context: context, error: err);
+      });
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            tooltip: 'もどる',
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.arrow_back_ios_new),
+          ),
+          title: Text(
+            'イベントをつくる／しょうたい',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: AppTextSizes.title,
+                  fontWeight: AppFontWeights.appBarTitle,
+                ),
+          ),
+          centerTitle: true,
+        ),
+        body: Center(
+          child: Text(
+            AppMessages.dialog(AppMessageId.s004).message,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontSize: AppTextSizes.body,
+              color: theme.hintColor,
+            ),
+          ),
+        ),
+      );
+    }
     final filteredFriends = friendQuery.isEmpty
         ? allUsers
         : allUsers
@@ -248,7 +286,14 @@ class _Ev0101EventCreateScreenState
       createdAt: now,
       updatedAt: now,
     );
-    ref.read(threadListProvider.notifier).upsert(thread);
+    try {
+      ref.read(threadListProvider.notifier).upsert(thread);
+    } catch (e, st) {
+      final err = toAppError(e, st);
+      if (!mounted) return;
+      await showAppErrorDialog(context: context, error: err);
+      return;
+    }
     final eventMeta = EventMeta(
       id: eventId,
       title: name,
@@ -258,7 +303,14 @@ class _Ev0101EventCreateScreenState
       status: EventStatus.inProgress,
       deletedAt: null,
     );
-    ref.read(eventMetaListProvider.notifier).upsertEventMeta(eventMeta);
+    try {
+      ref.read(eventMetaListProvider.notifier).upsertEventMeta(eventMeta);
+    } catch (e, st) {
+      final err = toAppError(e, st);
+      if (!mounted) return;
+      await showAppErrorDialog(context: context, error: err);
+      return;
+    }
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,

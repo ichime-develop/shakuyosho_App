@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/friend_providers.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
 
 /// 招待リンク経由で開かれる確認画面
 /// shakuyousho://invite?code=SYY-XXXXX
@@ -143,9 +145,19 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
   Future<void> _onAccept() async {
     setState(() => _processing = true);
 
-    final result = await ref
-        .read(friendActionsProvider.notifier)
-        .addFriendByCode(widget.code, source: 'link');
+    AddFriendResult result;
+    try {
+      result = await ref
+          .read(friendActionsProvider.notifier)
+          .addFriendByCode(widget.code, source: 'link');
+    } catch (e, st) {
+      final err = toAppError(e, st);
+      if (!mounted) return;
+      await showAppErrorDialog(context: context, error: err);
+      if (!mounted) return;
+      setState(() => _processing = false);
+      return;
+    }
 
     if (!mounted) return;
 

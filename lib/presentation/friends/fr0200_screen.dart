@@ -12,7 +12,10 @@ import 'package:shakuyousho_app/domain/models/loan_model.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
 import 'package:shakuyousho_app/presentation/common/app_paper_background.dart';
+import 'package:shakuyousho_app/presentation/common/app_loading_screen.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_message_dialog.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';
 
@@ -36,6 +39,7 @@ class _Fr0200ThreadDetailScreenState
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _didInitialScroll = false;
+  bool _didShowReadError = false;
 
   @override
   void dispose() {
@@ -77,18 +81,36 @@ class _Fr0200ThreadDetailScreenState
     });
   }
 
-  void _handleSend() {
+  Future<void> _handleSend() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
-    ref
-        .read(chatMessageActionsProvider.notifier)
-        .sendMessage(
-          threadId: widget.friendId,
-          senderId: ref.read(currentUserIdProvider),
-          text: text,
-        );
+    try {
+      await ref
+          .read(chatMessageActionsProvider.notifier)
+          .sendMessage(
+            threadId: widget.friendId,
+            senderId: ref.read(currentUserIdProvider),
+            text: text,
+          );
+    } catch (e, st) {
+      final err = toAppError(e, st);
+      if (!mounted) return;
+      await showAppErrorDialog(context: context, error: err);
+      return;
+    }
+    if (!mounted) return;
     _messageController.clear();
     _scrollToBottom(force: true);
+  }
+
+  void _handleReadError(Object error, StackTrace stackTrace) {
+    if (_didShowReadError) return;
+    _didShowReadError = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final err = toAppError(error, stackTrace);
+      await showAppErrorDialog(context: context, error: err);
+    });
   }
 
   @override
@@ -125,12 +147,37 @@ class _Fr0200ThreadDetailScreenState
       body: SafeArea(
         top: false,
         child: loansAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('エラー: $e')),
-          data: (loans) {
-            final messages = ref.watch(
-              messagesByThreadProvider(widget.friendId),
+          loading: () => const AppLoadingScreen(),
+          error: (e, st) {
+            _handleReadError(e, st);
+            return Center(
+              child: Text(
+                AppMessages.dialog(AppMessageId.s004).message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: AppTextSizes.body,
+                      color: Theme.of(context).hintColor,
+                    ),
+              ),
             );
+          },
+          data: (loans) {
+            List<ChatMessage> messages;
+            try {
+              messages = ref.watch(
+                messagesByThreadProvider(widget.friendId),
+              );
+            } catch (e, st) {
+              _handleReadError(e, st);
+              return Center(
+                child: Text(
+                  AppMessages.dialog(AppMessageId.s004).message,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontSize: AppTextSizes.body,
+                        color: Theme.of(context).hintColor,
+                      ),
+                ),
+              );
+            }
             return _buildBody(context, loans, messages);
           },
         ),
@@ -731,7 +778,7 @@ class _Fr0200ThreadDetailScreenState
       context: context,
       messageId: AppMessageId.fr0200_001,
       onDestructive: () async {
-        ref.read(loanActionsProvider.notifier).deleteLoan(loan.id);
+        await ref.read(loanActionsProvider.notifier).deleteLoan(loan.id);
       },
     );
   }
@@ -741,52 +788,54 @@ class _Fr0200ThreadDetailScreenState
       text: loan.remainingYen.toString(),
     );
 
-    await showCupertinoDialog<void>(
+    await showAppContentDialog(
       context: context,
-      builder: (ctx) {
-        return CupertinoAlertDialog(
-          title: const Text('かえす'),
-          content: Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('のこり ${loan.remainingYen.toYenSymbol()}'),
-                const SizedBox(height: 8),
-                CupertinoTextField(
-                  controller: controller,
-                  keyboardType: TextInputType.number,
-                  placeholder: 'きんがく',
-                  suffix: Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Text(AppStrings.amountUnit),
-                  ),
-                ),
-              ],
+      title: 'かえす',
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('のこり ${loan.remainingYen.toYenSymbol()}'),
+          const SizedBox(height: 8),
+          CupertinoTextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            placeholder: 'きんがく',
+            suffix: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Text(AppStrings.amountUnit),
             ),
           ),
-          actions: [
-            CupertinoDialogAction(
-              isDestructiveAction: true,
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('やめる'),
-            ),
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              onPressed: () {
-                final amount = int.tryParse(controller.text.trim());
-                if (amount == null || amount <= 0) return;
-                ref
-                    .read(loanActionsProvider.notifier)
-                    .addRepayment(loan.id, amount);
-                Navigator.pop(ctx);
-                _scrollToBottom(force: true);
-              },
-              child: const Text('かえす'),
-            ),
-          ],
-        );
-      },
+        ],
+      ),
+      actions: [
+        const AppDialogAction(
+          label: 'やめる',
+          style: AppDialogActionStyle.secondary,
+        ),
+        AppDialogAction(
+          label: 'かえす',
+          style: AppDialogActionStyle.primary,
+          closeOnSuccess: false,
+          onPressedAsync: () async {
+            final amount = int.tryParse(controller.text.trim());
+            if (amount == null || amount <= 0) return;
+            Navigator.of(context, rootNavigator: true).pop();
+            try {
+              await ref
+                  .read(loanActionsProvider.notifier)
+                  .addRepayment(loan.id, amount);
+            } catch (e, st) {
+              final err = toAppError(e, st);
+              if (!mounted) return;
+              await showAppErrorDialog(context: context, error: err);
+              return;
+            }
+            if (!mounted) return;
+            _scrollToBottom(force: true);
+          },
+        ),
+      ],
     );
   }
 

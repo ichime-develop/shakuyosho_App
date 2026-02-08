@@ -9,9 +9,10 @@ import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
-import 'package:shakuyousho_app/presentation/common/error/app_dialog.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_message_dialog.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
 import '../../application/usecases/event_share_service.dart';
 
 /// TR0100: イベント内の 1 つの支払い（取引）を入力・編集する画面
@@ -405,63 +406,6 @@ class _Tr0100TransactionScreenState
     );
   }
 
-  /// 内訳ゾーンのカード
-  Widget _buildBreakdownCard(ThemeData theme) {
-    return Card(
-      child: Column(
-        children: _memberShares.map((s) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: Row(
-              children: [
-                Checkbox(
-                  value: s.included,
-                  onChanged: (v) {
-                    setState(() {
-                      s.included = v ?? false;
-                      _recalcShares();
-                    });
-                  },
-                ),
-                Expanded(
-                  child: Text(
-                    s.name,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: AppTextSizes.body,
-                      fontWeight: AppFontWeights.listSubtitle,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 90,
-                  child: TextField(
-                    controller: s.controller,
-                    keyboardType: TextInputType.number,
-                    textAlign: TextAlign.right,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: AppTextSizes.small,
-                      fontWeight: AppFontWeights.listSubtitle,
-                    ),
-                    decoration: InputDecoration(
-                      isDense: true,
-                      suffixText: AppStrings.amountUnit,
-                      border: OutlineInputBorder(),
-                      hintStyle: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: AppTextSizes.small,
-                        color: theme.hintColor,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
   /// 合計金額や割り勘対象が変わったときに均等割りを再計算し、
   /// 各メンバーの TextField に反映する。
   void _recalcShares() {
@@ -562,7 +506,7 @@ class _Tr0100TransactionScreenState
         .toList();
   }
 
-  void _onTapSave() {
+  Future<void> _onTapSave() async {
     final context = this.context;
     final total = int.tryParse(_amountController.text) ?? 0;
 
@@ -650,8 +594,16 @@ class _Tr0100TransactionScreenState
     );
 
     // Persist to state
-    ref.read(transactionRepositoryProvider).upsert(tx);
+    try {
+      ref.read(transactionRepositoryProvider).upsert(tx);
+    } catch (e, st) {
+      final err = toAppError(e, st);
+      if (!context.mounted) return;
+      await showAppErrorDialog(context: context, error: err);
+      return;
+    }
 
+    if (!context.mounted) return;
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('おしはらいをほぞんしました')));
@@ -675,27 +627,10 @@ class _Tr0100TransactionScreenState
               .read(transactionRepositoryProvider)
               .delete(_editingTransaction!.id);
         }
-        if (!mounted) return;
+        if (!context.mounted) return;
         Navigator.of(context, rootNavigator: true).pop();
         context.pop();
       },
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.text});
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Text(
-      text,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontSize: AppTextSizes.section,
-        fontWeight: AppFontWeights.sectionTitle,
-      ),
     );
   }
 }
@@ -792,7 +727,6 @@ class _EventErrorView extends StatelessWidget {
 
 class _AccordionCard extends StatelessWidget {
   const _AccordionCard({
-    this.icon,
     required this.title,
     required this.summary,
     required this.expanded,
@@ -800,7 +734,6 @@ class _AccordionCard extends StatelessWidget {
     required this.child,
   });
 
-  final IconData? icon;
   final String title;
   final String? summary;
   final bool expanded;
@@ -831,10 +764,6 @@ class _AccordionCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
-                  if (icon != null) ...[
-                    Icon(icon, color: AppColors.iconDefault),
-                    const SizedBox(width: 12),
-                  ],
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

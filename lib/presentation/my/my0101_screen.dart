@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakuyousho_app/application/providers/user_providers.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
 
 class My0101NameEditScreen extends ConsumerStatefulWidget {
   const My0101NameEditScreen({super.key});
@@ -32,7 +34,7 @@ class _My0101NameEditScreenState extends ConsumerState<My0101NameEditScreen> {
     return text.isNotEmpty && text.length <= 8;
   }
 
-  void _onSave() {
+  Future<void> _onSave() async {
     final text = _controller.text.trim();
     if (text.isEmpty || text.length > 8) return;
     final myId = ref.read(currentUserIdProvider);
@@ -42,7 +44,15 @@ class _My0101NameEditScreenState extends ConsumerState<My0101NameEditScreen> {
         (current ??
                 User(id: myId, displayName: text, createdAt: DateTime.now()))
             .copyWith(displayName: text);
-    repo.upsert(updated);
+    try {
+      repo.upsert(updated);
+    } catch (e, st) {
+      final err = toAppError(e, st);
+      if (!mounted) return;
+      await showAppErrorDialog(context: context, error: err);
+      return;
+    }
+    if (!mounted) return;
     Navigator.of(context).pop();
   }
 

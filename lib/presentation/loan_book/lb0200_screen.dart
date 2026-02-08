@@ -9,8 +9,10 @@ import 'package:shakuyousho_app/core/extensions/num_extension.dart';
 import 'package:shakuyousho_app/domain/models/loan_model.dart';
 import 'package:shakuyousho_app/presentation/common/app_paper_background.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
+import 'package:shakuyousho_app/presentation/common/app_loading_screen.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
-import 'package:shakuyousho_app/presentation/common/error/app_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_message_dialog.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';
 
@@ -32,6 +34,7 @@ class Lb0200BorrowNotePreviewScreen extends ConsumerStatefulWidget {
 
 class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
   bool get isCreating => widget.loanId == null;
+  bool _didShowReadError = false;
 
   // 新規作成用フォーム
   final _amountController = TextEditingController();
@@ -242,21 +245,21 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
     final loansAsync = ref.watch(allLoansProvider);
 
     return loansAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: Color(0xFFFFF8DC),
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (e, _) => Scaffold(
-        body: Center(
-          child: Text(
-            'エラー: $e',
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: AppTextSizes.small,
-              color: AppColors.iconDefault,
+      loading: () => const AppLoadingScreen(),
+      error: (e, st) {
+        _handleReadError(e, st);
+        return Scaffold(
+          body: Center(
+            child: Text(
+              AppMessages.dialog(AppMessageId.s004).message,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: AppTextSizes.small,
+                color: AppColors.iconDefault,
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
       data: (loans) {
         final loan = loans.firstWhere(
           (l) => l.id == widget.loanId,
@@ -504,6 +507,16 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
     );
   }
 
+  void _handleReadError(Object error, StackTrace stackTrace) {
+    if (_didShowReadError) return;
+    _didShowReadError = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final err = toAppError(error, stackTrace);
+      await showAppErrorDialog(context: context, error: err);
+    });
+  }
+
   Future<void> _pickDate(BuildContext context) async {
     DateTime temp = _dueDate;
 
@@ -587,7 +600,7 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
     );
   }
 
-  void _onSave() {
+  Future<void> _onSave() async {
     final amount = int.tryParse(_amountController.text.trim());
     final purpose = _purposeController.text.trim();
     final input = _friendInput.trim();
@@ -627,20 +640,26 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
       return;
     }
 
-    // 友達をまず追加（存在チェックはrepositoryで行う）
-    ref.read(friendActionsProvider.notifier).addFriend(resolvedId);
+    // 友達追加と借用書作成はまとめてエラーハンドリング
+    try {
+      await ref.read(friendActionsProvider.notifier).addFriend(resolvedId);
+      await ref
+          .read(loanActionsProvider.notifier)
+          .createLoan(
+            counterpartyId: resolvedId,
+            amountYen: amount,
+            purpose: purpose,
+            note: _noteController.text.trim(),
+            dueDate: _dueDate,
+          );
+    } catch (e, st) {
+      final err = toAppError(e, st);
+      if (!mounted) return;
+      await showAppErrorDialog(context: context, error: err);
+      return;
+    }
 
-    // ローン作成
-    ref
-        .read(loanActionsProvider.notifier)
-        .createLoan(
-          counterpartyId: resolvedId,
-          amountYen: amount,
-          purpose: purpose,
-          note: _noteController.text.trim(),
-          dueDate: _dueDate,
-        );
-
+    if (!mounted) return;
     context.pop();
   }
 
@@ -688,7 +707,7 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
       messageId: AppMessageId.lb0200_001,
       closeOnDestructiveSuccess: false,
       onDestructive: () async {
-        ref.read(loanActionsProvider.notifier).deleteLoan(loan.id);
+        await ref.read(loanActionsProvider.notifier).deleteLoan(loan.id);
         if (!context.mounted) return;
         Navigator.of(context, rootNavigator: true).pop();
         context.pop();
@@ -733,53 +752,6 @@ class _InputField extends StatelessWidget {
   }
 }
 
-/// 詳細行
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, this.value, this.child});
-
-  final String label;
-  final String? value;
-  final Widget? child;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadii.card),
-        border: Border.all(color: AppColors.listBorder),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: AppTextSizes.small,
-                color: AppColors.iconDefault,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          if (child != null) child!,
-          if (value != null)
-            Expanded(
-              child: Text(
-                value!,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontSize: AppTextSizes.body,
-                  color: const Color(0xFF111827),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
 
 /// 詳細テキストブロック（スクリーン寄せ）
 class _DetailTextBlock extends StatelessWidget {

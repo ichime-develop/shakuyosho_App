@@ -13,7 +13,6 @@ import 'package:shakuyousho_app/presentation/event/ev0100_screen.dart';
 import 'package:shakuyousho_app/presentation/event/ev0200_screen.dart';
 import 'package:shakuyousho_app/presentation/event/ev0300_screen.dart';
 import 'package:shakuyousho_app/presentation/settlement/sv0100_screen.dart';
-import 'package:shakuyousho_app/presentation/common/app_route_loading_gate.dart';
 
 import '../presentation/splash/st0100_screen.dart';
 import '../presentation/event/ev0101_screen.dart';
@@ -114,14 +113,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final transactionId = state.uri.queryParameters['transactionId'];
           return NoTransitionPage(
             key: state.pageKey,
-            child: AppRouteLoadingGate(
-              // TODO: 外部データ取得を導入したら、ここで prefetch Future を待つ
-              // 例) load: () => ref.read(trDetailProvider(...).future),
-              load: () async {},
-              child: Tr0100TransactionScreen(
-                eventId: eventId,
-                transactionId: transactionId,
-              ),
+            child: Tr0100TransactionScreen(
+              eventId: eventId,
+              transactionId: transactionId,
             ),
           );
         },
@@ -142,10 +136,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           }
           return NoTransitionPage(
             key: state.pageKey,
-            child: AppRouteLoadingGate(
-              load: () async {},
-              child: Lb0200BorrowNotePreviewScreen(loanId: loanId),
-            ),
+            child: Lb0200BorrowNotePreviewScreen(loanId: loanId),
           );
         },
       ),
@@ -156,10 +147,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final friendId = state.uri.queryParameters['friendId'];
           return NoTransitionPage(
             key: state.pageKey,
-            child: AppRouteLoadingGate(
-              load: () async {},
-              child: Lb0200BorrowNotePreviewScreen(friendId: friendId),
-            ),
+            child: Lb0200BorrowNotePreviewScreen(friendId: friendId),
           );
         },
       ),
@@ -187,10 +175,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           }
           return NoTransitionPage(
             key: state.pageKey,
-            child: AppRouteLoadingGate(
-              load: () async {},
-              child: Fr0200ThreadDetailScreen(friendId: friendId),
-            ),
+            child: Fr0200ThreadDetailScreen(friendId: friendId),
           );
         },
       ),
@@ -223,11 +208,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final eventId = state.pathParameters['eventId'] ?? '';
           return NoTransitionPage(
             key: state.pageKey,
-            child: AppRouteLoadingGate(
-              // TODO: 外部データ取得を導入したら、ここで prefetch Future を待つ
-              load: () async {},
-              child: Ev0200EventDetailScreen(eventId: eventId),
-            ),
+            child: Ev0200EventDetailScreen(eventId: eventId),
           );
         },
       ),
@@ -247,10 +228,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           }
           return NoTransitionPage(
             key: state.pageKey,
-            child: AppRouteLoadingGate(
-              load: () async {},
-              child: Ev0300EventMembersScreen(eventId: eventId),
-            ),
+            child: Ev0300EventMembersScreen(eventId: eventId),
           );
         },
       ),
@@ -270,11 +248,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           }
           return NoTransitionPage(
             key: state.pageKey,
-            child: AppRouteLoadingGate(
-              // TODO: 外部データ取得を導入したら、ここで prefetch Future を待つ
-              load: () async {},
-              child: Sv0100SettlementScreen(eventId: eventId),
-            ),
+            child: Sv0100SettlementScreen(eventId: eventId),
           );
         },
       ),

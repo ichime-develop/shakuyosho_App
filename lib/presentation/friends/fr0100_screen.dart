@@ -7,7 +7,11 @@ import 'package:shakuyousho_app/core/extensions/date_time_extension.dart';
 import 'package:shakuyousho_app/core/extensions/num_extension.dart';
 import 'package:shakuyousho_app/presentation/common/common_bottom_nav_bar.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';
 import 'package:shakuyousho_app/presentation/friends/add_friend_sheet.dart';
+import 'package:shakuyousho_app/presentation/common/app_loading_screen.dart';
 
 /// FR0100: 友達一覧（坂口モデル準拠）
 class Fr0100ThreadListScreen extends ConsumerStatefulWidget {
@@ -21,6 +25,17 @@ class Fr0100ThreadListScreen extends ConsumerStatefulWidget {
 class _Fr0100ThreadListScreenState
     extends ConsumerState<Fr0100ThreadListScreen> {
   String _searchQuery = '';
+  bool _didShowReadError = false;
+
+  void _handleReadError(Object error, StackTrace stackTrace) {
+    if (_didShowReadError) return;
+    _didShowReadError = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final err = toAppError(error, stackTrace);
+      await showAppErrorDialog(context: context, error: err);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,8 +85,19 @@ class _Fr0100ThreadListScreenState
           // 友達一覧
           Expanded(
             child: summariesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('エラー: $e')),
+              loading: () => const AppLoadingScreen(),
+              error: (e, st) {
+                _handleReadError(e, st);
+                return Center(
+                  child: Text(
+                    AppMessages.dialog(AppMessageId.s004).message,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: AppTextSizes.body,
+                      color: theme.hintColor,
+                    ),
+                  ),
+                );
+              },
               data: (summaries) {
                 // 検索フィルタ
                 final filtered = _searchQuery.isEmpty

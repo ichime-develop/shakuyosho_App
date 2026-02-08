@@ -2,18 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
-import 'package:shakuyousho_app/application/providers/user_providers.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';
 
 /// EV0300: イベント参加メンバー一覧
-class Ev0300EventMembersScreen extends ConsumerWidget {
+class Ev0300EventMembersScreen extends ConsumerStatefulWidget {
   const Ev0300EventMembersScreen({super.key, required this.eventId});
 
   final String eventId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<Ev0300EventMembersScreen> createState() =>
+      _Ev0300EventMembersScreenState();
+}
+
+class _Ev0300EventMembersScreenState
+    extends ConsumerState<Ev0300EventMembersScreen> {
+  bool _didShowReadError = false;
+
+  void _handleReadError(Object error, StackTrace stackTrace) {
+    if (_didShowReadError) return;
+    _didShowReadError = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final err = toAppError(error, stackTrace);
+      await showAppErrorDialog(context: context, error: err);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final eventId = widget.eventId;
     if (eventId.isEmpty) {
       return _EventErrorView(
         title: 'めんばー',
@@ -22,7 +44,17 @@ class Ev0300EventMembersScreen extends ConsumerWidget {
       );
     }
 
-    final detail = ref.watch(eventDetailProvider(eventId));
+    EventDetail? detail;
+    try {
+      detail = ref.watch(eventDetailProvider(eventId));
+    } catch (e, st) {
+      _handleReadError(e, st);
+      return _EventErrorView(
+        title: 'めんばー',
+        message: AppMessages.dialog(AppMessageId.s004).message,
+        onBack: () => context.go('/ev0100'),
+      );
+    }
     if (detail == null) {
       return _EventErrorView(
         title: 'めんばー',

@@ -7,6 +7,9 @@ import 'package:shakuyousho_app/core/extensions/num_extension.dart';
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';
 
 /// SV0100: イベント精算画面
 /// - メンバーの支払総額と負担割合からネット残高を算出
@@ -25,6 +28,18 @@ class Sv0100SettlementScreen extends ConsumerStatefulWidget {
 
 class _Sv0100SettlementScreenState
     extends ConsumerState<Sv0100SettlementScreen> {
+  bool _didShowReadError = false;
+
+  void _handleReadError(Object error, StackTrace stackTrace) {
+    if (_didShowReadError) return;
+    _didShowReadError = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final err = toAppError(error, stackTrace);
+      await showAppErrorDialog(context: context, error: err);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -37,7 +52,17 @@ class _Sv0100SettlementScreenState
       );
     }
 
-    final eventMeta = ref.watch(eventMetaProvider(eventId));
+    EventMeta? eventMeta;
+    try {
+      eventMeta = ref.watch(eventMetaProvider(eventId));
+    } catch (e, st) {
+      _handleReadError(e, st);
+      return _EventErrorView(
+        title: 'おかねまとめ',
+        message: AppMessages.dialog(AppMessageId.s004).message,
+        onBack: () => context.go('/ev0100'),
+      );
+    }
     if (eventMeta == null) {
       return _EventErrorView(
         title: 'おかねまとめ',
@@ -46,7 +71,17 @@ class _Sv0100SettlementScreenState
       );
     }
 
-    final settlement = ref.watch(settlementProvider(eventId));
+    SettlementSummary? settlement;
+    try {
+      settlement = ref.watch(settlementProvider(eventId));
+    } catch (e, st) {
+      _handleReadError(e, st);
+      return _EventErrorView(
+        title: 'おかねまとめ',
+        message: AppMessages.dialog(AppMessageId.s004).message,
+        onBack: () => context.go('/ev0100'),
+      );
+    }
     final transfers =
         settlement?.instructions ?? const <SettlementInstruction>[];
     final eventTitle = eventMeta.title;
@@ -106,22 +141,6 @@ class _Sv0100SettlementScreenState
     );
   }
 
-  // _goLb は削除（借用書はイベント起点では発行しない）
-
-  void _goTx(SettlementInstruction t) {
-    final eventId = widget.eventId;
-    context.push(
-      '/tr0100/$eventId?mode=repayment&toUserId=${t.toUserId}&amount=${t.amount}',
-    );
-  }
-
-  void _goCreateAllLb(List<SettlementInstruction> list) {
-    // 借用書は個人起点のみのため、この機能は廃止
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('借用書は友だち詳細画面から発行してください')));
-  }
-
   void _goApplySettlement(List<SettlementInstruction> list) {
     final eventId = widget.eventId;
     final meta = ref.read(eventMetaProvider(eventId));
@@ -139,15 +158,6 @@ class _Sv0100SettlementScreenState
       context,
     ).showSnackBar(const SnackBar(content: Text('かくてい')));
     context.go('/ev0100');
-  }
-
-  String _currentEventTitle() {
-    final activeEventId = widget.eventId;
-    if (activeEventId.isEmpty) {
-      return 'イベント';
-    }
-    final meta = ref.read(eventMetaProvider(activeEventId));
-    return meta?.title ?? 'イベント';
   }
 }
 

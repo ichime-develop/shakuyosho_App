@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/core/extensions/date_time_extension.dart';
 import 'package:shakuyousho_app/core/extensions/num_extension.dart';
-import 'package:shakuyousho_app/presentation/common/error/app_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_message_dialog.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';
 
@@ -28,13 +29,33 @@ import 'package:shakuyousho_app/presentation/common/strings.dart';
 ///    - 「追加」: TR0100 へ遷移（新規）
 ///    - 「清算」: SV0100 へ遷移
 /// ※ この画面から借用書には遷移しない
-class Ev0200EventDetailScreen extends ConsumerWidget {
+class Ev0200EventDetailScreen extends ConsumerStatefulWidget {
   const Ev0200EventDetailScreen({super.key, required this.eventId});
 
   final String eventId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<Ev0200EventDetailScreen> createState() =>
+      _Ev0200EventDetailScreenState();
+}
+
+class _Ev0200EventDetailScreenState
+    extends ConsumerState<Ev0200EventDetailScreen> {
+  bool _didShowReadError = false;
+
+  void _handleReadError(Object error, StackTrace stackTrace) {
+    if (_didShowReadError) return;
+    _didShowReadError = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final err = toAppError(error, stackTrace);
+      await showAppErrorDialog(context: context, error: err);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final eventId = widget.eventId;
     if (eventId.isEmpty) {
       return _EventErrorView(
         title: 'イベントしょうさい',
@@ -43,7 +64,17 @@ class Ev0200EventDetailScreen extends ConsumerWidget {
       );
     }
 
-    final detail = ref.watch(eventDetailProvider(eventId));
+    EventDetail? detail;
+    try {
+      detail = ref.watch(eventDetailProvider(eventId));
+    } catch (e, st) {
+      _handleReadError(e, st);
+      return _EventErrorView(
+        title: 'イベントしょうさい',
+        message: AppMessages.dialog(AppMessageId.s004).message,
+        onBack: () => context.go('/ev0100'),
+      );
+    }
     if (detail == null) {
       return _EventErrorView(
         title: 'イベントしょうさい',
@@ -255,7 +286,7 @@ class _SummaryPanel extends StatelessWidget {
         children: [
           _SummaryListRow(
             label: 'ごうけい',
-            value: '${totalAmount.toAmountWithUnit(AppStrings.amountUnit)}',
+            value: totalAmount.toAmountWithUnit(AppStrings.amountUnit),
             textStyle: theme.textTheme.bodyMedium?.copyWith(
               fontSize: AppTextSizes.body,
               fontWeight: AppFontWeights.label,

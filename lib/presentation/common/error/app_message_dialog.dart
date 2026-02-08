@@ -1,5 +1,5 @@
-/// AppMessages のIDからダイアログを生成して表示するヘルパーファイル。
-/// 画面側は messageId と必要なコールバックだけ渡せばよい。
+// AppMessages のIDからダイアログを生成して表示するヘルパーファイル。
+// 画面側は messageId と必要なコールバックだけ渡せばよい。
 import 'package:flutter/material.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_dialog.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:shakuyousho_app/application/providers/friend_providers.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 
 /// QR コード読み取り画面
@@ -71,9 +73,20 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     await _controller.stop();
     if (!mounted) return;
 
-    final result = await ref
-        .read(friendActionsProvider.notifier)
-        .addFriendByCode(code, source: 'qr');
+    AddFriendResult result;
+    try {
+      result = await ref
+          .read(friendActionsProvider.notifier)
+          .addFriendByCode(code, source: 'qr');
+    } catch (e, st) {
+      final err = toAppError(e, st);
+      if (!mounted) return;
+      await showAppErrorDialog(context: context, error: err);
+      if (!mounted) return;
+      _handled = false;
+      await _controller.start();
+      return;
+    }
 
     if (!mounted) return;
 

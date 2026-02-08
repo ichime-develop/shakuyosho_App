@@ -1,8 +1,6 @@
-/// アプリ共通ダイアログのUIとアクション実行をまとめたファイル。
-/// ボタン実行中のローディングやエラー表示の責務もここで完結させる。
+// アプリ共通ダイアログのUIとアクション実行をまとめたファイル。
+// ボタン実行中のローディングやエラー表示の責務もここで完結させる。
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:shakuyousho_app/presentation/common/error/app_error.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
 import 'package:shakuyousho_app/core/utils/app_logger.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
@@ -40,6 +38,35 @@ Future<void> showAppDialog({
       return _AppDialog(
         title: title,
         message: message,
+        content: null,
+        actions: actions.isEmpty
+            ? const [
+                AppDialogAction(
+                  label: 'OK',
+                  style: AppDialogActionStyle.primary,
+                ),
+              ]
+            : actions,
+      );
+    },
+  );
+}
+
+Future<void> showAppContentDialog({
+  required BuildContext context,
+  String? title,
+  required Widget content,
+  List<AppDialogAction> actions = const [],
+  bool barrierDismissible = true,
+}) {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: barrierDismissible,
+    builder: (dialogContext) {
+      return _AppDialog(
+        title: title,
+        message: null,
+        content: content,
         actions: actions.isEmpty
             ? const [
                 AppDialogAction(
@@ -54,10 +81,16 @@ Future<void> showAppDialog({
 }
 
 class _AppDialog extends StatefulWidget {
-  const _AppDialog({required this.message, required this.actions, this.title});
+  const _AppDialog({
+    required this.actions,
+    this.title,
+    this.message,
+    this.content,
+  });
 
   final String? title;
-  final String message;
+  final String? message;
+  final Widget? content;
   final List<AppDialogAction> actions;
 
   @override
@@ -83,12 +116,11 @@ class _AppDialogState extends State<_AppDialog> {
 
     try {
       await action.onPressedAsync!.call();
-      if (!mounted) return;
+      if (!context.mounted) return;
       if (action.closeOnSuccess) {
         Navigator.of(context).pop();
       }
     } catch (e, st) {
-      final rootContext = Navigator.of(context, rootNavigator: true).context;
       final err = toAppError(e, st);
       AppLog.e(
         'app_dialog_error',
@@ -96,18 +128,18 @@ class _AppDialogState extends State<_AppDialog> {
         stack: err.stackTrace ?? st,
         data: {'type': err.type.toString(), 'message': err.message},
       );
-      if (mounted && action.closeOnFailure) {
+      if (!context.mounted) return;
+      if (action.closeOnFailure) {
         Navigator.of(context).pop();
       }
-      if (mounted) {
-        await showAppErrorDialog(context: rootContext, error: err);
-      }
+      await showAppErrorDialog(context: context, error: err);
     } finally {
-      if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _loadingIndex = null;
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _loadingIndex = null;
+        });
+      }
     }
   }
 
@@ -154,13 +186,16 @@ class _AppDialogState extends State<_AppDialog> {
                     ),
                     const SizedBox(height: 10),
                   ],
-                  Text(
-                    widget.message,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: AppTextSizes.body,
-                      height: 1.35,
+                  if (widget.content != null)
+                    widget.content!
+                  else if (widget.message != null)
+                    Text(
+                      widget.message!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: AppTextSizes.body,
+                        height: 1.35,
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 35),
                   if (actions.length == 1)
                     SizedBox(
@@ -222,30 +257,19 @@ class _ActionButton extends StatelessWidget {
     final theme = Theme.of(context);
     const dialogBg = Color(0xFFF2F2F7);
 
-    final label = loading
-        ? SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                _textColor(action.style),
-              ),
-            ),
-          )
-        : Text(
-            action.label,
-            style: theme.textTheme.labelLarge?.copyWith(
-              fontSize: AppTextSizes.body,
-              fontWeight: AppFontWeights.label,
-              color: _textColor(action.style),
-            ),
-          );
+    final label = Text(
+      action.label,
+      style: theme.textTheme.labelLarge?.copyWith(
+        fontSize: AppTextSizes.body,
+        fontWeight: AppFontWeights.label,
+        color: _textColor(action.style),
+      ),
+    );
 
     switch (action.style) {
       case AppDialogActionStyle.secondary:
         return OutlinedButton(
-          onPressed: disabled ? null : onPressed,
+          onPressed: (disabled || loading) ? null : onPressed,
           style: OutlinedButton.styleFrom(
             backgroundColor: dialogBg,
             side: const BorderSide(color: Colors.black, width: 1.2),
@@ -256,7 +280,7 @@ class _ActionButton extends StatelessWidget {
         );
       case AppDialogActionStyle.destructive:
         return OutlinedButton(
-          onPressed: disabled ? null : onPressed,
+          onPressed: (disabled || loading) ? null : onPressed,
           style: OutlinedButton.styleFrom(
             backgroundColor: dialogBg,
             side: const BorderSide(color: Colors.black, width: 1.2),
@@ -266,9 +290,8 @@ class _ActionButton extends StatelessWidget {
           child: label,
         );
       case AppDialogActionStyle.primary:
-      default:
         return ElevatedButton(
-          onPressed: disabled ? null : onPressed,
+          onPressed: (disabled || loading) ? null : onPressed,
           style: AppButtonStyles.primaryPill,
           child: label,
         );
@@ -282,7 +305,6 @@ class _ActionButton extends StatelessWidget {
       case AppDialogActionStyle.destructive:
         return AppColors.borrowAmount;
       case AppDialogActionStyle.primary:
-      default:
         return AppColors.primaryActionText;
     }
   }

@@ -1,5 +1,5 @@
-/// AppError をUIに表示し、ルールに沿って遷移も行うダイアログ用ファイル。
-/// 共通エラー文言（S001など）もここから表示する。
+// AppError をUIに表示し、ルールに沿って遷移も行うダイアログ用ファイル。
+// 共通エラー文言（S001など）もここから表示する。
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_error.dart';

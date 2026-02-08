@@ -5,7 +5,7 @@ final List<Thread> mockThreads = List<Thread>.unmodifiable([
   Thread(
     id: 'th_p_001',
     type: 'personal',
-    title: displayNameOf('u_002'),
+    title: mockDisplayNameOf('u_002'),
     participantIds: [currentUserId, 'u_002'],
     createdAt: DateTime(2024, 1, 20, 20, 0),
     updatedAt: DateTime(2024, 3, 4, 9, 0),
@@ -13,7 +13,7 @@ final List<Thread> mockThreads = List<Thread>.unmodifiable([
   Thread(
     id: 'th_p_002',
     type: 'personal',
-    title: displayNameOf('u_003'),
+    title: mockDisplayNameOf('u_003'),
     participantIds: [currentUserId, 'u_003'],
     createdAt: DateTime(2024, 2, 10, 19, 0),
     updatedAt: DateTime(2024, 4, 12, 8, 30),
@@ -21,7 +21,7 @@ final List<Thread> mockThreads = List<Thread>.unmodifiable([
   Thread(
     id: 'th_p_003',
     type: 'personal',
-    title: displayNameOf('u_004'),
+    title: mockDisplayNameOf('u_004'),
     participantIds: [currentUserId, 'u_004'],
     createdAt: DateTime(2024, 3, 8, 21, 0),
     updatedAt: DateTime(2024, 5, 1, 12, 45),
@@ -29,7 +29,7 @@ final List<Thread> mockThreads = List<Thread>.unmodifiable([
   Thread(
     id: 'th_p_004',
     type: 'personal',
-    title: displayNameOf('u_005'),
+    title: mockDisplayNameOf('u_005'),
     participantIds: [currentUserId, 'u_005'],
     createdAt: DateTime(2024, 3, 22, 18, 0),
     updatedAt: DateTime(2024, 6, 7, 14, 10),
@@ -37,7 +37,7 @@ final List<Thread> mockThreads = List<Thread>.unmodifiable([
   Thread(
     id: 'th_p_005',
     type: 'personal',
-    title: displayNameOf('u_006'),
+    title: mockDisplayNameOf('u_006'),
     participantIds: [currentUserId, 'u_006'],
     createdAt: DateTime(2024, 4, 3, 20, 0),
     updatedAt: DateTime(2024, 6, 18, 9, 20),
@@ -45,7 +45,7 @@ final List<Thread> mockThreads = List<Thread>.unmodifiable([
   Thread(
     id: 'th_p_006',
     type: 'personal',
-    title: displayNameOf('u_007'),
+    title: mockDisplayNameOf('u_007'),
     participantIds: [currentUserId, 'u_007'],
     createdAt: DateTime(2024, 4, 18, 19, 0),
     updatedAt: DateTime(2024, 7, 2, 11, 0),
@@ -53,7 +53,7 @@ final List<Thread> mockThreads = List<Thread>.unmodifiable([
   Thread(
     id: 'th_p_007',
     type: 'personal',
-    title: displayNameOf('u_008'),
+    title: mockDisplayNameOf('u_008'),
     participantIds: [currentUserId, 'u_008'],
     createdAt: DateTime(2024, 5, 12, 21, 0),
     updatedAt: DateTime(2024, 7, 21, 18, 15),
@@ -61,7 +61,7 @@ final List<Thread> mockThreads = List<Thread>.unmodifiable([
   Thread(
     id: 'th_p_008',
     type: 'personal',
-    title: displayNameOf('u_009'),
+    title: mockDisplayNameOf('u_009'),
     participantIds: [currentUserId, 'u_009'],
     createdAt: DateTime(2024, 6, 2, 20, 30),
     updatedAt: DateTime(2024, 8, 6, 8, 0),
@@ -69,7 +69,7 @@ final List<Thread> mockThreads = List<Thread>.unmodifiable([
   Thread(
     id: 'th_p_009',
     type: 'personal',
-    title: displayNameOf('u_010'),
+    title: mockDisplayNameOf('u_010'),
     participantIds: [currentUserId, 'u_010'],
     createdAt: DateTime(2024, 7, 25, 18, 0),
     updatedAt: DateTime(2024, 9, 9, 10, 40),
@@ -77,7 +77,7 @@ final List<Thread> mockThreads = List<Thread>.unmodifiable([
   Thread(
     id: 'th_p_010',
     type: 'personal',
-    title: displayNameOf('u_011'),
+    title: mockDisplayNameOf('u_011'),
     participantIds: [currentUserId, 'u_011'],
     createdAt: DateTime(2024, 8, 7, 19, 30),
     updatedAt: DateTime(2024, 10, 3, 17, 5),
@@ -85,7 +85,7 @@ final List<Thread> mockThreads = List<Thread>.unmodifiable([
   Thread(
     id: 'th_p_011',
     type: 'personal',
-    title: displayNameOf('u_012'),
+    title: mockDisplayNameOf('u_012'),
     participantIds: [currentUserId, 'u_012'],
     createdAt: DateTime(2024, 9, 16, 20, 0),
     updatedAt: DateTime(2024, 11, 11, 9, 50),

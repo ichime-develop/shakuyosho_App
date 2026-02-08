@@ -7,6 +7,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shakuyousho_app/application/providers/friend_providers.dart';
 import 'package:shakuyousho_app/application/providers/user_providers.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
 
 /// FR0100 から呼ばれるともだち追加 BottomSheet を表示する。
 ///
@@ -263,9 +265,19 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
       _resultMessage = null;
     });
 
-    final result = await ref
-        .read(friendActionsProvider.notifier)
-        .addFriendByCode(code, source: 'code');
+    AddFriendResult result;
+    try {
+      result = await ref
+          .read(friendActionsProvider.notifier)
+          .addFriendByCode(code, source: 'code');
+    } catch (e, st) {
+      final err = toAppError(e, st);
+      if (!mounted) return;
+      await showAppErrorDialog(context: context, error: err);
+      if (!mounted) return;
+      setState(() => _processing = false);
+      return;
+    }
 
     if (!mounted) return;
 

@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/core/extensions/date_time_extension.dart';
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';
 import 'package:shakuyousho_app/presentation/common/common_bottom_nav_bar.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 
@@ -22,27 +25,84 @@ class Ev0100EventListScreen extends ConsumerStatefulWidget {
 class _Ev0100EventListScreenState
     extends ConsumerState<Ev0100EventListScreen> {
   String _searchQuery = '';
+  bool _didShowReadError = false;
+
+  void _handleReadError(Object error, StackTrace stackTrace) {
+    if (_didShowReadError) return;
+    _didShowReadError = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final err = toAppError(error, stackTrace);
+      await showAppErrorDialog(context: context, error: err);
+    });
+  }
+
+  Widget _buildReadErrorScaffold(ThemeData theme) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'イベントいちらん',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontSize: AppTextSizes.title,
+            fontWeight: AppFontWeights.appBarTitle,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: Stack(
+        children: [
+          Center(
+            child: Text(
+              AppMessages.dialog(AppMessageId.s004).message,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: AppTextSizes.body,
+                color: theme.hintColor,
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 32,
+            right: 24,
+            child: _CreateFab(
+              onPressed: () => _Controller.onCreateEvent(context),
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: const CommonBottomNavBar(currentIndex: 2),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final metas = ref
-        .watch(eventMetaListProvider)
-        .where((meta) => meta.deletedAt == null)
-        .toList(growable: false);
+    List<EventMeta> metas;
+    try {
+      metas = ref
+          .watch(eventMetaListProvider)
+          .where((meta) => meta.deletedAt == null)
+          .toList(growable: false);
+    } catch (e, st) {
+      _handleReadError(e, st);
+      return _buildReadErrorScaffold(theme);
+    }
     final query = _searchQuery.trim().toLowerCase();
     final filteredMetas = query.isEmpty
         ? metas
         : metas
             .where((meta) => meta.title.toLowerCase().contains(query))
             .toList(growable: false);
-    final views = filteredMetas
-        .map((meta) {
-          final txs = ref.watch(transactionsByEventProvider(meta.id));
-          final summary = deriveEventSummary(meta, txs);
-          return _EventView(meta: meta, summary: summary);
-        })
-        .toList(growable: false);
+    final List<_EventView> views = [];
+    try {
+      for (final meta in filteredMetas) {
+        final txs = ref.watch(transactionsByEventProvider(meta.id));
+        final summary = deriveEventSummary(meta, txs);
+        views.add(_EventView(meta: meta, summary: summary));
+      }
+    } catch (e, st) {
+      _handleReadError(e, st);
+      return _buildReadErrorScaffold(theme);
+    }
     final ongoing = views.where((e) => !e.summary.isSettled).toList()
       ..sort(
         (a, b) => b.summary.lastUpdatedAt.compareTo(a.summary.lastUpdatedAt),

@@ -5,7 +5,12 @@ import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/application/providers/loan_providers.dart';
 import 'package:shakuyousho_app/core/extensions/num_extension.dart';
 import 'package:shakuyousho_app/core/utils/app_logger.dart';
+import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
+import 'package:shakuyousho_app/presentation/common/app_loading_screen.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';
 import '../common/common_bottom_nav_bar.dart';
 
 /// TO0100: ホーム（こじん / イベント タブ）
@@ -110,21 +115,60 @@ class _To0100ScreenState extends ConsumerState<To0100Screen>
 // ─────────────────────────────────────────────────────────────────
 // こじんタブ
 // ─────────────────────────────────────────────────────────────────
-class _PersonalTabView extends ConsumerWidget {
+class _PersonalTabView extends ConsumerStatefulWidget {
   const _PersonalTabView();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PersonalTabView> createState() => _PersonalTabViewState();
+}
+
+class _PersonalTabViewState extends ConsumerState<_PersonalTabView> {
+  bool _didShowReadError = false;
+
+  void _handleReadError(Object error, StackTrace stackTrace) {
+    if (_didShowReadError) return;
+    _didShowReadError = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final err = toAppError(error, stackTrace);
+      await showAppErrorDialog(context: context, error: err);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final totalsAsync = ref.watch(loanTotalsProvider);
     final summariesAsync = ref.watch(friendSummariesProvider);
 
     return totalsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('えらー: $e')),
+      loading: () => const AppLoadingScreen(),
+      error: (e, st) {
+        _handleReadError(e, st);
+        return Center(
+          child: Text(
+            AppMessages.dialog(AppMessageId.s004).message,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontSize: AppTextSizes.body,
+              color: theme.hintColor,
+            ),
+          ),
+        );
+      },
       data: (totals) => summariesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('えらー: $e')),
+        loading: () => const AppLoadingScreen(),
+        error: (e, st) {
+          _handleReadError(e, st);
+          return Center(
+            child: Text(
+              AppMessages.dialog(AppMessageId.s004).message,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: AppTextSizes.body,
+                color: theme.hintColor,
+              ),
+            ),
+          );
+        },
         data: (allSummaries) {
           // 未完済Loanがある友だちのみ
           final summaries = allSummaries
@@ -294,18 +338,49 @@ class _FriendRow extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────
 // イベントタブ
 // ─────────────────────────────────────────────────────────────────
-class _EventTabView extends ConsumerWidget {
+class _EventTabView extends ConsumerStatefulWidget {
   const _EventTabView();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_EventTabView> createState() => _EventTabViewState();
+}
+
+class _EventTabViewState extends ConsumerState<_EventTabView> {
+  bool _didShowReadError = false;
+
+  void _handleReadError(Object error, StackTrace stackTrace) {
+    if (_didShowReadError) return;
+    _didShowReadError = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final err = toAppError(error, stackTrace);
+      await showAppErrorDialog(context: context, error: err);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     // 進行中（status == inProgress）のイベントのみ、
     // 「取引があった順（最近順）」で上位5件
-    final top5 = ref
-        .watch(inProgressEventMetasByRecentTxProvider)
-        .take(5)
-        .toList();
+    List<EventMeta> top5;
+    try {
+      top5 = ref
+          .watch(inProgressEventMetasByRecentTxProvider)
+          .take(5)
+          .toList();
+    } catch (e, st) {
+      _handleReadError(e, st);
+      return Center(
+        child: Text(
+          AppMessages.dialog(AppMessageId.s004).message,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontSize: AppTextSizes.body,
+            color: theme.hintColor,
+          ),
+        ),
+      );
+    }
 
     return ListView(
       key: const PageStorageKey('to0100_event'),

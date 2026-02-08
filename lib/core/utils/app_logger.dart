@@ -51,10 +51,15 @@ class AppRiverpodLogger extends ProviderObserver {
   const AppRiverpodLogger();
 
   @override
-  void didUpdateProvider(ProviderBase provider, Object? prev, Object? next, ProviderContainer container) {
+  void didUpdateProvider(
+    ProviderBase provider,
+    Object? previousValue,
+    Object? newValue,
+    ProviderContainer container,
+  ) {
     if (!kDebugMode) return;
     final name = provider.name ?? provider.runtimeType.toString();
-    debugPrint('[PROV][SYY] $name -> $next');
+    debugPrint('[PROV][SYY] $name -> $newValue');
   }
 }
 
