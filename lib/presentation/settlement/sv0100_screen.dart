@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
+import 'package:shakuyousho_app/core/extensions/num_extension.dart';
 
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 
 /// SV0100: イベント精算画面
 /// - メンバーの支払総額と負担割合からネット残高を算出
@@ -56,6 +58,10 @@ class _Sv0100SettlementScreenState
           onPressed: () => context.pop(),
         ),
         title: Text('SV0100 おかねまとめ：$eventTitle'),
+        titleTextStyle: theme.textTheme.titleMedium?.copyWith(
+          fontSize: AppTextSizes.title,
+          fontWeight: AppFontWeights.appBarTitle,
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 140),
@@ -69,6 +75,7 @@ class _Sv0100SettlementScreenState
               child: Text(
                 'とくにやることはないよ。',
                 style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: AppTextSizes.body,
                   color: theme.hintColor,
                 ),
               ),
@@ -81,17 +88,15 @@ class _Sv0100SettlementScreenState
         minimum: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         child: ElevatedButton.icon(
           onPressed: () => _goApplySettlement(transfers),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: theme.colorScheme.primary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: const StadiumBorder(),
-            elevation: 6,
-          ),
+          style: AppButtonStyles.primaryPill,
           icon: const Icon(Icons.check_circle, size: 20),
-          label: const Text(
+          label: Text(
             'せいさんかんりょう',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontSize: AppTextSizes.body,
+              fontWeight: AppFontWeights.label,
+              color: AppColors.primaryActionText,
+            ),
           ),
         ),
       ),
@@ -154,12 +159,12 @@ class _HeroSection extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withOpacity(0.12),
+            color: AppColors.secondaryActionFill,
             shape: BoxShape.circle,
           ),
           child: Icon(
             Icons.handshake,
-            color: theme.colorScheme.primary,
+            color: AppColors.secondaryActionText,
             size: 32,
           ),
         ),
@@ -167,14 +172,18 @@ class _HeroSection extends StatelessWidget {
         Text(
           'けっか',
           style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
+            fontSize: AppTextSizes.section,
+            fontWeight: AppFontWeights.sectionTitle,
           ),
         ),
         const SizedBox(height: 6),
         Text(
           'だれがだれにいくらはらうか\nまとめておいたよ',
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontSize: AppTextSizes.small,
+            color: theme.hintColor,
+          ),
         ),
       ],
     );
@@ -190,8 +199,8 @@ class _TransferList extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(color: Colors.black.withOpacity(0.08)),
-          bottom: BorderSide(color: Colors.black.withOpacity(0.08)),
+          top: const BorderSide(color: AppColors.listBorder),
+          bottom: const BorderSide(color: AppColors.listBorder),
         ),
       ),
       child: Column(
@@ -207,10 +216,10 @@ class _TransferList extends ConsumerWidget {
                 toName: toName,
               ),
               if (index != transfers.length - 1)
-                Divider(
+                const Divider(
                   height: 1,
                   thickness: 0.6,
-                  color: Colors.black.withOpacity(0.08),
+                  color: AppColors.listBorder,
                 ),
             ],
           );
@@ -243,9 +252,10 @@ class _TransferRow extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  _fmtYen(amount),
+                  amount.toYenSymbol(),
                   style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontSize: AppTextSizes.section,
+                    fontWeight: AppFontWeights.listTitle,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -255,7 +265,7 @@ class _TransferRow extends StatelessWidget {
                       child: Container(
                         height: 2,
                         decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.4),
+                          color: AppColors.listBorder,
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
@@ -264,7 +274,7 @@ class _TransferRow extends StatelessWidget {
                     Icon(
                       Icons.arrow_forward_ios,
                       size: 14,
-                      color: Colors.grey.withOpacity(0.7),
+                      color: AppColors.iconDefault,
                     ),
                   ],
                 ),
@@ -272,8 +282,9 @@ class _TransferRow extends StatelessWidget {
                 Text(
                   'へ はらう',
                   style: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
+                    fontSize: AppTextSizes.small,
+                    fontWeight: AppFontWeights.label,
+                    color: AppColors.iconDefault,
                   ),
                 ),
               ],
@@ -296,8 +307,8 @@ class _AvatarBadge extends StatelessWidget {
     final theme = Theme.of(context);
     final initial = name.isNotEmpty ? name.characters.first : '?';
     final baseColor = isReceiver
-        ? theme.colorScheme.primary
-        : Colors.deepOrangeAccent;
+        ? AppColors.lendAmount
+        : AppColors.borrowAmount;
     return SizedBox(
       width: 72,
       child: Column(
@@ -314,10 +325,10 @@ class _AvatarBadge extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Text(
                   initial,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: AppTextSizes.section,
+                    fontWeight: AppFontWeights.label,
                     color: baseColor,
-                    fontSize: 20,
                   ),
                 ),
               ),
@@ -330,7 +341,7 @@ class _AvatarBadge extends StatelessWidget {
                   child: Icon(
                     isReceiver ? Icons.add : Icons.remove,
                     size: 16,
-                    color: isReceiver ? baseColor : Colors.redAccent,
+                    color: isReceiver ? baseColor : AppColors.borrowAmount,
                   ),
                 ),
               ),
@@ -340,7 +351,10 @@ class _AvatarBadge extends StatelessWidget {
           Text(
             name,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: AppTextSizes.tiny,
+              fontWeight: AppFontWeights.label,
+            ),
           ),
         ],
       ),
@@ -372,13 +386,24 @@ class _EventErrorView extends StatelessWidget {
             icon: const Icon(Icons.arrow_back),
             onPressed: onBack,
           ),
-          title: Text(title),
+          title: Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: AppTextSizes.title,
+                  fontWeight: AppFontWeights.appBarTitle,
+                ),
+          ),
         ),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(message),
+              Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: AppTextSizes.body,
+                    ),
+              ),
               const SizedBox(height: 12),
               TextButton(onPressed: onBack, child: const Text('EV0100にもどる')),
             ],
@@ -387,15 +412,4 @@ class _EventErrorView extends StatelessWidget {
       ),
     );
   }
-}
-
-String _fmtYen(int n) {
-  final s = n.abs().toString();
-  final buf = StringBuffer();
-  for (int i = 0; i < s.length; i++) {
-    final r = s.length - i;
-    buf.write(s[i]);
-    if (r > 1 && r % 3 == 1) buf.write(',');
-  }
-  return '¥${buf.toString()}';
 }

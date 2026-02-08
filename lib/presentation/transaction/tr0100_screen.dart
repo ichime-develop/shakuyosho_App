@@ -913,14 +913,3 @@ class _MemberShareState {
   bool included;
   final TextEditingController controller;
 }
-
-String _fmtYen(int n) {
-  final s = n.abs().toString();
-  final buf = StringBuffer();
-  for (int i = 0; i < s.length; i++) {
-    final r = s.length - i;
-    buf.write(s[i]);
-    if (r > 1 && r % 3 == 1) buf.write(',');
-  }
-  return AppStrings.amountWithUnit(buf.toString());
-}

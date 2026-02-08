@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/application/providers/loan_providers.dart';
+import 'package:shakuyousho_app/core/extensions/date_time_extension.dart';
 import 'package:shakuyousho_app/domain/models/thread_model.dart';
 
 class PersonalThreadSummary {
@@ -73,7 +74,7 @@ final personalThreadsProvider = Provider<List<PersonalThreadSummary>>((ref) {
         threadId: threadId,
         displayName: displayName,
         updatedAt: updatedAt,
-        updatedAtLabel: _formatDateTime(updatedAt),
+        updatedAtLabel: updatedAt.toYmdHm(),
       ),
     );
   }
@@ -94,7 +95,7 @@ final groupThreadsProvider = Provider<List<GroupThreadSummary>>((ref) {
               groupName: t.title,
               memberCount: t.participantIds.length,
               updatedAt: t.updatedAt,
-              updatedAtLabel: _formatDateTime(t.updatedAt),
+              updatedAtLabel: t.updatedAt.toYmdHm(),
             ),
           )
           .toList(growable: false)
@@ -191,12 +192,3 @@ String? _resolvePeerUserId(List<String> participantIds, String myId) {
 }
 
 DateTime _fallbackDate() => DateTime(2024, 1, 1, 12, 0);
-
-String _formatDateTime(DateTime dt) {
-  final y = dt.year.toString();
-  final m = dt.month.toString().padLeft(2, '0');
-  final d = dt.day.toString().padLeft(2, '0');
-  final h = dt.hour.toString().padLeft(2, '0');
-  final min = dt.minute.toString().padLeft(2, '0');
-  return '$y/$m/$d $h:$min';
-}

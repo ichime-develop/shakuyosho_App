@@ -41,7 +41,7 @@ class CommonBottomNavBar extends StatelessWidget {
       _NavItemData(
         iconFilled: Icons.event_note,
         iconOutlined: Icons.event_note_outlined,
-        label: 'いべんと',
+        label: 'イベント',
       ),
       _NavItemData(
         iconFilled: Icons.person,
@@ -86,8 +86,9 @@ class CommonBottomNavBar extends StatelessWidget {
                       data.label,
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight:
-                            selected ? FontWeight.bold : FontWeight.w500,
+                        fontWeight: selected
+                            ? FontWeight.bold
+                            : FontWeight.w500,
                         color: Colors.black,
                       ),
                     ),

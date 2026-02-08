@@ -5,8 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/chat_message_providers.dart';
 import 'package:shakuyousho_app/application/providers/loan_providers.dart';
 import 'package:shakuyousho_app/application/providers/user_providers.dart';
+import 'package:shakuyousho_app/core/extensions/date_time_extension.dart';
+import 'package:shakuyousho_app/core/extensions/num_extension.dart';
 import 'package:shakuyousho_app/domain/models/chat_message_model.dart';
 import 'package:shakuyousho_app/domain/models/loan_model.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
 import 'package:shakuyousho_app/presentation/common/app_paper_background.dart';
 
@@ -105,7 +108,13 @@ class _Fr0200ThreadDetailScreenState
           icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () => context.pop(),
         ),
-        title: Text(displayName, style: const TextStyle(fontSize: 16)),
+        title: Text(
+          displayName,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: AppTextSizes.title,
+                fontWeight: AppFontWeights.appBarTitle,
+              ),
+        ),
         centerTitle: true,
         backgroundColor: AppPaperBackground.baseColor,
         elevation: 0,
@@ -172,6 +181,7 @@ class _Fr0200ThreadDetailScreenState
       }
     }
 
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -179,24 +189,22 @@ class _Fr0200ThreadDetailScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'いまの じょうたい',
-            style: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
-          ),
-          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'これから かえす',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: AppTextSizes.body,
+                  fontWeight: AppFontWeights.listSubtitle,
+                ),
               ),
               Text(
-                '¥${_fmtYen(toPay)}',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFFEF4444),
+                toPay.toYenSymbol(),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: AppTextSizes.section,
+                  fontWeight: AppFontWeights.listTitle,
+                  color: AppColors.borrowAmount,
                 ),
               ),
             ],
@@ -205,16 +213,19 @@ class _Fr0200ThreadDetailScreenState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'これから かえってくる',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: AppTextSizes.body,
+                  fontWeight: AppFontWeights.listSubtitle,
+                ),
               ),
               Text(
-                '¥${_fmtYen(toReceive)}',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF22C55E),
+                toReceive.toYenSymbol(),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: AppTextSizes.section,
+                  fontWeight: AppFontWeights.listTitle,
+                  color: AppColors.lendAmount,
                 ),
               ),
             ],
@@ -223,7 +234,7 @@ class _Fr0200ThreadDetailScreenState
           // 下に細い境界線を引く
           Container(
             height: 1,
-            color: const Color(0xFFD1D5DB),
+            color: AppColors.listBorder,
             margin: const EdgeInsets.only(top: 6),
           ),
         ],
@@ -251,7 +262,10 @@ class _Fr0200ThreadDetailScreenState
         child: Center(
           child: Text(
             'まだ やりとり が ないよ',
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontSize: AppTextSizes.body,
+              color: Theme.of(context).hintColor,
+            ),
           ),
         ),
       );
@@ -261,7 +275,7 @@ class _Fr0200ThreadDetailScreenState
     String? lastDate;
 
     for (final it in items) {
-      final dateLabel = _fmtDate(it.t);
+      final dateLabel = it.t.toYmdSlash();
       if (lastDate != dateLabel) {
         lastDate = dateLabel;
         children.add(_DateChip(label: dateLabel));
@@ -277,10 +291,10 @@ class _Fr0200ThreadDetailScreenState
           _TxBubble(
             isMe: isMe,
             label: label,
-            amount: '¥${_fmtYen(loan.amountYen)}',
+            amount: loan.amountYen.toYenSymbol(),
             memo: loan.purpose,
             note: loan.note,
-            due: _fmtDate(loan.dueDate),
+            due: loan.dueDate.toYmdSlash(),
             onTap: () => _showLoanSheet(loan),
           ),
         );
@@ -304,14 +318,15 @@ class _Fr0200ThreadDetailScreenState
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       decoration: BoxDecoration(
         color: scaffoldBg,
-        border: Border(top: BorderSide(color: const Color(0xFFD1D5DB))),
+        border: const Border(top: BorderSide(color: AppColors.listBorder)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           // 借用書追加ボタン
           IconButton(
-            icon: const Icon(CupertinoIcons.doc_text, color: Color(0xFF34C759)),
+            icon: const Icon(CupertinoIcons.doc_text),
+            color: AppColors.iconDefault,
             onPressed: () =>
                 context.push('/lb0200?friendId=${widget.friendId}'),
           ),
@@ -323,16 +338,16 @@ class _Fr0200ThreadDetailScreenState
               placeholder: 'めっせーじ を 入力',
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFE5E7EB),
+                color: AppColors.addButtonBackground,
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: const Color(0xFFD1D5DB)),
+                border: Border.all(color: AppColors.listBorder),
               ),
               suffix: Padding(
                 padding: const EdgeInsets.only(right: 10),
                 child: Icon(
                   Icons.sentiment_satisfied_alt_outlined,
                   size: 20,
-                  color: Colors.grey.shade400,
+                  color: AppColors.iconDefault,
                 ),
               ),
               onSubmitted: (_) => _handleSend(),
@@ -347,17 +362,18 @@ class _Fr0200ThreadDetailScreenState
               padding: const EdgeInsets.symmetric(horizontal: 16),
               margin: const EdgeInsets.only(bottom: 1),
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
+                color: AppColors.addButtonBackground,
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.listBorder),
               ),
               alignment: Alignment.center,
-              child: const Text(
+              child: Text(
                 'おくる',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1F2937),
-                ),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: AppTextSizes.body,
+                      fontWeight: AppFontWeights.label,
+                      color: Colors.black,
+                    ),
               ),
             ),
           ),
@@ -411,7 +427,7 @@ class _Fr0200ThreadDetailScreenState
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFDDD6FE)),
+                  border: Border.all(color: AppColors.listBorder),
                   boxShadow: [
                     BoxShadow(
                       color: const Color.fromRGBO(0, 0, 0, 0.12),
@@ -427,29 +443,29 @@ class _Fr0200ThreadDetailScreenState
                 ),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       'みうけとり',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF7C3AED),
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: AppTextSizes.tiny,
+                            fontWeight: AppFontWeights.label,
+                            color: AppColors.lendAmount,
+                          ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '$recvCount 件',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF9CA3AF),
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: AppTextSizes.tiny,
+                            color: AppColors.iconDefault,
+                          ),
                     ),
                     Text(
-                      '¥${_fmtYen(recvSum)}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF7C3AED),
-                      ),
+                      recvSum.toYenSymbol(),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontSize: AppTextSizes.body,
+                            fontWeight: AppFontWeights.listTitle,
+                            color: AppColors.lendAmount,
+                          ),
                     ),
                   ],
                 ),
@@ -469,7 +485,7 @@ class _Fr0200ThreadDetailScreenState
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                  border: Border.all(color: AppColors.listBorder),
                   boxShadow: [
                     BoxShadow(
                       color: const Color.fromRGBO(0, 0, 0, 0.12),
@@ -485,18 +501,22 @@ class _Fr0200ThreadDetailScreenState
                 ),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       'みへんさい',
-                      style: TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: AppTextSizes.tiny,
+                            fontWeight: AppFontWeights.label,
+                            color: AppColors.borrowAmount,
+                          ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '¥${_fmtYen(paySum)}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1F2937),
-                      ),
+                      paySum.toYenSymbol(),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontSize: AppTextSizes.body,
+                            fontWeight: AppFontWeights.listTitle,
+                            color: AppColors.borrowAmount,
+                          ),
                     ),
                   ],
                 ),
@@ -515,6 +535,7 @@ class _Fr0200ThreadDetailScreenState
     showCupertinoModalPopup(
       context: context,
       builder: (ctx) {
+        final theme = Theme.of(ctx);
         return Material(
           color: Colors.transparent,
           child: SafeArea(
@@ -545,9 +566,9 @@ class _Fr0200ThreadDetailScreenState
                         ),
                         child: Text(
                           loan.remainingYen == 0 ? 'しはらいかんりょう' : 'みへんさい',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: AppTextSizes.small,
+                            fontWeight: AppFontWeights.label,
                             color: loan.remainingYen == 0
                                 ? const Color(0xFF059669)
                                 : const Color(0xFFD97706),
@@ -557,58 +578,74 @@ class _Fr0200ThreadDetailScreenState
                       const Spacer(),
                       GestureDetector(
                         onTap: () => Navigator.pop(ctx),
-                        child: const Icon(Icons.close, color: Colors.grey),
+                        child: const Icon(
+                          Icons.close,
+                          color: AppColors.iconDefault,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
                   // 金額
                   Text(
-                    '¥${_fmtYen(loan.amountYen)}',
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
+                    loan.amountYen.toYenSymbol(),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontSize: AppTextSizes.amountXL,
+                      fontWeight: AppFontWeights.listTitle,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     loan.purpose,
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: AppTextSizes.body,
+                      color: AppColors.iconDefault,
+                    ),
                   ),
                   // 備考
                   if (loan.note.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Text(
                       'びこう：${loan.note}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey.shade500,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: AppTextSizes.small,
+                        color: AppColors.iconDefault,
                       ),
                     ),
                   ],
                   const SizedBox(height: 8),
                   Text(
-                    'めやすのひ：${_fmtDate(loan.dueDate)}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+                    'きげん：${loan.dueDate.toYmdSlash()}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: AppTextSizes.small,
+                      color: theme.hintColor,
+                    ),
                   ),
                   // 返済状況
                   const SizedBox(height: 12),
                   Text(
-                    'のこり：¥${_fmtYen(loan.remainingYen)}',
-                    style: const TextStyle(fontSize: 14),
+                    'のこり：${loan.remainingYen.toYenSymbol()}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: AppTextSizes.body,
+                    ),
                   ),
                   if (loan.repayments.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Text(
-                      'へんさい：¥${_fmtYen(loan.repaidYen)} / ¥${_fmtYen(loan.amountYen)}',
-                      style: const TextStyle(fontSize: 13),
+                      'へんさい：${loan.repaidYen.toYenSymbol()} / ${loan.amountYen.toYenSymbol()}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: AppTextSizes.small,
+                      ),
                     ),
                   ],
                   if (loan.remainingYen == 0) ...[
                     const SizedBox(height: 6),
-                    const Text(
+                    Text(
                       'しはらいかんりょう',
-                      style: TextStyle(fontSize: 13, color: Color(0xFF059669)),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: AppTextSizes.small,
+                        color: const Color(0xFF059669),
+                      ),
                     ),
                   ],
                   const SizedBox(height: 20),
@@ -617,15 +654,19 @@ class _Fr0200ThreadDetailScreenState
                     SizedBox(
                       width: double.infinity,
                       child: CupertinoButton(
-                        color: const Color(0xFF34C759),
+                        color: AppColors.primaryActionFill,
                         borderRadius: BorderRadius.circular(12),
                         onPressed: () {
                           Navigator.pop(ctx);
                           _showRepayDialog(loan);
                         },
-                        child: const Text(
+                        child: Text(
                           'かえす',
-                          style: TextStyle(color: Colors.white),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: AppTextSizes.body,
+                            fontWeight: AppFontWeights.label,
+                            color: AppColors.primaryActionText,
+                          ),
                         ),
                       ),
                     ),
@@ -634,15 +675,19 @@ class _Fr0200ThreadDetailScreenState
                   SizedBox(
                     width: double.infinity,
                     child: CupertinoButton(
-                      color: Colors.grey.shade200,
+                      color: AppColors.addButtonBackground,
                       borderRadius: BorderRadius.circular(12),
                       onPressed: () {
                         Navigator.pop(ctx);
                         context.push('/lb0200/${loan.id}');
                       },
-                      child: const Text(
+                      child: Text(
                         'しょうさい を みる',
-                        style: TextStyle(color: Color(0xFF374151)),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: AppTextSizes.body,
+                          fontWeight: AppFontWeights.label,
+                          color: AppColors.iconDefault,
+                        ),
                       ),
                     ),
                   ),
@@ -658,9 +703,13 @@ class _Fr0200ThreadDetailScreenState
                           Navigator.pop(ctx);
                           _confirmDelete(loan);
                         },
-                        child: const Text(
+                        child: Text(
                           'さくじょ',
-                          style: TextStyle(color: Color(0xFFDC2626)),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: AppTextSizes.body,
+                            fontWeight: AppFontWeights.label,
+                            color: const Color(0xFFDC2626),
+                          ),
                         ),
                       ),
                     ),
@@ -715,7 +764,7 @@ class _Fr0200ThreadDetailScreenState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('のこり ¥${_fmtYen(loan.remainingYen)}'),
+                Text('のこり ${loan.remainingYen.toYenSymbol()}'),
                 const SizedBox(height: 8),
                 CupertinoTextField(
                   controller: controller,
@@ -765,6 +814,7 @@ class _Fr0200ThreadDetailScreenState
     showCupertinoModalPopup(
       context: context,
       builder: (ctx) {
+        final theme = Theme.of(ctx);
         return Material(
           color: Colors.transparent,
           child: SafeArea(
@@ -781,18 +831,21 @@ class _Fr0200ThreadDetailScreenState
                 children: [
                   Row(
                     children: [
-                      const Text(
+                      Text(
                         'みうけとり いちらん',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF7C3AED),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontSize: AppTextSizes.section,
+                          fontWeight: AppFontWeights.sectionTitle,
+                          color: AppColors.lendAmount,
                         ),
                       ),
                       const Spacer(),
                       GestureDetector(
                         onTap: () => Navigator.pop(ctx),
-                        child: const Icon(Icons.close, color: Colors.grey),
+                        child: const Icon(
+                          Icons.close,
+                          color: AppColors.iconDefault,
+                        ),
                       ),
                     ],
                   ),
@@ -813,24 +866,26 @@ class _Fr0200ThreadDetailScreenState
                                 children: [
                                   Text(
                                     loan.purpose,
-                                    style: const TextStyle(fontSize: 14),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontSize: AppTextSizes.body,
+                                    ),
                                   ),
                                   Text(
-                                    'めやす：${_fmtDate(loan.dueDate)}',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey.shade500,
+                                    'きげん：${loan.dueDate.toYmdSlash()}',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontSize: AppTextSizes.small,
+                                      color: AppColors.iconDefault,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                             Text(
-                              '¥${_fmtYen(loan.remainingYen)}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF7C3AED),
+                              loan.remainingYen.toYenSymbol(),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: AppTextSizes.section,
+                                fontWeight: AppFontWeights.listTitle,
+                                color: AppColors.lendAmount,
                               ),
                             ),
                           ],
@@ -858,6 +913,7 @@ class _Fr0200ThreadDetailScreenState
     showCupertinoModalPopup(
       context: context,
       builder: (ctx) {
+        final theme = Theme.of(ctx);
         return Material(
           color: Colors.transparent,
           child: SafeArea(
@@ -874,17 +930,20 @@ class _Fr0200ThreadDetailScreenState
                 children: [
                   Row(
                     children: [
-                      const Text(
+                      Text(
                         'みかえし いちらん',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontSize: AppTextSizes.section,
+                          fontWeight: AppFontWeights.sectionTitle,
                         ),
                       ),
                       const Spacer(),
                       GestureDetector(
                         onTap: () => Navigator.pop(ctx),
-                        child: const Icon(Icons.close, color: Colors.grey),
+                        child: const Icon(
+                          Icons.close,
+                          color: AppColors.iconDefault,
+                        ),
                       ),
                     ],
                   ),
@@ -905,23 +964,26 @@ class _Fr0200ThreadDetailScreenState
                                 children: [
                                   Text(
                                     loan.purpose,
-                                    style: const TextStyle(fontSize: 14),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontSize: AppTextSizes.body,
+                                    ),
                                   ),
                                   Text(
-                                    'めやす：${_fmtDate(loan.dueDate)}',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey.shade500,
+                                    'きげん：${loan.dueDate.toYmdSlash()}',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontSize: AppTextSizes.small,
+                                      color: AppColors.iconDefault,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                             Text(
-                              '¥${_fmtYen(loan.remainingYen)}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                              loan.remainingYen.toYenSymbol(),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: AppTextSizes.section,
+                                fontWeight: AppFontWeights.listTitle,
+                                color: AppColors.borrowAmount,
                               ),
                             ),
                           ],
@@ -956,12 +1018,15 @@ class _DateChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.addButtonBackground,
+            borderRadius: BorderRadius.circular(AppRadii.card),
           ),
           child: Text(
             label,
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontSize: AppTextSizes.small,
+                  color: AppColors.iconDefault,
+                ),
           ),
         ),
       ),
@@ -979,7 +1044,7 @@ class _ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final align = isMe ? Alignment.centerRight : Alignment.centerLeft;
     final bubbleColor = isMe
-        ? const Color(0xFF34C759).withValues(alpha: 0.18)
+        ? const Color(0xFF34C759).withOpacity(0.18)
         : const Color(0xFFF3F4F6);
     final radius = BorderRadius.only(
       topLeft: const Radius.circular(16),
@@ -1002,7 +1067,10 @@ class _ChatBubble extends StatelessWidget {
         ),
         child: Text(
           text,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: AppTextSizes.body,
+                color: const Color(0xFF111827),
+              ),
         ),
       ),
     );
@@ -1041,7 +1109,7 @@ class _TxBubble extends StatelessWidget {
         ? const Color(0xFF34C759).withOpacity(0.6)
         : const Color(0xFF4B5563).withOpacity(0.15);
 
-    final labelColor = isMe ? const Color(0xFF166534) : const Color(0xFF6B7280);
+    final labelColor = const Color(0xFF6B7280);
 
     final borderRadius = BorderRadius.only(
       topLeft: const Radius.circular(18),
@@ -1067,19 +1135,23 @@ class _TxBubble extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ラベル（〇〇さんに かした / 〇〇さんから かりた）
-              Text(label, style: TextStyle(fontSize: 11, color: labelColor)),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: AppTextSizes.small,
+                      color: labelColor,
+                    ),
+              ),
               const SizedBox(height: 8),
               // 金額（中央揃え・大きく）
               Center(
                 child: Text(
                   amount,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: isMe
-                        ? const Color(0xFF166534)
-                        : const Color(0xFF1F2937),
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: AppTextSizes.amountLarge,
+                        fontWeight: AppFontWeights.listTitle,
+                        color: const Color(0xFF1F2937),
+                      ),
                 ),
               ),
               const SizedBox(height: 10),
@@ -1087,35 +1159,36 @@ class _TxBubble extends StatelessWidget {
               if (!isMe)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Divider(height: 1, color: Colors.grey.shade300),
+                  child: const Divider(height: 1, color: AppColors.listBorder),
                 ),
               // ようと
               Text(
                 'ようと : ${memo.isEmpty ? 'なし' : memo}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isMe
-                      ? const Color(0xFF166534)
-                      : const Color(0xFF4B5563),
-                ),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: AppTextSizes.small,
+                      color: const Color(0xFF374151),
+                    ),
               ),
               // 備考
               if (note.isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(
                   'びこう : $note',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontSize: AppTextSizes.small,
+                        color: const Color(0xFF6B7280),
+                      ),
                 ),
               ],
               const SizedBox(height: 2),
               // 期限（赤色）
               Text(
                 'きげん : $due',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFFEF4444),
-                  fontWeight: FontWeight.w500,
-                ),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: AppTextSizes.small,
+                      fontWeight: AppFontWeights.listSubtitle,
+                      color: const Color(0xFFDC2626),
+                    ),
               ),
             ],
           ),
@@ -1147,13 +1220,24 @@ class _ErrorView extends StatelessWidget {
             icon: const Icon(Icons.arrow_back),
             onPressed: onBack,
           ),
-          title: const Text('FR0200'),
+          title: Text(
+            'FR0200',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontSize: AppTextSizes.title,
+                  fontWeight: AppFontWeights.appBarTitle,
+                ),
+          ),
         ),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(message),
+              Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: AppTextSizes.body,
+                    ),
+              ),
               const SizedBox(height: 12),
               CupertinoButton(onPressed: onBack, child: const Text('もどる')),
             ],
@@ -1162,18 +1246,4 @@ class _ErrorView extends StatelessWidget {
       ),
     );
   }
-}
-
-// ユーティリティ
-String _fmtYen(int value) {
-  final s = value.toString();
-  return s.replaceAllMapped(
-    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-    (m) => '${m[1]},',
-  );
-}
-
-String _fmtDate(DateTime dt) {
-  String two(int n) => n.toString().padLeft(2, '0');
-  return '${dt.year}/${two(dt.month)}/${two(dt.day)}';
 }

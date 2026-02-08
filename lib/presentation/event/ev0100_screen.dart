@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
+import 'package:shakuyousho_app/core/extensions/date_time_extension.dart';
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/presentation/common/common_bottom_nav_bar.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
@@ -168,9 +169,6 @@ class _Controller {
   }
 }
 
-String _fmtDate(DateTime d) =>
-    '${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
-
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.label, required this.accentColor});
 
@@ -286,7 +284,7 @@ class _EventRow extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          _fmtDate(summary.lastUpdatedAt),
+                          summary.lastUpdatedAt.toYmdSlash(),
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontSize: AppTextSizes.small,
                           color: theme.hintColor,

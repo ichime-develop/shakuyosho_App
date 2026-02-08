@@ -19,14 +19,17 @@ class AppColors {
   /// Navigation/Icon
   /// アイコンの基本色（非選択）
   static const Color iconDefault = Color(0xFF6B7280);
+
   /// ボトムナビの選択中アイコン色
   static const Color navSelectedIcon = Colors.black;
+
   /// ボトムナビの非選択アイコン色
   static const Color navUnselectedIcon = iconDefault;
 
   /// Amount
   /// 金額色：かした（TO0100の基準）
   static const Color lendAmount = Colors.teal;
+
   /// 金額色：かりた（TO0100の基準）
   static const Color borrowAmount = Colors.deepOrange;
 
@@ -50,7 +53,7 @@ class AppColors {
   static const Color secondaryActionText = Color(0xFF5F9E83);
 
   /// Add (+) action (non-green)
-  static const Color addButtonBackground = Colors.white;
+  static const Color addButtonBackground = Color(0xFFF3F4F6);
   static const Color addButtonBorder = Color(0xFFE0E0E0);
   static const Color addButtonIcon = Color(0xFF6B7280);
 
@@ -68,6 +71,7 @@ class AppRadii {
   static const double card = 16;
   @Deprecated('Use AppRadii.card or AppRadii.pill depending on intent.')
   static const double button = card;
+
   /// 角丸：ピル（主要ボタン/フローティング）
   static const double pill = 999;
 
@@ -105,14 +109,24 @@ class AppTextSizes {
 
   /// 文字サイズ：画面タイトル（AppBar）
   static const double title = 18;
+
   /// 文字サイズ：セクション見出し
   static const double section = 16;
+
   /// 文字サイズ：本文
   static const double body = 14;
+
   /// 文字サイズ：補助テキスト
   static const double small = 12;
+
   /// 文字サイズ：最小ラベル
   static const double tiny = 11;
+  /// 文字サイズ：金額（大）
+  static const double amountLarge = 24;
+  /// 文字サイズ：金額（特大）
+  static const double amountXL = 28;
+  /// 文字サイズ：金額（最大）
+  static const double amountXXL = 48;
 }
 
 class AppFontWeights {
@@ -120,22 +134,26 @@ class AppFontWeights {
 
   /// 画面タイトル（AppBar）
   static const FontWeight appBarTitle = FontWeight.w700;
+
   /// セクション見出し
   static const FontWeight sectionTitle = FontWeight.w700;
+
   /// リストのタイトル
   static const FontWeight listTitle = FontWeight.w700;
+
   /// リストのサブタイトル
   static const FontWeight listSubtitle = FontWeight.w500;
+
   /// ラベル（サマリー等）
   static const FontWeight label = FontWeight.w700;
 }
-
 
 class AppButtonStyles {
   const AppButtonStyles._();
 
   /// 「かえす」など：確定アクション（緑のピル）
-  static ButtonStyle get primaryPill => ElevatedButton.styleFrom(
+  static ButtonStyle get primaryPill =>
+      ElevatedButton.styleFrom(
         backgroundColor: AppColors.primaryActionFill,
         foregroundColor: AppColors.primaryActionText,
         elevation: 0,
@@ -149,28 +167,33 @@ class AppButtonStyles {
 
   /// 「かす」など：補助アクション（薄い枠＋淡い塗り）
   static ButtonStyle get secondaryPill => OutlinedButton.styleFrom(
-        foregroundColor: AppColors.secondaryActionText,
-        backgroundColor: AppColors.secondaryActionFill,
-        side: const BorderSide(color: AppColors.secondaryActionBorder, width: 1.2),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-        shape: const StadiumBorder(),
-      );
+    foregroundColor: AppColors.secondaryActionText,
+    backgroundColor: AppColors.secondaryActionFill,
+    side: const BorderSide(color: AppColors.secondaryActionBorder, width: 1.2),
+    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+    shape: const StadiumBorder(),
+  );
 
   /// 友達追加/イベント追加/取引追加：+ のみ（非緑）
   /// ※Widget側で `Icon(Icons.add)` を渡して使う
   static ButtonStyle get addCircle => OutlinedButton.styleFrom(
-        foregroundColor: AppColors.addButtonIcon,
-        backgroundColor: AppColors.addButtonBackground,
-        side: const BorderSide(color: AppColors.addButtonBorder, width: 1.2),
-        padding: const EdgeInsets.all(12),
-        shape: const CircleBorder(),
-      );
+    foregroundColor: AppColors.addButtonIcon,
+    backgroundColor: AppColors.addButtonBackground,
+    side: const BorderSide(color: AppColors.addButtonBorder, width: 1.2),
+    padding: const EdgeInsets.all(20),
+    shape: const CircleBorder(),
+  ).copyWith(
+    elevation: const WidgetStatePropertyAll(4),
+    shadowColor: const WidgetStatePropertyAll(Color.fromARGB(60, 0, 0, 0)),
+  );
 }
 
 /// チェックボックス・ラジオボタンのテーマ
 class AppControlThemes {
   const AppControlThemes._();
 
+  // 選択時：AppColors.selectionActive
+  // 非選択時：白背景＋AppColors.selectionBorder の枠線
   static WidgetStateProperty<Color?> get _selectionFillWhiteInactive =>
       WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
@@ -179,6 +202,8 @@ class AppControlThemes {
         return Colors.white;
       });
 
+  // 選択時：AppColors.selectionActive
+  // 非選択時：AppColors.selectionInactive
   static WidgetStateProperty<Color?> get _selectionFill =>
       WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
@@ -186,14 +211,13 @@ class AppControlThemes {
         }
         return AppColors.selectionInactive;
       });
-
+      
+  /// チェックボックスのテーマ
   static CheckboxThemeData get checkbox => CheckboxThemeData(
-        fillColor: _selectionFillWhiteInactive,
-        checkColor: WidgetStateProperty.all(AppColors.selectionCheck),
-        side: const BorderSide(color: AppColors.selectionBorder, width: 1.2),
-      );
+    fillColor: _selectionFillWhiteInactive,
+    checkColor: WidgetStateProperty.all(AppColors.selectionCheck),
+    side: const BorderSide(color: AppColors.selectionBorder, width: 1.2),
+  );
 
-  static RadioThemeData get radio => RadioThemeData(
-        fillColor: _selectionFill,
-      );
+  static RadioThemeData get radio => RadioThemeData(fillColor: _selectionFill);
 }

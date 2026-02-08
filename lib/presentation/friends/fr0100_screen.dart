@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/loan_providers.dart';
+import 'package:shakuyousho_app/core/extensions/date_time_extension.dart';
+import 'package:shakuyousho_app/core/extensions/num_extension.dart';
 import 'package:shakuyousho_app/presentation/common/common_bottom_nav_bar.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 import 'package:shakuyousho_app/presentation/friends/add_friend_sheet.dart';
 
 /// FR0100: 友達一覧（坂口モデル準拠）
@@ -26,10 +29,28 @@ class _Fr0100ThreadListScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ともだち', style: TextStyle(fontSize: 18)),
+        title: Text(
+          'ともだち',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontSize: AppTextSizes.title,
+            fontWeight: AppFontWeights.appBarTitle,
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_add_alt_1, size: 27),
+            iconSize: 24,
+            onPressed: () async {
+              final result = await showAddFriendSheet(context);
+              if (result == 'qr' && context.mounted) {
+                context.push('/qr-scanner');
+              }
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -38,7 +59,9 @@ class _Fr0100ThreadListScreenState
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: CupertinoSearchTextField(
               placeholder: 'けんさく',
-              style: const TextStyle(),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: AppTextSizes.body,
+              ),
               onChanged: (value) {
                 setState(() => _searchQuery = value.trim());
               },
@@ -65,7 +88,10 @@ class _Fr0100ThreadListScreenState
                   return Center(
                     child: Text(
                       'ともだち が いないよ',
-                      style: TextStyle(fontSize: 16, color: theme.hintColor),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: AppTextSizes.body,
+                        color: theme.hintColor,
+                      ),
                     ),
                   );
                 }
@@ -86,26 +112,7 @@ class _Fr0100ThreadListScreenState
           ),
         ],
       ),
-      // 友達追加ボタン
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: SizedBox(
-        width: 220,
-        child: CupertinoButton(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          onPressed: () async {
-            final result = await showAddFriendSheet(context);
-            if (result == 'qr' && context.mounted) {
-              context.push('/qr-scanner');
-            }
-          },
-          child: const Text(
-            '＋ ともだち を ついか',
-            style: TextStyle(fontSize: 16, color: Color(0xFF374151)),
-          ),
-        ),
-      ),
+      // 友達追加は右上アイコンに統一
       bottomNavigationBar: const CommonBottomNavBar(currentIndex: 1),
     );
   }
@@ -122,19 +129,6 @@ class _FriendCard extends StatelessWidget {
   final FriendSummary summary;
   final VoidCallback onTap;
 
-  String _fmtYen(int value) {
-    final s = value.toString();
-    return s.replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (m) => '${m[1]},',
-    );
-  }
-
-  String _fmtDate(DateTime dt) {
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${dt.year}/${two(dt.month)}/${two(dt.day)}';
-  }
-
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -148,10 +142,9 @@ class _FriendCard extends StatelessWidget {
             // 名前
             Text(
               summary.displayName,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF111827),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: AppTextSizes.section,
+                fontWeight: AppFontWeights.listTitle,
               ),
             ),
             const SizedBox(height: 6),
@@ -159,18 +152,20 @@ class _FriendCard extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'かした：¥${_fmtYen(summary.lentTotal)}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF374151),
+                  'かした：${summary.lentTotal.toYenSymbol()}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: AppTextSizes.small,
+                    fontWeight: AppFontWeights.listSubtitle,
+                    color: AppColors.lendAmount,
                   ),
                 ),
                 const SizedBox(width: 16),
                 Text(
-                  'かりた：¥${_fmtYen(summary.borrowedTotal)}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF374151),
+                  'かりた：${summary.borrowedTotal.toYenSymbol()}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: AppTextSizes.small,
+                    fontWeight: AppFontWeights.listSubtitle,
+                    color: AppColors.borrowAmount,
                   ),
                 ),
               ],
@@ -179,12 +174,16 @@ class _FriendCard extends StatelessWidget {
             if (summary.nearestDueDate != null) ...[
               const SizedBox(height: 4),
               Text(
-                'めやすのひ：${_fmtDate(summary.nearestDueDate!)}',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                'きげん：${summary.nearestDueDate!.toYmdSlash()}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontSize: AppTextSizes.small,
+                  fontWeight: AppFontWeights.listSubtitle,
+                  color: AppColors.iconDefault,
+                ),
               ),
             ],
             const SizedBox(height: 8),
-            const Divider(height: 1, color: Color(0xFFE5E7EB)),
+            const Divider(height: 1, color: AppColors.listBorder),
           ],
         ),
       ),

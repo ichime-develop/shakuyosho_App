@@ -4,8 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/application/providers/loan_providers.dart';
+import 'package:shakuyousho_app/core/extensions/date_time_extension.dart';
+import 'package:shakuyousho_app/core/extensions/num_extension.dart';
 import 'package:shakuyousho_app/domain/models/loan_model.dart';
 import 'package:shakuyousho_app/presentation/common/app_paper_background.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
 
 /// LB0200: 取引の追加と編集（坂口モデル準拠）
@@ -64,6 +67,12 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
 
   /// 新規作成モード
   Widget _buildCreateMode(BuildContext context) {
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      fontSize: AppTextSizes.small,
+      color: AppColors.iconDefault,
+    );
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -72,7 +81,13 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
-        title: const Text('とりひき を ついか', style: TextStyle(fontSize: 18)),
+        title: Text(
+          'とりひき を ついか',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontSize: AppTextSizes.title,
+            fontWeight: AppFontWeights.appBarTitle,
+          ),
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -83,10 +98,7 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
             const SizedBox(height: 0),
 
             // 相手の名前 (label adjusted)
-            const Text(
-              'かりたひと',
-              style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
-            ),
+            Text('かりたひと', style: labelStyle),
             const SizedBox(height: 8),
             _InputField(
               initialValue: _friendInput,
@@ -99,10 +111,7 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
             const SizedBox(height: 24),
 
             // 金額
-            const Text(
-              'きんがく',
-              style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
-            ),
+            Text('きんがく', style: labelStyle),
             const SizedBox(height: 8),
             CupertinoTextField(
               controller: _amountController,
@@ -110,59 +119,66 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
               placeholder: '0',
               suffix: Padding(
                 padding: const EdgeInsets.only(right: 12),
-                child: Text(AppStrings.amountUnit, style: const TextStyle()),
+                child: Text(
+                  AppStrings.amountUnit,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: AppTextSizes.small,
+                    color: AppColors.iconDefault,
+                  ),
+                ),
               ),
-              style: const TextStyle(fontSize: 24),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontSize: AppTextSizes.amountLarge,
+                fontWeight: AppFontWeights.listTitle,
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.card),
+                border: Border.all(color: AppColors.listBorder),
               ),
             ),
             const SizedBox(height: 24),
 
             // 目的
-            const Text(
-              'ようけん',
-              style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
-            ),
+            Text('ようけん', style: labelStyle),
             const SizedBox(height: 8),
             CupertinoTextField(
               controller: _purposeController,
               placeholder: 'ごはんだい など',
-              style: const TextStyle(fontSize: 16),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: AppTextSizes.body,
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.card),
+                border: Border.all(color: AppColors.listBorder),
               ),
             ),
             const SizedBox(height: 24),
 
             // 備考
-            const Text(
-              'びこう',
-              style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
-            ),
+            Text('びこう', style: labelStyle),
             const SizedBox(height: 8),
             CupertinoTextField(
               controller: _noteController,
               placeholder: 'めもなど（にんい）',
-              style: const TextStyle(fontSize: 16),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: AppTextSizes.body,
+              ),
               maxLines: 3,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.card),
+                border: Border.all(color: AppColors.listBorder),
               ),
             ),
             const SizedBox(height: 24),
 
             // 返済期限
-            const Text(
-              'めやすのひ',
-              style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
-            ),
+            Text('きげん', style: labelStyle),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: () => _pickDate(context),
@@ -173,18 +189,21 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                 ),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.card),
+                  border: Border.all(color: AppColors.listBorder),
                 ),
                 child: Row(
                   children: [
                     Text(
-                      _fmtDate(_dueDate),
-                      style: const TextStyle(fontSize: 16),
+                      _dueDate.toYmdSlash(),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: AppTextSizes.body,
+                      ),
                     ),
                     const Spacer(),
                     const Icon(
                       CupertinoIcons.calendar,
-                      color: Color(0xFF6B7280),
+                      color: AppColors.iconDefault,
                     ),
                   ],
                 ),
@@ -195,25 +214,15 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
             // 送るボタン（既存の借用書UIと同様）
             SizedBox(
               width: double.infinity,
-              child: GestureDetector(
-                onTap: _onSave,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x1A000000),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'おくる',
-                    style: TextStyle(fontSize: 18, color: Color(0xFF6B7280)),
+              child: ElevatedButton(
+                onPressed: _onSave,
+                style: AppButtonStyles.primaryPill,
+                child: Text(
+                  'おくる',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontSize: AppTextSizes.body,
+                    fontWeight: AppFontWeights.label,
+                    color: AppColors.primaryActionText,
                   ),
                 ),
               ),
@@ -226,6 +235,7 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
 
   /// 詳細表示モード
   Widget _buildDetailMode(BuildContext context) {
+    final theme = Theme.of(context);
     final loansAsync = ref.watch(allLoansProvider);
 
     return loansAsync.when(
@@ -233,7 +243,17 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
         backgroundColor: Color(0xFFFFF8DC),
         body: Center(child: CircularProgressIndicator()),
       ),
-      error: (e, _) => Scaffold(body: Center(child: Text('エラー: $e'))),
+      error: (e, _) => Scaffold(
+        body: Center(
+          child: Text(
+            'エラー: $e',
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: AppTextSizes.small,
+              color: AppColors.iconDefault,
+            ),
+          ),
+        ),
+      ),
       data: (loans) {
         final loan = loans.firstWhere(
           (l) => l.id == widget.loanId,
@@ -250,8 +270,14 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                 onPressed: () => context.pop(),
               ),
             ),
-            body: const Center(
-              child: Text('とりひき が みつかりません', style: TextStyle()),
+            body: Center(
+              child: Text(
+                'とりひき が みつかりません',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: AppTextSizes.small,
+                  color: AppColors.iconDefault,
+                ),
+              ),
             ),
           );
         }
@@ -269,12 +295,12 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
               icon: const Icon(Icons.arrow_back),
               onPressed: () => context.pop(),
             ),
-            title: const Text(
+            title: Text(
               'しゃくよーしょ 詳細',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF94A3B8),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: AppTextSizes.tiny,
+                fontWeight: AppFontWeights.listSubtitle,
+                color: const Color(0xFF94A3B8),
               ),
             ),
             centerTitle: true,
@@ -295,21 +321,21 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'かりたひと',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF78716C),
-                          fontWeight: FontWeight.w500,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: AppTextSizes.small,
+                          color: const Color(0xFF78716C),
+                          fontWeight: AppFontWeights.listSubtitle,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         borrowerName,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF44403C),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontSize: AppTextSizes.amountLarge,
+                          fontWeight: AppFontWeights.listTitle,
+                          color: const Color(0xFF44403C),
                         ),
                       ),
                     ],
@@ -318,11 +344,11 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                   // きんがく
                   Column(
                     children: [
-                      const Text(
+                      Text(
                         'きんがく',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF78716C),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: AppTextSizes.small,
+                          color: const Color(0xFF78716C),
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -333,18 +359,18 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                         children: [
                           Text(
                             '¥',
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w700,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontSize: AppTextSizes.amountXL,
+                              fontWeight: AppFontWeights.listTitle,
                               color: amountColor,
                             ),
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            _fmtYen(loan.amountYen),
-                            style: TextStyle(
-                              fontSize: 48,
-                              fontWeight: FontWeight.w700,
+                            loan.amountYen.toCommaString(),
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontSize: AppTextSizes.amountXXL,
+                              fontWeight: AppFontWeights.listTitle,
                               letterSpacing: -1,
                               color: amountColor,
                             ),
@@ -352,9 +378,9 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                           const SizedBox(width: 4),
                           Text(
                             '-',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontSize: AppTextSizes.section,
+                              fontWeight: AppFontWeights.listTitle,
                               color: amountColor,
                             ),
                           ),
@@ -365,13 +391,13 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                   const SizedBox(height: 24),
                   _DetailTextBlock(
                     label: 'のこり',
-                    value: '¥${_fmtYen(loan.remainingYen)}',
+                    value: loan.remainingYen.toYenSymbol(),
                   ),
                   if (loan.repayments.isNotEmpty)
                     _DetailTextBlock(
                       label: 'へんさい',
                       value:
-                          '¥${_fmtYen(loan.repaidYen)} / ¥${_fmtYen(loan.amountYen)}',
+                          '${loan.repaidYen.toYenSymbol()} / ${loan.amountYen.toYenSymbol()}',
                     ),
                   if (loan.remainingYen == 0)
                     const _DetailTextBlock(label: 'じょうたい', value: 'しはらいかんりょう'),
@@ -381,11 +407,11 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                   ),
                   _DetailTextBlock(
                     label: 'へんさい きげん',
-                    value: _fmtDateJa(loan.dueDate),
+                    value: loan.dueDate.toYmdJa(),
                   ),
                   _DetailTextBlock(
                     label: 'つくったひ',
-                    value: _fmtDateJa(loan.createdAt),
+                    value: loan.createdAt.toYmdJa(),
                   ),
                   _DetailTextBlock(
                     label: 'ばんごう',
@@ -401,21 +427,21 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'かしたひと',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF78716C),
-                          fontWeight: FontWeight.w500,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: AppTextSizes.small,
+                          color: const Color(0xFF78716C),
+                          fontWeight: AppFontWeights.listSubtitle,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         lenderName,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF44403C),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontSize: AppTextSizes.section,
+                          fontWeight: AppFontWeights.listTitle,
+                          color: const Color(0xFF44403C),
                         ),
                       ),
                     ],
@@ -450,18 +476,20 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                       onPressed: () => context.pop(),
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF6B7280),
-                        side: const BorderSide(color: Color(0xFFE5E7EB)),
+                        foregroundColor: AppColors.iconDefault,
+                        side: const BorderSide(color: AppColors.listBorder),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.5,
+                          borderRadius: BorderRadius.circular(AppRadii.card),
                         ),
                       ),
-                      child: const Text('とじる'),
+                      child: Text(
+                        'とじる',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontSize: AppTextSizes.body,
+                          fontWeight: AppFontWeights.label,
+                          color: AppColors.iconDefault,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -499,20 +527,30 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                       children: [
                         CupertinoButton(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: const Text('やめる'),
+                          child: Text(
+                            'やめる',
+                            style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                                  fontSize: AppTextSizes.small,
+                                ),
+                          ),
                           onPressed: () => Navigator.of(ctx).pop(),
                         ),
-                        const Text(
-                          'めやすのひ',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF6B7280),
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Text(
+                          'きげん',
+                          style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                                fontSize: AppTextSizes.small,
+                                fontWeight: AppFontWeights.listSubtitle,
+                                color: AppColors.iconDefault,
+                              ),
                         ),
                         CupertinoButton(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: const Text('けってい'),
+                          child: Text(
+                            'けってい',
+                            style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                                  fontSize: AppTextSizes.small,
+                                ),
+                          ),
                           onPressed: () {
                             setState(() => _dueDate = temp);
                             Navigator.of(ctx).pop();
@@ -613,12 +651,28 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
     showCupertinoDialog<void>(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: const Text('エラー', style: TextStyle()),
-        content: Text(msg, style: const TextStyle()),
+        title: Text(
+          'エラー',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontSize: AppTextSizes.body,
+            fontWeight: AppFontWeights.listTitle,
+          ),
+        ),
+        content: Text(
+          msg,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontSize: AppTextSizes.small,
+          ),
+        ),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: Text(
+              'OK',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontSize: AppTextSizes.small,
+              ),
+            ),
           ),
         ],
       ),
@@ -629,18 +683,39 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
     final ok = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: const Text('さくじょ', style: TextStyle()),
-        content: const Text('この とりひき を けしますか？', style: TextStyle()),
+        title: Text(
+          'さくじょ',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontSize: AppTextSizes.body,
+            fontWeight: AppFontWeights.listTitle,
+          ),
+        ),
+        content: Text(
+          'この とりひき を けしますか？',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontSize: AppTextSizes.small,
+          ),
+        ),
         actions: [
           CupertinoDialogAction(
             isDestructiveAction: false,
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('やめる', style: TextStyle()),
+            child: Text(
+              'やめる',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontSize: AppTextSizes.small,
+              ),
+            ),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('けす', style: TextStyle()),
+            child: Text(
+              'けす',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontSize: AppTextSizes.small,
+              ),
+            ),
           ),
         ],
       ),
@@ -667,14 +742,22 @@ class _InputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return CupertinoTextField(
       controller: TextEditingController(text: initialValue),
       placeholder: placeholder,
-      style: const TextStyle(fontSize: 16),
+      style: theme.textTheme.bodyMedium?.copyWith(
+        fontSize: AppTextSizes.body,
+      ),
+      placeholderStyle: theme.textTheme.bodySmall?.copyWith(
+        fontSize: AppTextSizes.small,
+        color: AppColors.iconDefault,
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        border: Border.all(color: AppColors.listBorder),
       ),
       onChanged: onChanged,
     );
@@ -691,11 +774,13 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        border: Border.all(color: AppColors.listBorder),
       ),
       child: Row(
         children: [
@@ -703,7 +788,10 @@ class _DetailRow extends StatelessWidget {
             width: 120,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: AppTextSizes.small,
+                color: AppColors.iconDefault,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -712,7 +800,10 @@ class _DetailRow extends StatelessWidget {
             Expanded(
               child: Text(
                 value!,
-                style: const TextStyle(fontSize: 16, color: Color(0xFF111827)),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: AppTextSizes.body,
+                  color: const Color(0xFF111827),
+                ),
               ),
             ),
         ],
@@ -735,6 +826,7 @@ class _DetailTextBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -742,17 +834,21 @@ class _DetailTextBlock extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF78716C)),
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: AppTextSizes.small,
+              color: const Color(0xFF78716C),
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: TextStyle(
-              fontSize: mono ? 14 : 18,
-              fontWeight: mono ? FontWeight.w500 : FontWeight.w600,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontSize: mono ? AppTextSizes.body : AppTextSizes.title,
+              fontWeight: mono
+                  ? AppFontWeights.listSubtitle
+                  : AppFontWeights.listTitle,
               color: const Color(0xFF44403C),
-              fontFamily: mono ? 'monospace' : null,
-              letterSpacing: mono ? 1.6 : 0,
+              letterSpacing: mono ? 1.2 : 0,
               height: 1.4,
             ),
           ),
@@ -763,24 +859,3 @@ class _DetailTextBlock extends StatelessWidget {
 }
 
 // ユーティリティ関数
-String _fmtYen(int value) {
-  final s = value.toString();
-  return s.replaceAllMapped(
-    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-    (m) => '${m[1]},',
-  );
-}
-
-String _fmtDate(DateTime dt) {
-  String two(int n) => n.toString().padLeft(2, '0');
-  return '${dt.year}/${two(dt.month)}/${two(dt.day)}';
-}
-
-String _fmtDateJa(DateTime dt) {
-  return '${dt.year}ねん ${dt.month}がつ ${dt.day}にち';
-}
-
-String _fmtDateTime(DateTime dt) {
-  String two(int n) => n.toString().padLeft(2, '0');
-  return '${dt.year}/${two(dt.month)}/${two(dt.day)} ${two(dt.hour)}:${two(dt.minute)}';
-}

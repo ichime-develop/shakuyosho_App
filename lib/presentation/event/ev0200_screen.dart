@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
+import 'package:shakuyousho_app/core/extensions/date_time_extension.dart';
+import 'package:shakuyousho_app/core/extensions/num_extension.dart';
 
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
@@ -239,17 +241,6 @@ class _Controller {
   }
 }
 
-String _fmtYen(int n) {
-  final s = n.abs().toString();
-  final buf = StringBuffer();
-  for (int i = 0; i < s.length; i++) {
-    final r = s.length - i;
-    buf.write(s[i]);
-    if (r > 1 && r % 3 == 1) buf.write(',');
-  }
-  return '¥${buf.toString()}';
-}
-
 class _SummaryPanel extends StatelessWidget {
   const _SummaryPanel({
     required this.theme,
@@ -278,7 +269,7 @@ class _SummaryPanel extends StatelessWidget {
           _SummaryListRow(
             label: 'ごうけい',
             value:
-                '${_fmtYen(totalAmount).replaceAll('¥', '')}${AppStrings.amountUnit}',
+                '${totalAmount.toAmountWithUnit(AppStrings.amountUnit)}',
             textStyle: theme.textTheme.bodyMedium?.copyWith(
               fontSize: AppTextSizes.body,
               fontWeight: AppFontWeights.label,
@@ -474,8 +465,8 @@ class _PaymentRow extends ConsumerWidget {
                     children: [
                       Text(
                         isExpense
-                            ? '$payerName   ${_fmtMonthDay(transaction.date)}'
-                            : '$fromName → $toName   ${_fmtMonthDay(transaction.date)}',
+                            ? '$payerName   ${transaction.date.toMdSlash()}'
+                            : '$fromName → $toName   ${transaction.date.toMdSlash()}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontSize: AppTextSizes.small,
                           color: theme.hintColor,
@@ -492,7 +483,9 @@ class _PaymentRow extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  AppStrings.amountWithUnitInt(transaction.totalAmount),
+                  transaction.totalAmount.toAmountWithUnit(
+                    AppStrings.amountUnit,
+                  ),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontSize: AppTextSizes.section,
                     fontWeight: AppFontWeights.listTitle,
@@ -558,9 +551,6 @@ class _EventErrorView extends StatelessWidget {
     );
   }
 }
-
-String _fmtMonthDay(DateTime d) =>
-    '${d.month}/${d.day.toString().padLeft(2, '0')}';
 
 List<String> _collectParticipantIds(
   EventMeta meta,

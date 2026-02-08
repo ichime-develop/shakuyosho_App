@@ -3,16 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/application/providers/loan_providers.dart';
+import 'package:shakuyousho_app/core/extensions/num_extension.dart';
 import 'package:shakuyousho_app/core/utils/app_logger.dart';
+import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 import '../common/common_bottom_nav_bar.dart';
 
-/// TO0100: ホーム（こじん / いべんと タブ）
-/// - タブ: こじん / いべんと
-/// - フッター: ほーむ / ともだち / いべんと / じぶん
+/// TO0100: ホーム（こじん / イベント タブ）
+/// - タブ: こじん / イベント
+/// - フッター: ほーむ / ともだち / イベント / じぶん
 class To0100Screen extends ConsumerStatefulWidget {
   const To0100Screen({super.key, this.initialTab = 0});
 
-  /// 0: こじん, 1: いべんと — ルート（/to0100/personal|event）と同期
+  /// 0: こじん, 1: イベント — ルート（/to0100/personal|event）と同期
   final int initialTab;
 
   @override
@@ -64,17 +66,34 @@ class _To0100ScreenState extends ConsumerState<To0100Screen>
     logBuild(context, 'TO0100');
     return Scaffold(
       appBar: AppBar(
-        title: const Text('しゃくよーしょ'),
+        title: Text(
+          'しゃくよーしょ',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontSize: AppTextSizes.title,
+            fontWeight: AppFontWeights.appBarTitle,
+          ),
+        ),
         bottom: TabBar(
           controller: _tabController,
+          labelColor: Colors.black,
+          unselectedLabelColor: AppColors.iconDefault,
           onTap: (index) {
             final path = index == 0 ? '/to0100/personal' : '/to0100/event';
             context.replace(path);
             _tabController.index = index;
           },
+          labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontSize: AppTextSizes.body,
+            fontWeight: AppFontWeights.label,
+          ),
+          unselectedLabelStyle: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(
+                fontSize: AppTextSizes.body,
+                fontWeight: AppFontWeights.listSubtitle,
+              ),
           tabs: const [
             Tab(text: 'こじん', icon: Icon(Icons.person_outline)),
-            Tab(text: 'いべんと', icon: Icon(Icons.event_note)),
+            Tab(text: 'イベント', icon: Icon(Icons.event_note)),
           ],
         ),
       ),
@@ -117,35 +136,44 @@ class _PersonalTabView extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             children: [
               // サマリカード
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('あなたのざんだか', style: theme.textTheme.titleMedium),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _KpiTile(
-                              label: 'かしている',
-                              value: _fmtYen(totals.lentTotal),
-                              valueColor: Colors.teal,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _KpiTile(
-                              label: 'かりている',
-                              value: _fmtYen(totals.borrowedTotal),
-                              valueColor: Colors.deepOrange,
-                            ),
-                          ),
-                        ],
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.summaryCardBackground,
+                  borderRadius: BorderRadius.circular(AppRadii.card),
+                  boxShadow: AppShadows.subtle,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'あなたのざんだか',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontSize: AppTextSizes.section,
+                        fontWeight: AppFontWeights.sectionTitle,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _KpiTile(
+                            label: 'かしている',
+                            value: totals.lentTotal.toYenSymbol(),
+                            valueColor: AppColors.lendAmount,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _KpiTile(
+                            label: 'かりている',
+                            value: totals.borrowedTotal.toYenSymbol(),
+                            valueColor: AppColors.borrowAmount,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
@@ -154,19 +182,40 @@ class _PersonalTabView extends ConsumerWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text('ともだち', style: theme.textTheme.titleSmall),
+                    child: Text(
+                      'ともだち',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontSize: AppTextSizes.section,
+                        fontWeight: AppFontWeights.sectionTitle,
+                      ),
+                    ),
                   ),
                   TextButton(
                     onPressed: () => context.go('/fr0100'),
-                    child: const Text('ぜんぶみる'),
+                    child: Text(
+                      'ぜんぶみる',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: AppTextSizes.body,
+                        fontWeight: AppFontWeights.listSubtitle,
+                        color: Colors.black,
+                      ),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               if (summaries.isEmpty)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Center(child: Text('かしかりしているともだちはいないよ')),
+                  child: Center(
+                    child: Text(
+                      'かしかりしているともだちはいないよ',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: AppTextSizes.body,
+                        color: theme.hintColor,
+                      ),
+                    ),
+                  ),
                 )
               else
                 ...summaries.map(
@@ -194,33 +243,46 @@ class _FriendRow extends StatelessWidget {
     final theme = Theme.of(context);
     final balance = summary.balance;
     final isPlus = balance >= 0;
-    final color = isPlus ? Colors.teal : Colors.deepOrange;
+    final color = isPlus ? AppColors.lendAmount : AppColors.borrowAmount;
 
     return ListTile(
-      title: Text(summary.displayName),
+      title: Text(
+        summary.displayName,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontSize: AppTextSizes.section,
+          fontWeight: AppFontWeights.listTitle,
+        ),
+      ),
       subtitle: Row(
         children: [
           if (summary.lentTotal > 0)
             Text(
-              'かし ${_fmtYen(summary.lentTotal)}',
-              style: theme.textTheme.bodySmall?.copyWith(color: Colors.teal),
+              'かし ${summary.lentTotal.toYenSymbol()}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: AppTextSizes.small,
+                fontWeight: AppFontWeights.listSubtitle,
+                color: AppColors.lendAmount,
+              ),
             ),
           if (summary.lentTotal > 0 && summary.borrowedTotal > 0)
             const SizedBox(width: 8),
           if (summary.borrowedTotal > 0)
             Text(
-              'かり ${_fmtYen(summary.borrowedTotal)}',
+              'かり ${summary.borrowedTotal.toYenSymbol()}',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.deepOrange,
+                fontSize: AppTextSizes.small,
+                fontWeight: AppFontWeights.listSubtitle,
+                color: AppColors.borrowAmount,
               ),
             ),
         ],
       ),
       trailing: Text(
-        '${isPlus ? '+' : ''}${_fmtYen(balance)}',
+        '${isPlus ? '+' : ''}${balance.toYenSymbol()}',
         style: theme.textTheme.titleSmall?.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
+          fontSize: AppTextSizes.section,
+          fontWeight: AppFontWeights.listTitle,
         ),
       ),
       onTap: onTap,
@@ -229,7 +291,7 @@ class _FriendRow extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// いべんとタブ
+// イベントタブ
 // ─────────────────────────────────────────────────────────────────
 class _EventTabView extends ConsumerWidget {
   const _EventTabView();
@@ -252,20 +314,41 @@ class _EventTabView extends ConsumerWidget {
         Row(
           children: [
             Expanded(
-              child: Text('しんこうちゅうのいべんと', style: theme.textTheme.titleSmall),
+              child: Text(
+                'しんこうちゅうのイベント',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontSize: AppTextSizes.section,
+                  fontWeight: AppFontWeights.sectionTitle,
+                ),
+              ),
             ),
             TextButton(
               onPressed: () => context.push('/ev0100'),
-              child: const Text('ぜんぶみる'),
+              child: Text(
+                'ぜんぶみる',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: AppTextSizes.body,
+                  fontWeight: AppFontWeights.listSubtitle,
+                  color: Colors.black,
+                ),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 8),
 
         if (top5.isEmpty)
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 24),
-            child: Center(child: Text('しんこうちゅうのいべんとはないよ')),
+            child: Center(
+              child: Text(
+                'しんこうちゅうのイベントはないよ',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: AppTextSizes.body,
+                  color: theme.hintColor,
+                ),
+              ),
+            ),
           )
         else
           ...top5.map(
@@ -288,8 +371,14 @@ class _EventRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(title),
-      trailing: const Icon(Icons.chevron_right),
+      title: Text(
+        title,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontSize: AppTextSizes.section,
+          fontWeight: AppFontWeights.listTitle,
+        ),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.iconDefault),
       onTap: onTap,
     );
   }
@@ -311,12 +400,20 @@ class _KpiTile extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: theme.textTheme.labelMedium),
+        Text(
+          label,
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontSize: AppTextSizes.small,
+            fontWeight: AppFontWeights.label,
+            color: AppColors.iconDefault,
+          ),
+        ),
         Text(
           value,
           style: theme.textTheme.titleMedium?.copyWith(
             color: valueColor,
-            fontWeight: FontWeight.w700,
+            fontSize: AppTextSizes.section,
+            fontWeight: AppFontWeights.listTitle,
           ),
         ),
       ],
@@ -327,13 +424,3 @@ class _KpiTile extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────
 // 表示用ユーティリティ
 // ─────────────────────────────────────────────────────────────────
-String _fmtYen(int n) {
-  final s = n.abs().toString();
-  final buf = StringBuffer();
-  for (int i = 0; i < s.length; i++) {
-    final r = s.length - i;
-    buf.write(s[i]);
-    if (r > 1 && r % 3 == 1) buf.write(',');
-  }
-  return '¥${buf.toString()}';
-}
