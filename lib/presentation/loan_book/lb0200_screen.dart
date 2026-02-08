@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/application/providers/loan_providers.dart';
 import 'package:shakuyousho_app/domain/models/loan_model.dart';
+import 'package:shakuyousho_app/presentation/common/app_paper_background.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
 
 /// LB0200: 取引の追加と編集（坂口モデル準拠）
@@ -79,28 +80,11 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // かす（固定）
-            const Text(
-              'しゅべつ',
-              style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFDCFCE7),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'かす',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 0),
 
-            // 相手の名前
+            // 相手の名前 (label adjusted)
             const Text(
-              'あいて',
+              'かりたひと',
               style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
             ),
             const SizedBox(height: 8),
@@ -208,17 +192,29 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
             ),
             const SizedBox(height: 40),
 
-            // 保存ボタン
+            // 送るボタン（LB0100 と同様の UI）
             SizedBox(
               width: double.infinity,
-              child: CupertinoButton(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                color: const Color(0xFF4F46E5),
-                borderRadius: BorderRadius.circular(12),
-                onPressed: _onSave,
-                child: const Text(
-                  'ほぞん',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+              child: GestureDetector(
+                onTap: _onSave,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x1A000000),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'おくる',
+                    style: TextStyle(fontSize: 18, color: Color(0xFF6B7280)),
+                  ),
                 ),
               ),
             ),
@@ -260,15 +256,27 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
           );
         }
 
+        final borrowerName = _displayNameOf(loan.borrowerUserId);
+        final lenderName = _displayNameOf(loan.lenderUserId);
+        final amountColor = const Color(0xFF475569);
+
         return Scaffold(
+          backgroundColor: AppPaperBackground.baseColor,
           appBar: AppBar(
-            backgroundColor: Colors.transparent,
+            backgroundColor: AppPaperBackground.baseColor,
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: () => context.pop(),
             ),
-            title: const Text('しょうさい', style: TextStyle(fontSize: 18)),
+            title: const Text(
+              'しゃくよーしょ 詳細',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF94A3B8),
+              ),
+            ),
             centerTitle: true,
             actions: [
               IconButton(
@@ -278,117 +286,172 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
               ),
             ],
           ),
-          body: ListView(
-            padding: const EdgeInsets.all(20),
+          body: Stack(
             children: [
-              // 状態
-              _DetailRow(
-                label: 'じょうたい',
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: loan.isRepaid
-                        ? const Color(0xFFDCFCE7)
-                        : const Color(0xFFFEF3C7),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    loan.isRepaid ? 'へんさいずみ' : 'みへんさい',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: loan.isRepaid
-                          ? const Color(0xFF059669)
-                          : const Color(0xFFD97706),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // 相手
-              _DetailRow(label: 'あいて', value: _resolveDisplayName(loan)),
-              const SizedBox(height: 16),
-              // 金額
-              _DetailRow(label: 'きんがく', value: '¥${_fmtYen(loan.amountYen)}'),
-              const SizedBox(height: 16),
-              // 目的
-              _DetailRow(label: 'ようけん', value: loan.purpose),
-              const SizedBox(height: 16),
-              // 備考
-              if (loan.note.isNotEmpty) ...[
-                _DetailRow(label: 'びこう', value: loan.note),
-                const SizedBox(height: 16),
-              ],
-              // めやすのひ
-              _DetailRow(label: 'めやすのひ', value: _fmtDate(loan.dueDate)),
-              const SizedBox(height: 16),
-              // 作成日
-              _DetailRow(label: 'つくったひ', value: _fmtDateTime(loan.createdAt)),
-              const SizedBox(height: 16),
-              // 借用証番号
-              _DetailRow(label: 'しゃくようしょう No.', value: loan.iouNo),
-
-              // 返済履歴
-              if (loan.repayments.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                const Text(
-                  'へんさい りれき',
-                  style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
-                ),
-                const SizedBox(height: 8),
-                ...loan.repayments.map(
-                  (r) => Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(_fmtDate(r.paidAt), style: const TextStyle()),
-                        Text(
-                          '¥${_fmtYen(r.amountYen)}',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+              ListView(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 140),
+                children: [
+                  // かりたひと
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'かりたひと',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF78716C),
+                          fontWeight: FontWeight.w500,
                         ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        borrowerName,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF44403C),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // きんがく
+                  Column(
+                    children: [
+                      const Text(
+                        'きんがく',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF78716C),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            '¥',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                              color: amountColor,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _fmtYen(loan.amountYen),
+                            style: TextStyle(
+                              fontSize: 48,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -1,
+                              color: amountColor,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '-',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: amountColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _DetailTextBlock(
+                    label: 'ようと',
+                    value: loan.purpose.isEmpty ? 'なし' : loan.purpose,
+                  ),
+                  _DetailTextBlock(
+                    label: 'へんさい きげん',
+                    value: _fmtDateJa(loan.dueDate),
+                  ),
+                  _DetailTextBlock(
+                    label: 'つくったひ',
+                    value: _fmtDateJa(loan.createdAt),
+                  ),
+                  _DetailTextBlock(
+                    label: 'ばんごう',
+                    value: loan.iouNo,
+                    mono: true,
+                  ),
+                  _DetailTextBlock(
+                    label: 'びこうらん',
+                    value: loan.note.isEmpty ? 'なし' : loan.note,
+                  ),
+                  const SizedBox(height: 12),
+                  // かしたひと
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'かしたひと',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF78716C),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        lenderName,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF44403C),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  padding: EdgeInsets.fromLTRB(
+                    24,
+                    20,
+                    24,
+                    MediaQuery.of(context).padding.bottom + 16,
+                  ),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Color(0xFFFFF8DC),
+                        Color(0xFFFFF8DC),
+                        Color(0x00FFF8DC),
                       ],
                     ),
                   ),
-                ),
-              ],
-
-              // 残額
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: loan.isRepaid
-                      ? const Color(0xFFDCFCE7)
-                      : const Color(0xFFFEF3C7),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      loan.isRepaid ? 'かんさい！' : 'のこり',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                  child: SizedBox(
+                    height: 52,
+                    child: OutlinedButton(
+                      onPressed: () => context.pop(),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF6B7280),
+                        side: const BorderSide(color: Color(0xFFE5E7EB)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.5,
+                        ),
                       ),
+                      child: const Text('とじる'),
                     ),
-                    Text(
-                      '¥${_fmtYen(loan.remainingYen)}',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -399,15 +462,76 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
   }
 
   Future<void> _pickDate(BuildContext context) async {
-    final picked = await showDatePicker(
+    DateTime temp = _dueDate;
+
+    await showCupertinoModalPopup<void>(
       context: context,
-      initialDate: _dueDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
+      builder: (ctx) {
+        final bottomPad = MediaQuery.of(ctx).padding.bottom;
+        return Material(
+          color: Colors.transparent,
+          child: Container(
+            height: 320 + bottomPad,
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFF8DC),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 48,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CupertinoButton(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: const Text('やめる'),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                        ),
+                        const Text(
+                          'めやすのひ',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF6B7280),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        CupertinoButton(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: const Text('けってい'),
+                          onPressed: () {
+                            setState(() => _dueDate = temp);
+                            Navigator.of(ctx).pop();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: Localizations.override(
+                      context: ctx,
+                      locale: const Locale('ja', 'JP'),
+                      child: CupertinoDatePicker(
+                        backgroundColor: const Color(0xFFFFF8DC),
+                        initialDateTime: _dueDate,
+                        minimumDate: DateTime.now(),
+                        maximumDate: DateTime(2100),
+                        mode: CupertinoDatePickerMode.date,
+                        dateOrder: DatePickerDateOrder.ymd,
+                        onDateTimeChanged: (d) => temp = d,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
-    if (picked != null) {
-      setState(() => _dueDate = picked);
-    }
   }
 
   void _onSave() {
@@ -467,10 +591,10 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
     context.pop();
   }
 
-  String _resolveDisplayName(Loan loan) {
+  String _displayNameOf(String userId) {
+    if (userId.isEmpty) return '';
     final userRepo = ref.read(userRepositoryProvider);
-    return userRepo.getById(loan.counterpartyId)?.displayName ??
-        loan.counterpartyId;
+    return userRepo.getById(userId)?.displayName ?? userId;
   }
 
   void _showError(String msg) {
@@ -585,6 +709,47 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
+/// 詳細テキストブロック（スクリーン寄せ）
+class _DetailTextBlock extends StatelessWidget {
+  const _DetailTextBlock({
+    required this.label,
+    required this.value,
+    this.mono = false,
+  });
+
+  final String label;
+  final String value;
+  final bool mono;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF78716C)),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: mono ? 14 : 18,
+              fontWeight: mono ? FontWeight.w500 : FontWeight.w600,
+              color: const Color(0xFF44403C),
+              fontFamily: mono ? 'monospace' : null,
+              letterSpacing: mono ? 1.6 : 0,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ユーティリティ関数
 String _fmtYen(int value) {
   final s = value.toString();
@@ -597,6 +762,10 @@ String _fmtYen(int value) {
 String _fmtDate(DateTime dt) {
   String two(int n) => n.toString().padLeft(2, '0');
   return '${dt.year}/${two(dt.month)}/${two(dt.day)}';
+}
+
+String _fmtDateJa(DateTime dt) {
+  return '${dt.year}ねん ${dt.month}がつ ${dt.day}にち';
 }
 
 String _fmtDateTime(DateTime dt) {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'router/app_router.dart';
 import 'core/utils/app_logger.dart';
@@ -144,6 +145,16 @@ class _AppState extends ConsumerState<App> {
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       theme: theme,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ja', 'JP'),
+        Locale('en', 'US'),
+      ],
+      locale: const Locale('ja', 'JP'),
       builder: (context, child) {
         final baseTheme = Theme.of(context);
         final transparentTheme = baseTheme.copyWith(

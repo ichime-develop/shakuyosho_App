@@ -33,60 +33,53 @@ class CommonBottomNavBar extends StatelessWidget {
       _NavItemData(icon: Icons.event_note, label: 'いべんと'),
       _NavItemData(icon: Icons.person, label: 'じぶん'),
     ];
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: const [
-              BoxShadow(
-                color: Color.fromARGB(20, 0, 0, 0),
-                blurRadius: 24,
-                offset: Offset(0, -4),
-              ),
-            ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color.fromARGB(20, 0, 0, 0),
+            blurRadius: 24,
+            offset: Offset(0, -4),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(items.length, (index) {
-              final selected = currentIndex == index;
-              final data = items[index];
-              final color = selected
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurface.withOpacity(0.5);
-              return Expanded(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () => _onTap(context, index),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(data.icon, color: color, size: 24),
-                        const SizedBox(height: 4),
-                        Text(
-                          data.label,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: selected
-                                ? FontWeight.bold
-                                : FontWeight.w500,
-                            color: color,
-                          ),
-                        ),
-                      ],
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: List.generate(items.length, (index) {
+          final selected = currentIndex == index;
+          final data = items[index];
+          final color = selected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurface.withOpacity(0.5);
+          return Expanded(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => _onTap(context, index),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(data.icon, color: color, size: 24),
+                    const SizedBox(height: 6),
+                    Text(
+                      data.label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight:
+                            selected ? FontWeight.bold : FontWeight.w500,
+                        color: color,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              );
-            }),
-          ),
-        ),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }

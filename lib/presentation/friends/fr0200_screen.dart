@@ -42,6 +42,7 @@ class _Fr0200ThreadDetailScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollController.hasClients) return;
       final pos = _scrollController.position;
+      if (!pos.hasContentDimensions) return;
       final distance = pos.maxScrollExtent - pos.pixels;
       if (!force && distance > 180) return;
       if (jump) {
@@ -60,7 +61,8 @@ class _Fr0200ThreadDetailScreenState
     if (_didInitialScroll) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (!_scrollController.hasClients) {
+      if (!_scrollController.hasClients ||
+          !_scrollController.position.hasContentDimensions) {
         _scheduleInitialScroll();
         return;
       }
