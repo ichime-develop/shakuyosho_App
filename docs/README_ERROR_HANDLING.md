@@ -89,6 +89,13 @@ class AppError implements Exception {
 文言は固定しない。  
 **type × 画面文脈で userMessage を渡す。**
 
+### 文言管理（メッセージID）
+
+- **1ID = 1ダイアログ** の単位で管理する（`title / message / buttons` をまとめて持つ）。
+- 画面側は **ID参照のみ**で表示する（例：`AppMessages.dialog(AppMessageId.xxx)`）。
+- 画面固有の文言は **画面IDプレフィックス**（例：`fr0100_001`, `fr0100_002`）で採番する。
+- 画面に紐づかない共通文言は **`S001` / `S002` / `S003`** のようなIDで管理する。
+
 ### ローディングの基本ルール
 
 - 画面取得中は **共通ローディングUI** に統一する

@@ -9,6 +9,9 @@ import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_message_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';
 import '../../application/usecases/event_share_service.dart';
 
 /// TR0100: イベント内の 1 つの支払い（取引）を入力・編集する画面
@@ -662,32 +665,21 @@ class _Tr0100TransactionScreenState
   }
 
   Future<void> _onDeleteRecord() async {
-    final confirmed = await showDialog<bool>(
+    await showAppMessageDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('おしはらいをけす'),
-        content: const Text(
-          'このおしはらいをけしていい？\n'
-          'もとにもどせないよ。（モック）',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('キャンセル'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('けす'),
-          ),
-        ],
-      ),
+      messageId: AppMessageId.tr0100_001,
+      closeOnDestructiveSuccess: false,
+      onDestructive: () async {
+        if (_editingTransaction != null) {
+          ref
+              .read(transactionRepositoryProvider)
+              .delete(_editingTransaction!.id);
+        }
+        if (!mounted) return;
+        Navigator.of(context, rootNavigator: true).pop();
+        context.pop();
+      },
     );
-    if (confirmed == true && mounted) {
-      if (_editingTransaction != null) {
-        ref.read(transactionRepositoryProvider).delete(_editingTransaction!.id);
-      }
-      context.pop();
-    }
   }
 }
 

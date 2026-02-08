@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/event_providers.dart';
 import 'package:shakuyousho_app/core/extensions/date_time_extension.dart';
 import 'package:shakuyousho_app/core/extensions/num_extension.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_message_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';
 
 import 'package:shakuyousho_app/domain/models/event_meta_model.dart';
 import 'package:shakuyousho_app/domain/models/transaction_model.dart';
@@ -211,34 +214,17 @@ class _Controller {
     required WidgetRef ref,
     required String eventId,
   }) async {
-    final confirmed = await showDialog<bool>(
+    await showAppMessageDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('イベントをけす'),
-        content: const Text(
-          'このイベントをけしていい？\n'
-          'メモしたおしはらいももとにもどらないよ。（モック）',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('キャンセル'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('けす'),
-          ),
-        ],
-      ),
+      messageId: AppMessageId.ev0200_001,
+      closeOnDestructiveSuccess: false,
+      onDestructive: () async {
+        ref.read(eventMetaListProvider.notifier).deleteEventMeta(eventId);
+        if (!context.mounted) return;
+        Navigator.of(context, rootNavigator: true).pop();
+        GoRouter.of(context).go('/ev0100');
+      },
     );
-
-    if (confirmed != true) return;
-    ref.read(eventMetaListProvider.notifier).deleteEventMeta(eventId);
-
-    // 詳細画面を閉じて前の画面に戻る
-    if (context.mounted) {
-      context.pop();
-    }
   }
 }
 
@@ -269,8 +255,7 @@ class _SummaryPanel extends StatelessWidget {
         children: [
           _SummaryListRow(
             label: 'ごうけい',
-            value:
-                '${totalAmount.toAmountWithUnit(AppStrings.amountUnit)}',
+            value: '${totalAmount.toAmountWithUnit(AppStrings.amountUnit)}',
             textStyle: theme.textTheme.bodyMedium?.copyWith(
               fontSize: AppTextSizes.body,
               fontWeight: AppFontWeights.label,
@@ -370,12 +355,19 @@ class _PrimaryButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.accentGreenFill,
           foregroundColor: AppColors.accentGreen,
-          side: const BorderSide(color: AppColors.accentGreenBorder, width: 1.2),
+          side: const BorderSide(
+            color: AppColors.accentGreenBorder,
+            width: 1.2,
+          ),
           shape: const StadiumBorder(),
           elevation: 2,
           padding: const EdgeInsets.symmetric(horizontal: 18),
         ),
-        icon: const Icon(Icons.payments, size: 18, color: AppColors.accentGreen),
+        icon: const Icon(
+          Icons.payments,
+          size: 18,
+          color: AppColors.accentGreen,
+        ),
         label: Text(
           'せいさんする',
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -540,9 +532,9 @@ class _EventErrorView extends StatelessWidget {
             children: [
               Text(
                 message,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: AppTextSizes.body,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontSize: AppTextSizes.body),
               ),
               const SizedBox(height: 12),
               TextButton(onPressed: onBack, child: const Text('もどる')),

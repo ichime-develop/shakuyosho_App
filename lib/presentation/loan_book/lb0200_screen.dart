@@ -10,6 +10,9 @@ import 'package:shakuyousho_app/domain/models/loan_model.dart';
 import 'package:shakuyousho_app/presentation/common/app_paper_background.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_message_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';
 
 /// LB0200: 取引の追加と編集（坂口モデル準拠）
 ///
@@ -680,51 +683,17 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
   }
 
   Future<void> _confirmDelete(BuildContext context, Loan loan) async {
-    final ok = await showCupertinoDialog<bool>(
+    await showAppMessageDialog(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text(
-          'さくじょ',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontSize: AppTextSizes.body,
-            fontWeight: AppFontWeights.listTitle,
-          ),
-        ),
-        content: Text(
-          'この とりひき を けしますか？',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontSize: AppTextSizes.small,
-          ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            isDestructiveAction: false,
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(
-              'やめる',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontSize: AppTextSizes.small,
-              ),
-            ),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(
-              'けす',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontSize: AppTextSizes.small,
-              ),
-            ),
-          ),
-        ],
-      ),
+      messageId: AppMessageId.lb0200_001,
+      closeOnDestructiveSuccess: false,
+      onDestructive: () async {
+        ref.read(loanActionsProvider.notifier).deleteLoan(loan.id);
+        if (!context.mounted) return;
+        Navigator.of(context, rootNavigator: true).pop();
+        context.pop();
+      },
     );
-
-    if (ok == true) {
-      ref.read(loanActionsProvider.notifier).deleteLoan(loan.id);
-      if (context.mounted) context.pop();
-    }
   }
 }
 

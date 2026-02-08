@@ -12,6 +12,9 @@ import 'package:shakuyousho_app/domain/models/loan_model.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 import 'package:shakuyousho_app/presentation/common/strings.dart';
 import 'package:shakuyousho_app/presentation/common/app_paper_background.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_message_dialog.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_messages.dart';
 
 /// FR0200: 友達との取引詳細（friends_page.dart FriendDetailPage 準拠）
 /// - チャット風タイムライン
@@ -724,29 +727,13 @@ class _Fr0200ThreadDetailScreenState
   }
 
   Future<void> _confirmDelete(Loan loan) async {
-    final ok = await showCupertinoDialog<bool>(
+    await showAppMessageDialog(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('さくじょ'),
-        content: const Text('この しゃくようしょ を けしますか？'),
-        actions: [
-          CupertinoDialogAction(
-            isDestructiveAction: false,
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('やめる'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('けす'),
-          ),
-        ],
-      ),
+      messageId: AppMessageId.fr0200_001,
+      onDestructive: () async {
+        ref.read(loanActionsProvider.notifier).deleteLoan(loan.id);
+      },
     );
-
-    if (ok == true) {
-      ref.read(loanActionsProvider.notifier).deleteLoan(loan.id);
-    }
   }
 
   Future<void> _showRepayDialog(Loan loan) async {
