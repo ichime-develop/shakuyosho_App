@@ -2,9 +2,13 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
+import 'package:shakuyousho_app/core/config/app_flags.dart';
+import 'package:shakuyousho_app/core/utils/app_logger.dart';
 import 'package:shakuyousho_app/data/mock/event_meta_mock.dart'
     as event_meta_mock;
 import 'package:shakuyousho_app/data/mock/threads_mock.dart' as threads_mock;
+import 'package:shakuyousho_app/infrastructure/firestore/firestore_event_repository.dart';
+import 'package:shakuyousho_app/infrastructure/firestore/firestore_transaction_repository.dart';
 import 'package:shakuyousho_app/infrastructure/mock/mock_transaction_mapper.dart'
     as mock_transaction_mapper;
 import 'package:shakuyousho_app/infrastructure/repositories/hive_event_repository.dart';
@@ -49,20 +53,25 @@ class EventMetaListNotifier extends StateNotifier<List<EventMeta>>
   final EventRepository _eventRepository;
 
   @override
-  List<EventMeta> getAllEventMetas() =>
+  Future<List<EventMeta>> getAllEventMetas() async =>
       List.unmodifiable(state.where((m) => m.deletedAt == null));
 
   @override
-  EventMeta? getEventMetaById(String eventId) {
+  Future<EventMeta?> getEventMetaById(String eventId) async {
     for (final meta in state) {
       if (meta.id == eventId && meta.deletedAt == null) return meta;
     }
     return null;
   }
 
+  Future<void> reload() async {
+    final metas = await _eventRepository.getAllEventMetas();
+    state = List<EventMeta>.from(metas);
+  }
+
   @override
-  void upsertEventMeta(EventMeta meta) {
-    _eventRepository.upsertEventMeta(meta);
+  Future<void> upsertEventMeta(EventMeta meta) async {
+    await _eventRepository.upsertEventMeta(meta);
     final updated = [...state];
     final index = updated.indexWhere((m) => m.id == meta.id);
     if (index == -1) {
@@ -74,8 +83,8 @@ class EventMetaListNotifier extends StateNotifier<List<EventMeta>>
   }
 
   @override
-  void deleteEventMeta(String eventId) {
-    _eventRepository.deleteEventMeta(eventId);
+  Future<void> deleteEventMeta(String eventId) async {
+    await _eventRepository.deleteEventMeta(eventId);
     final now = DateTime.now();
     state = state
         .map((meta) {
@@ -100,13 +109,25 @@ class TransactionListNotifier extends StateNotifier<List<Transaction>>
   final EventRepository _eventRepository;
 
   @override
-  List<Transaction> getByEventId(String eventId) {
-    return _transactionRepository.getByEventId(eventId);
+  Future<List<Transaction>> getAll() async {
+    return List.unmodifiable(state);
   }
 
   @override
-  void upsert(Transaction tx) {
-    _transactionRepository.upsert(tx);
+  Future<List<Transaction>> getByEventId(String eventId) async {
+    return state
+        .where((t) => t.eventId == eventId && t.deletedAt == null)
+        .toList(growable: false);
+  }
+
+  Future<void> reload() async {
+    final txs = await _transactionRepository.getAll();
+    state = List<Transaction>.from(txs);
+  }
+
+  @override
+  Future<void> upsert(Transaction tx) async {
+    await _transactionRepository.upsert(tx);
     final updated = [...state];
     final index = updated.indexWhere((t) => t.id == tx.id);
     if (index == -1) {
@@ -115,13 +136,13 @@ class TransactionListNotifier extends StateNotifier<List<Transaction>>
       updated[index] = tx;
     }
     state = updated;
-    _markEventInProgressIfSettled(tx.eventId);
+    await _markEventInProgressIfSettled(tx.eventId);
   }
 
   @override
-  void delete(String txId) {
+  Future<void> delete(String txId) async {
     final eventId = _findEventId(txId);
-    _transactionRepository.delete(txId);
+    await _transactionRepository.delete(txId);
     final now = DateTime.now();
     final updated = state
         .map((t) {
@@ -130,7 +151,7 @@ class TransactionListNotifier extends StateNotifier<List<Transaction>>
         })
         .toList(growable: false);
     state = updated;
-    _markEventInProgressIfSettled(eventId);
+    await _markEventInProgressIfSettled(eventId);
   }
 
   String? _findEventId(String txId) {
@@ -140,12 +161,12 @@ class TransactionListNotifier extends StateNotifier<List<Transaction>>
     return null;
   }
 
-  void _markEventInProgressIfSettled(String? eventId) {
+  Future<void> _markEventInProgressIfSettled(String? eventId) async {
     if (eventId == null || eventId.isEmpty) return;
-    final meta = _eventRepository.getEventMetaById(eventId);
+    final meta = await _eventRepository.getEventMetaById(eventId);
     if (meta == null) return;
     if (meta.status != EventStatus.settled) return;
-    _eventRepository.upsertEventMeta(
+    await _eventRepository.upsertEventMeta(
       meta.copyWith(status: EventStatus.inProgress, updatedAt: DateTime.now()),
     );
   }
@@ -229,20 +250,22 @@ Map<String, dynamic> _castMap(dynamic raw) {
 // リポジトリの実体（Map保存）
 // Providerからはインターフェース(EventRepository等)として扱う
 final Box<Map> _eventMetaBox = Hive.box<Map>('eventMetas');
-final EventRepository _eventRepo = HiveEventRepository(
-  eventMetaBox: _eventMetaBox,
-);
+final EventRepository _eventRepo = kUseFirebase
+    ? FirestoreEventRepository()
+    : HiveEventRepository(eventMetaBox: _eventMetaBox);
 final List<EventMeta> _initialEventMetas = (() {
+  if (kUseFirebase) return const <EventMeta>[];
   _seedEventMetasIfEmpty(_eventMetaBox);
   return _eventMetaBox.values
       .map((raw) => EventMeta.fromMap(_castMap(raw)))
       .toList(growable: false);
 })();
 final Box<Map> _transactionBox = Hive.box<Map>('transactions');
-final TransactionRepository _txRepo = HiveTransactionRepository(
-  transactionBox: _transactionBox,
-);
+final TransactionRepository _txRepo = kUseFirebase
+    ? FirestoreTransactionRepository(eventRepository: _eventRepo)
+    : HiveTransactionRepository(transactionBox: _transactionBox);
 final List<Transaction> _initialTransactions = (() {
+  if (kUseFirebase) return const <Transaction>[];
   _seedTransactionsIfEmpty(_transactionBox);
   return _transactionBox.values
       .map((raw) => Transaction.fromMap(_castMap(raw)))
@@ -280,20 +303,53 @@ final threadRepositoryProvider = Provider<ThreadRepository>((ref) {
 // - notifier: 追加/更新/削除などの操作
 final eventMetaListProvider =
     StateNotifierProvider<EventMetaListNotifier, List<EventMeta>>((ref) {
-      return EventMetaListNotifier(
+      final notifier = EventMetaListNotifier(
         eventRepository: _eventRepo,
         initialMetas: _initialEventMetas,
       );
+      if (kUseFirebase) {
+        _scheduleInitialReload(
+          target: 'eventMetaListProvider',
+          reload: notifier.reload,
+        );
+      }
+      return notifier;
     });
 
 final transactionListProvider =
     StateNotifierProvider<TransactionListNotifier, List<Transaction>>((ref) {
-      return TransactionListNotifier(
+      final notifier = TransactionListNotifier(
         transactionRepository: _txRepo,
         eventRepository: ref.read(eventMetaListProvider.notifier),
         initialTransactions: _initialTransactions,
       );
+      if (kUseFirebase) {
+        _scheduleInitialReload(
+          target: 'transactionListProvider',
+          reload: notifier.reload,
+        );
+      }
+      return notifier;
     });
+
+void _scheduleInitialReload({
+  required String target,
+  required Future<void> Function() reload,
+}) {
+  Future.microtask(() async {
+    try {
+      await reload();
+    } catch (e, st) {
+      // 初期ロード失敗は未捕捉例外にせずログ化し、画面側の再試行導線で回復させる。
+      AppLog.e(
+        'initial_provider_reload_failed',
+        error: e,
+        stack: st,
+        data: {'target': target},
+      );
+    }
+  });
+}
 
 final threadListProvider =
     StateNotifierProvider<ThreadListNotifier, List<Thread>>((ref) {
@@ -388,11 +444,8 @@ final eventDetailProvider = Provider.family<EventDetail?, String>((
   final meta = ref.watch(eventMetaProvider(eventId));
   if (meta == null) return null;
 
-  // Watch transaction state so detail updates after writes.
-  ref.watch(transactionListProvider);
-  final txs = List<Transaction>.from(
-    ref.read(transactionRepositoryProvider).getByEventId(eventId),
-  )..sort((a, b) => b.date.compareTo(a.date));
+  final txs = List<Transaction>.from(ref.watch(transactionsByEventProvider(eventId)))
+    ..sort((a, b) => b.date.compareTo(a.date));
   return EventDetail(meta: meta, transactions: txs);
 });
 

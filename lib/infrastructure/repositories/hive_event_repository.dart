@@ -10,26 +10,26 @@ class HiveEventRepository implements EventRepository {
   final Box<Map> _eventMetaBox;
 
   @override
-  List<EventMeta> getAllEventMetas() {
+  Future<List<EventMeta>> getAllEventMetas() async {
     return _eventMetaBox.values
         .map((raw) => EventMeta.fromMap(_castMap(raw)))
         .toList(growable: false);
   }
 
   @override
-  EventMeta? getEventMetaById(String eventId) {
+  Future<EventMeta?> getEventMetaById(String eventId) async {
     final raw = _eventMetaBox.get(eventId);
     if (raw == null) return null;
     return EventMeta.fromMap(_castMap(raw), id: eventId);
   }
 
   @override
-  void upsertEventMeta(EventMeta meta) {
+  Future<void> upsertEventMeta(EventMeta meta) async {
     _eventMetaBox.put(meta.id, meta.toMap());
   }
 
   @override
-  void deleteEventMeta(String eventId) {
+  Future<void> deleteEventMeta(String eventId) async {
     final raw = _eventMetaBox.get(eventId);
     if (raw == null) return;
     final current = EventMeta.fromMap(_castMap(raw), id: eventId);

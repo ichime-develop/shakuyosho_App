@@ -251,7 +251,7 @@ class _Controller {
       messageId: AppMessageId.ev0200_001,
       closeOnDestructiveSuccess: false,
       onDestructive: () async {
-        ref.read(eventMetaListProvider.notifier).deleteEventMeta(eventId);
+        await ref.read(eventMetaListProvider.notifier).deleteEventMeta(eventId);
         if (!context.mounted) return;
         Navigator.of(context, rootNavigator: true).pop();
         GoRouter.of(context).go('/ev0100');

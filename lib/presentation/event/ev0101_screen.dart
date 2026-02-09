@@ -304,7 +304,7 @@ class _Ev0101EventCreateScreenState
       deletedAt: null,
     );
     try {
-      ref.read(eventMetaListProvider.notifier).upsertEventMeta(eventMeta);
+      await ref.read(eventMetaListProvider.notifier).upsertEventMeta(eventMeta);
     } catch (e, st) {
       final err = toAppError(e, st);
       if (!mounted) return;

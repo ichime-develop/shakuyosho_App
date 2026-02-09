@@ -513,24 +513,23 @@ class _Tr0100TransactionScreenState
   }
 
   Future<void> _onTapSave() async {
-    final context = this.context;
     final total = int.tryParse(_amountController.text) ?? 0;
 
     if (_eventId == null || _eventId!.isEmpty) {
-      _showError(context, 'eventIdが未指定です。');
+      _showError(this.context, 'eventIdが未指定です。');
       return;
     }
     if (_payerUserId == null || _payerUserId!.isEmpty) {
-      _showError(context, 'はらったひとをえらんでね。');
+      _showError(this.context, 'はらったひとをえらんでね。');
       return;
     }
     if (total <= 0) {
-      _showError(context, 'ごうけいきんがくをいれてね。');
+      _showError(this.context, 'ごうけいきんがくをいれてね。');
       return;
     }
     final included = _memberShares.where((s) => s.included).toList();
     if (included.isEmpty) {
-      _showError(context, 'すくなくともひとりはわりかんメンバーにしてね。');
+      _showError(this.context, 'すくなくともひとりはわりかんメンバーにしてね。');
       return;
     }
 
@@ -545,7 +544,7 @@ class _Tr0100TransactionScreenState
       final text = s.controller.text.trim();
       final parsed = text.isEmpty ? 0 : int.tryParse(text);
       if (parsed == null || parsed < 0) {
-        _showError(context, 'わりかんの きんがく は 0 いじょう の すうじで いれてね。');
+        _showError(this.context, 'わりかんの きんがく は 0 いじょう の すうじで いれてね。');
         return;
       }
       shares[s.memberId] = parsed;
@@ -558,7 +557,7 @@ class _Tr0100TransactionScreenState
           ? '$diffAmount${AppStrings.amountUnit} たりないよ。'
           : '$diffAmount${AppStrings.amountUnit} おおすぎるよ。';
       _showError(
-        context,
+        this.context,
         message,
       );
       return;
@@ -595,16 +594,16 @@ class _Tr0100TransactionScreenState
 
     // Persist to state
     try {
-      ref.read(transactionRepositoryProvider).upsert(tx);
+      await ref.read(transactionRepositoryProvider).upsert(tx);
     } catch (e, st) {
       final err = toAppError(e, st);
-      if (!context.mounted) return;
-      await showAppErrorDialog(context: context, error: err);
+      if (!mounted) return;
+      await showAppErrorDialog(context: this.context, error: err);
       return;
     }
 
-    if (!context.mounted) return;
-    context.pop();
+    if (!mounted) return;
+    this.context.pop();
   }
 
   void _showError(BuildContext context, String message) {
@@ -620,13 +619,13 @@ class _Tr0100TransactionScreenState
       closeOnDestructiveSuccess: false,
       onDestructive: () async {
         if (_editingTransaction != null) {
-          ref
+          await ref
               .read(transactionRepositoryProvider)
               .delete(_editingTransaction!.id);
         }
-        if (!context.mounted) return;
-        Navigator.of(context, rootNavigator: true).pop();
-        context.pop();
+        if (!mounted) return;
+        Navigator.of(this.context, rootNavigator: true).pop();
+        this.context.pop();
       },
     );
   }

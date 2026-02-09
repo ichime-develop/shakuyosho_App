@@ -34,10 +34,10 @@ class _FakeEventRepository implements EventRepository {
   final List<EventMeta> metas = [];
 
   @override
-  List<EventMeta> getAllEventMetas() => List.unmodifiable(metas);
+  Future<List<EventMeta>> getAllEventMetas() async => List.unmodifiable(metas);
 
   @override
-  EventMeta? getEventMetaById(String id) {
+  Future<EventMeta?> getEventMetaById(String id) async {
     for (final meta in metas) {
       if (meta.id == id) return meta;
     }
@@ -45,7 +45,7 @@ class _FakeEventRepository implements EventRepository {
   }
 
   @override
-  void upsertEventMeta(EventMeta meta) {
+  Future<void> upsertEventMeta(EventMeta meta) async {
     final idx = metas.indexWhere((m) => m.id == meta.id);
     if (idx == -1) {
       metas.add(meta);
@@ -55,7 +55,7 @@ class _FakeEventRepository implements EventRepository {
   }
 
   @override
-  void deleteEventMeta(String id) {
+  Future<void> deleteEventMeta(String id) async {
     metas.removeWhere((m) => m.id == id);
   }
 }
@@ -99,7 +99,7 @@ void main() {
     expect(result.thread.id, 'th_Trip_202501020304007');
     expect(result.eventMeta.id, 'ev_Trip_202501020304007');
     expect(result.thread.participantIds.toSet(), {'u_001', 'u_002'});
-    expect(eventRepo.getAllEventMetas().length, 1);
+    expect((await eventRepo.getAllEventMetas()).length, 1);
     expect(inviteService.sent.length, 1);
     expect(inviteService.sent.first['memberId'], 'u_002');
   });

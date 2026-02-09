@@ -10,10 +10,11 @@ class MockEventRepository implements EventRepository {
   final List<EventMeta> _metas;
 
   @override
-  List<EventMeta> getAllEventMetas() => List.unmodifiable(_metas);
+  Future<List<EventMeta>> getAllEventMetas() async =>
+      List.unmodifiable(_metas);
 
   @override
-  EventMeta? getEventMetaById(String eventId) {
+  Future<EventMeta?> getEventMetaById(String eventId) async {
     for (final meta in _metas) {
       if (meta.id == eventId) return meta;
     }
@@ -21,7 +22,7 @@ class MockEventRepository implements EventRepository {
   }
 
   @override
-  void upsertEventMeta(EventMeta meta) {
+  Future<void> upsertEventMeta(EventMeta meta) async {
     final idx = _metas.indexWhere((m) => m.id == meta.id);
     if (idx == -1) {
       _metas.add(meta);
@@ -31,7 +32,7 @@ class MockEventRepository implements EventRepository {
   }
 
   @override
-  void deleteEventMeta(String eventId) {
+  Future<void> deleteEventMeta(String eventId) async {
     final idx = _metas.indexWhere((m) => m.id == eventId);
     if (idx == -1) return;
     final now = DateTime.now();

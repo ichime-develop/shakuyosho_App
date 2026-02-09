@@ -141,11 +141,11 @@ class _Sv0100SettlementScreenState
     );
   }
 
-  void _goApplySettlement(List<SettlementInstruction> list) {
+  Future<void> _goApplySettlement(List<SettlementInstruction> list) async {
     final eventId = widget.eventId;
     final meta = ref.read(eventMetaProvider(eventId));
     if (meta != null) {
-      ref
+      await ref
           .read(eventMetaListProvider.notifier)
           .upsertEventMeta(
             meta.copyWith(
@@ -154,6 +154,7 @@ class _Sv0100SettlementScreenState
             ),
           );
     }
+    if (!mounted) return;
     context.go('/ev0100');
   }
 }

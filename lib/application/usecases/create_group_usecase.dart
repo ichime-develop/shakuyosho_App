@@ -88,7 +88,7 @@ class CreateGroupUsecase {
       status: EventStatus.inProgress,
       deletedAt: null,
     );
-    _eventRepository.upsertEventMeta(eventMeta);
+    await _eventRepository.upsertEventMeta(eventMeta);
 
     return CreateGroupResult(thread: thread, eventMeta: eventMeta);
   }

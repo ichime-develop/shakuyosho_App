@@ -11,7 +11,24 @@ class HiveTransactionRepository implements TransactionRepository {
   final Box<Map> _transactionBox;
 
   @override
-  List<Transaction> getByEventId(String eventId) {
+  Future<List<Transaction>> getAll() async {
+    try {
+      return _transactionBox.values
+          .map((raw) => Transaction.fromMap(_castMap(raw)))
+          .toList(growable: false);
+    } catch (e, st) {
+      throw AppError(
+        type: AppErrorType.unknown,
+        userMessage: '',
+        message: 'transaction get all failed',
+        cause: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  @override
+  Future<List<Transaction>> getByEventId(String eventId) async {
     try {
       return _transactionBox.values
           .map((raw) => Transaction.fromMap(_castMap(raw)))
@@ -29,7 +46,7 @@ class HiveTransactionRepository implements TransactionRepository {
   }
 
   @override
-  void upsert(Transaction tx) {
+  Future<void> upsert(Transaction tx) async {
     try {
       _transactionBox.put(tx.id, tx.toMap());
     } catch (e, st) {
@@ -44,7 +61,7 @@ class HiveTransactionRepository implements TransactionRepository {
   }
 
   @override
-  void delete(String txId) {
+  Future<void> delete(String txId) async {
     try {
       final current = _transactionBox.get(txId);
       if (current == null) return;

@@ -25,8 +25,9 @@ Future<void> showAppErrorDialog({
   final commonMessageId = switch (error.type) {
     AppErrorType.network => AppMessageId.s001,
     AppErrorType.notFound => AppMessageId.s002,
+    AppErrorType.invalid => AppMessageId.s006,
+    AppErrorType.unauthorized => AppMessageId.s005,
     AppErrorType.unknown => AppMessageId.s003,
-    _ => null,
   };
 
   Future<void> handlePrimary() async {
@@ -46,7 +47,7 @@ Future<void> showAppErrorDialog({
     }
   }
 
-  if (error.userMessage.isEmpty && commonMessageId != null) {
+  if (error.userMessage.isEmpty) {
     await showAppMessageDialog(
       context: context,
       messageId: commonMessageId,
@@ -56,10 +57,7 @@ Future<void> showAppErrorDialog({
     return;
   }
 
-  final fallback =
-      commonMessageId == null
-          ? 'よきせぬエラーが はっせいしました'
-          : AppMessages.dialog(commonMessageId).message;
+  final fallback = AppMessages.dialog(AppMessageId.s003).message;
   final message = error.userMessage.isNotEmpty ? error.userMessage : fallback;
 
   await showAppDialog(

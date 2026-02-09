@@ -16,4 +16,15 @@ class FirestoreCollections {
     FirebaseFirestore? db,
   ]) =>
       (db ?? FirebaseFirestore.instance).collection(users);
+
+  static CollectionReference<Map<String, dynamic>> eventsRef([
+    FirebaseFirestore? db,
+  ]) =>
+      (db ?? FirebaseFirestore.instance).collection(events);
+
+  static CollectionReference<Map<String, dynamic>> eventTransactionsRef(
+    String eventId, [
+    FirebaseFirestore? db,
+  ]) =>
+      eventsRef(db).doc(eventId).collection(transactions);
 }

@@ -11,7 +11,22 @@ class MockTransactionRepository implements TransactionRepository {
   final List<Transaction> _txs;
 
   @override
-  List<Transaction> getByEventId(String eventId) {
+  Future<List<Transaction>> getAll() async {
+    try {
+      return List<Transaction>.unmodifiable(_txs);
+    } catch (e, st) {
+      throw AppError(
+        type: AppErrorType.unknown,
+        userMessage: '',
+        message: 'transaction get all failed',
+        cause: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  @override
+  Future<List<Transaction>> getByEventId(String eventId) async {
     try {
       return _txs
           .where((t) => t.eventId == eventId && t.deletedAt == null)
@@ -28,7 +43,7 @@ class MockTransactionRepository implements TransactionRepository {
   }
 
   @override
-  void upsert(Transaction tx) {
+  Future<void> upsert(Transaction tx) async {
     try {
       final idx = _txs.indexWhere((t) => t.id == tx.id);
       if (idx == -1) {
@@ -48,7 +63,7 @@ class MockTransactionRepository implements TransactionRepository {
   }
 
   @override
-  void delete(String txId) {
+  Future<void> delete(String txId) async {
     try {
       final now = DateTime.now();
       final index = _txs.indexWhere((t) => t.id == txId);

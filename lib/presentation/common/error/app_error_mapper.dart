@@ -8,7 +8,7 @@ AppError toAppError(Object error, StackTrace stackTrace) {
   // TODO: FirebaseException / PlatformException などを型で分類する
   return AppError(
     type: AppErrorType.unknown,
-    userMessage: 'よきせぬエラーが はっせいしました',
+    userMessage: '',
     message: error.toString(),
     cause: error,
     stackTrace: stackTrace,

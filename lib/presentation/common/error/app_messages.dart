@@ -29,6 +29,8 @@ class AppMessageId {
   static const s002 = 'S002'; // notFound
   static const s003 = 'S003'; // unknown
   static const s004 = 'S004'; // read failed
+  static const s005 = 'S005'; // unauthorized
+  static const s006 = 'S006'; // invalid
 
   // EV0200
   static const ev0200_001 = 'ev0200_001';
@@ -72,6 +74,20 @@ class AppMessages {
     AppMessageId.s004: AppDialogMessage(
       title: 'えらー',
       message: '読み込みに失敗しました。',
+      buttons: [
+        AppDialogButton(label: 'OK', role: AppDialogButtonRole.primary),
+      ],
+    ),
+    AppMessageId.s005: AppDialogMessage(
+      title: 'えらー',
+      message: 'けんげんが ないよ',
+      buttons: [
+        AppDialogButton(label: 'OK', role: AppDialogButtonRole.primary),
+      ],
+    ),
+    AppMessageId.s006: AppDialogMessage(
+      title: 'えらー',
+      message: 'にゅうりょくが ただしくないよ',
       buttons: [
         AppDialogButton(label: 'OK', role: AppDialogButtonRole.primary),
       ],
