@@ -1,0 +1,170 @@
+<html class="light" lang="ja"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,FILL@0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700&amp;family=Kiwi+Maru:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#8b7e74",
+            "crayon-red": "#ff7575",
+            "crayon-blue": "#63b3ed",
+            "crayon-green": "#81c784",
+            "crayon-yellow": "#ffe082",
+            "crayon-pink": "#f48fb1",
+            "crayon-purple": "#ce93d8",
+            "background-light": "#f2eee5",
+          },
+          fontFamily: {
+            "display": ["Kiwi Maru", "sans-serif"],
+            "handwritten": ["Kiwi Maru", "serif"]
+          },
+        },
+      },
+    }
+  </script>
+<style type="text/tailwindcss">
+    :root {
+      --logo-brown: #8b7e74;
+    }
+    .paper-texture {
+      background-color: #f2eee5;
+      position: relative;
+    }
+    .paper-texture::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuAo7Eb9LVaV7LhZTmclK25bpOSxiJ9KQ7wl_2N47kCk2ZyysNowFae4bptHCxD9Fppdbn3wwOA2on_-CO7o-ccnJQ6BLnJXMpT3b2fyAabvhohhht-ZYr286a5Ps0eeEqgV5JbZrKtB1qQeGk73nR7-l0q-cNwG4ld_mWwkG-tY4knWs20rCeeVIEwYlMRdJalzoufYc9zfHrnMfOVu7YmIaTgKg5wKLqP2qcerwsbRZf3nLk1h0wRCL_HoSutdNee8If1SuN8GGzMl);
+      background-blend-mode: soft-light;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+    .crayon-filter {
+      filter: url(#crayon-roughness);
+    }
+    .shakuyosho-title {
+      font-size: clamp(2.5rem, 12vw, 4rem);
+      color: var(--logo-brown);
+    }
+    .loose-leaf-tear {
+      clip-path: polygon(0% 0%, 100% 0%, 100% 95%, 95% 100%, 85% 95%, 75% 100%, 65% 95%, 55% 100%, 45% 95%, 35% 100%, 25% 95%, 15% 100%, 5% 95%, 0% 100%);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light font-display m-0 p-0 overflow-hidden select-none">
+<svg class="hidden">
+<filter id="crayon-roughness">
+<feTurbulence baseFrequency="0.05" numOctaves="2" result="noise" type="fractalNoise"></feTurbulence>
+<feDisplacementMap in="SourceGraphic" in2="noise" scale="3"></feDisplacementMap>
+</filter>
+</svg>
+<div class="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden paper-texture">
+<div class="absolute inset-0 z-0 opacity-100 pointer-events-none">
+<div class="absolute top-[5%] left-[-5%] w-48 h-32 bg-white/60 rotate-[-5deg] loose-leaf-tear shadow-sm border-l-8 border-crayon-blue/10 p-4">
+<div class="space-y-3 opacity-20">
+<div class="h-0.5 bg-crayon-blue w-full"></div>
+<div class="h-0.5 bg-crayon-blue w-full"></div>
+<div class="h-0.5 bg-crayon-blue w-full"></div>
+</div>
+</div>
+<div class="absolute top-[8%] right-[8%] w-28 h-28 text-crayon-yellow crayon-filter opacity-80">
+<svg class="fill-current stroke-current" style="stroke-width: 5; stroke-linecap: round;" viewBox="0 0 100 100">
+<circle cx="50" cy="50" fill-opacity="0.3" r="28"></circle>
+<path d="M50 10 L50 22 M85 20 L75 30 M95 50 L83 50 M85 80 L75 70 M50 90 L50 78 M15 80 L25 70 M5 50 L17 50 M15 20 L25 30" fill="none"></path>
+<circle cx="42" cy="45" fill="#444" r="2.5"></circle>
+<circle cx="58" cy="45" fill="#444" r="2.5"></circle>
+<path d="M40 60 Q50 72 60 60" fill="none" stroke="#444" stroke-width="4"></path>
+</svg>
+</div>
+<div class="absolute bottom-[15%] right-[8%] w-24 h-24 text-crayon-red crayon-filter opacity-90 rotate-[10deg]">
+<svg class="fill-current stroke-current" style="stroke-width: 4;" viewBox="0 0 100 100">
+<path d="M20 50 Q20 30 50 30 Q80 30 80 50 Q80 90 50 90 Q20 90 20 50" fill-opacity="0.4"></path>
+<circle cx="43" cy="30" fill="#555" r="5"></circle>
+<circle cx="57" cy="30" fill="#555" r="5"></circle>
+<path d="M35 55 L65 55" stroke="#555" stroke-dasharray="4 2" stroke-width="2"></path>
+</svg>
+</div>
+<div class="absolute top-[22%] right-[25%] w-12 h-12 text-crayon-yellow crayon-filter opacity-90 rotate-12">
+<div class="w-full h-full rounded-full border-[4px] border-current flex items-center justify-center bg-white/40">
+<span class="text-xl font-bold">¥</span>
+</div>
+</div>
+<div class="absolute top-[12%] left-[45%] w-10 h-16 text-gray-400 crayon-filter opacity-60 rotate-[15deg]">
+<svg class="fill-none stroke-current" style="stroke-width: 6; stroke-linecap: round;" viewBox="0 0 40 100">
+<path d="M10 20 L10 70 A10 10 0 0 0 30 70 L30 30 A10 10 0 0 0 10 30 L10 50 A5 5 0 0 0 20 50 L20 40"></path>
+</svg>
+</div>
+<div class="absolute bottom-[20%] left-[5%] w-32 h-12 text-gray-400/40 crayon-filter -rotate-45">
+<div class="w-full h-4 bg-current rounded-full relative">
+<div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4 h-4 bg-crayon-pink rounded-sm"></div>
+<div class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full border-t-[8px] border-b-[8px] border-r-[12px] border-t-transparent border-b-transparent border-r-gray-300"></div>
+</div>
+</div>
+<div class="absolute top-[35%] left-[8%] w-32 h-18 rotate-[-12deg] crayon-filter">
+<div class="w-full h-full border-[4px] border-crayon-green/40 rounded-lg bg-crayon-green/5 p-2 flex items-center justify-around">
+<div class="text-[10px] font-bold text-crayon-green/60">1000</div>
+<div class="w-8 h-8 border-[3px] border-crayon-green/40 rounded-full flex items-center justify-center">
+<span class="text-crayon-green/60 font-bold text-lg">¥</span>
+</div>
+<div class="text-[10px] font-bold text-crayon-green/60">1000</div>
+</div>
+</div>
+<div class="absolute top-[55%] left-[5%] w-14 h-20 rotate-[-8deg] crayon-filter">
+<div class="w-full h-full bg-white border-[3px] border-gray-200 rounded-lg p-2 flex flex-col items-center justify-center shadow-sm">
+<div class="w-8 h-8 border-3 border-crayon-red rounded-full flex items-center justify-center">
+<div class="w-3 h-3 bg-crayon-red rounded-full"></div>
+</div>
+</div>
+</div>
+<div class="absolute bottom-[8%] left-[12%] w-20 h-20 text-crayon-pink crayon-filter opacity-80">
+<svg class="fill-current" viewBox="0 0 100 100">
+<path d="M50 50 Q65 15 80 50 Q95 85 50 75 Q5 85 20 50 Q35 15 50 50" fill-opacity="0.4" stroke="currentColor" stroke-width="4"></path>
+<circle class="text-crayon-yellow" cx="50" cy="50" r="10"></circle>
+</svg>
+</div>
+<div class="absolute bottom-[40%] left-[20%] w-16 h-16 bg-crayon-yellow/10 -rotate-6 border border-crayon-yellow/30 p-2">
+<div class="w-full h-full border-b border-crayon-yellow/30"></div>
+</div>
+</div>
+<div class="relative z-10 flex flex-col items-center px-6">
+<div class="relative flex flex-col items-center">
+<div class="mb-2 text-[var(--logo-brown)] opacity-90 crayon-filter">
+<svg class="w-24 h-24 stroke-current fill-none" style="stroke-width: 8; stroke-linecap: round; stroke-linejoin: round;" viewBox="0 0 100 100">
+<path d="M30 25 L50 50 L70 25 M30 62 L70 62 M30 75 L70 75 M50 50 L50 85"></path>
+</svg>
+</div>
+<div class="relative">
+<div class="absolute -inset-8 bg-white/20 blur-2xl rounded-full -z-10"></div>
+<h1 class="font-handwritten shakuyosho-title whitespace-nowrap leading-tight crayon-filter" style="font-weight: 500;">
+            しゃくよーしょ
+          </h1>
+</div>
+</div>
+</div>
+<div class="absolute bottom-20 w-full flex flex-col items-center px-10">
+<div class="w-full max-w-[140px] h-3 bg-white/60 rounded-full overflow-hidden border-[2px] border-gray-200/50 p-0.5 crayon-filter">
+<div class="h-full bg-crayon-green/60 rounded-full w-2/3"></div>
+</div>
+</div>
+<div class="absolute bottom-2 w-32 h-1.5 bg-black/5 rounded-full"></div>
+</div>
+<div class="hidden">
+<img data-alt="Crayon texture base" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAo7Eb9LVaV7LhZTmclK25bpOSxiJ9KQ7wl_2N47kCk2ZyysNowFae4bptHCxD9Fppdbn3wwOA2on_-CO7o-ccnJQ6BLnJXMpT3b2fyAabvhohhht-ZYr286a5Ps0eeEqgV5JbZrKtB1qQeGk73nR7-l0q-cNwG4ld_mWwkG-tY4knWs20rCeeVIEwYlMRdJalzoufYc9zfHrnMfOVu7YmIaTgKg5wKLqP2qcerwsbRZf3nLk1h0wRCL_HoSutdNee8If1SuN8GGzMl"/>
+</div>
+
+</body></html>
