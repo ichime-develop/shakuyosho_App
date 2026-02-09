@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "307393429746",
+    "project_id": "shakuyosho-app",
+    "storage_bucket": "shakuyosho-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:307393429746:android:962e5a3bd49d79f2c7d06b",
+        "android_client_info": {
+          "package_name": "com.example.shakuyousho_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFB1wuIStSd57w5eJhM_3h3nYJc3RF8LU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
