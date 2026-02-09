@@ -1,0 +1,240 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------
+    // Common helpers
+    // -------------------------------
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && uid() == userId;
+    }
+
+    // 物理削除は v1 では禁止。将来キャッシュクリア機能追加時にここを開ける。
+    function canHardDelete() {
+      return false;
+    }
+
+    function isEventMemberByResource() {
+      return signedIn()
+        && resource.data.memberUids is list
+        && resource.data.memberUids.hasAny([uid()]);
+    }
+
+    function isEventMember(eventId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/events/$(eventId))
+        && get(/databases/$(database)/documents/events/$(eventId)).data.memberUids is list
+        && get(/databases/$(database)/documents/events/$(eventId)).data.memberUids.hasAny([uid()]);
+    }
+
+    function ownerUnchanged() {
+      return request.resource.data.ownerUid == resource.data.ownerUid;
+    }
+
+    function eventMembersChanged() {
+      return request.resource.data.memberUids != resource.data.memberUids;
+    }
+
+    // memberUids は ownerUid 以外が変更不可
+    function canChangeEventMembers() {
+      return !eventMembersChanged() || resource.data.ownerUid == uid();
+    }
+
+    function isThreadMemberByResource() {
+      return signedIn()
+        && resource.data.participantUids is list
+        && resource.data.participantUids.hasAny([uid()]);
+    }
+
+    function isThreadMember(threadId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/threads/$(threadId))
+        && get(/databases/$(database)/documents/threads/$(threadId)).data.participantUids is list
+        && get(/databases/$(database)/documents/threads/$(threadId)).data.participantUids.hasAny([uid()]);
+    }
+
+    function createdByUnchanged() {
+      return request.resource.data.createdByUid == resource.data.createdByUid;
+    }
+
+    function threadParticipantsChanged() {
+      return request.resource.data.participantUids != resource.data.participantUids;
+    }
+
+    // participantUids は createdByUid 以外が変更不可
+    function canChangeThreadParticipants() {
+      return !threadParticipantsChanged() || resource.data.createdByUid == uid();
+    }
+
+    function isLoanPartyByResource() {
+      return signedIn()
+        && (resource.data.lenderUid == uid() || resource.data.borrowerUid == uid());
+    }
+
+    function isLoanPartyByRequest() {
+      return signedIn()
+        && (request.resource.data.lenderUid == uid() || request.resource.data.borrowerUid == uid());
+    }
+
+    // Loan は「契約コア項目」を不変に固定し、運用項目（status/repayments/updatedAt/deletedAt 等）は更新可。
+    // allowlist は使わず、不変項目だけ比較固定する。
+    function loanCoreUnchanged() {
+      return request.resource.data.lenderUid == resource.data.lenderUid
+        && request.resource.data.borrowerUid == resource.data.borrowerUid
+        && request.resource.data.threadId == resource.data.threadId
+        && request.resource.data.amountYen == resource.data.amountYen
+        && request.resource.data.purpose == resource.data.purpose
+        && request.resource.data.dueDate == resource.data.dueDate
+        && request.resource.data.iouNo == resource.data.iouNo
+        && request.resource.data.createdByUid == resource.data.createdByUid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.schemaVersion == resource.data.schemaVersion;
+    }
+
+    // deletedAt の巻き戻し（undelete）や再変更を防止
+    function loanNotUndeleted() {
+      return resource.data.deletedAt == null
+        || request.resource.data.deletedAt == resource.data.deletedAt;
+    }
+
+    // Message は送信者本人のみ論理削除可。
+    function isMessageLogicalDeleteOnlyBySender() {
+      return resource.data.senderUid == uid()
+        && request.resource.data.senderUid == resource.data.senderUid
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['deletedAt'])
+        && request.resource.data.deletedAt != null;
+    }
+
+    // -------------------------------
+    // users
+    // -------------------------------
+    match /users/{userId} {
+      // users/{uid} は本人のみ read/write
+      allow read: if isSelf(userId);
+      allow create, update: if isSelf(userId);
+      allow delete: if canHardDelete();
+
+      // friends: owner(uid) のみ read/write
+      // v1 は owner-only。peer read を開けると情報露出が増えるため閉じる。
+      match /friends/{peerUid} {
+        allow read: if isSelf(userId);
+        allow create, update: if isSelf(userId);
+        allow delete: if canHardDelete();
+      }
+    }
+
+    // -------------------------------
+    // events + transactions
+    // -------------------------------
+    match /events/{eventId} {
+      // create: 作成者が owner かつ memberUids に自分を含む
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == uid()
+        && request.resource.data.memberUids is list
+        && request.resource.data.memberUids.hasAny([uid()]);
+
+      // member のみ read
+      allow read: if isEventMemberByResource();
+
+      // member のみ update
+      // - ownerUid は不変
+      // - memberUids 変更は owner のみ
+      allow update: if isEventMemberByResource()
+        && ownerUnchanged()
+        && canChangeEventMembers();
+
+      // 物理削除は v1 では禁止（論理削除運用）
+      allow delete: if canHardDelete();
+
+      match /transactions/{txId} {
+        // event member のみ read/write
+        allow read: if isEventMember(eventId);
+        allow create, update: if isEventMember(eventId);
+        allow delete: if canHardDelete();
+      }
+    }
+
+    // -------------------------------
+    // threads + messages
+    // -------------------------------
+    match /threads/{threadId} {
+      // create: 作成者が participant に含まれる
+      allow create: if signedIn()
+        && request.resource.data.createdByUid == uid()
+        && request.resource.data.participantUids is list
+        && request.resource.data.participantUids.hasAny([uid()]);
+
+      // participant のみ read
+      allow read: if isThreadMemberByResource();
+
+      // participant のみ update
+      // - createdByUid は不変
+      // - participantUids 変更は createdByUid のみ
+      allow update: if isThreadMemberByResource()
+        && createdByUnchanged()
+        && canChangeThreadParticipants();
+
+      // 物理削除は v1 では禁止（論理削除運用）
+      allow delete: if canHardDelete();
+
+      match /messages/{messageId} {
+        // participant のみ read
+        allow read: if isThreadMember(threadId);
+
+        // create: participant かつ senderUid は本人のみ
+        allow create: if isThreadMember(threadId)
+          && request.resource.data.senderUid == uid();
+
+        // update: 送信者本人の論理削除(deletedAt設定)のみ
+        allow update: if isThreadMember(threadId)
+          && isMessageLogicalDeleteOnlyBySender();
+
+        // 物理削除は v1 では禁止（論理削除運用）
+        allow delete: if canHardDelete();
+      }
+    }
+
+    // -------------------------------
+    // loans
+    // -------------------------------
+    match /loans/{loanId} {
+      // loan 当事者のみ create/read
+      allow create: if isLoanPartyByRequest();
+      allow read: if isLoanPartyByResource();
+
+      // 当事者は更新可。ただし契約コアは不変。
+      allow update: if isLoanPartyByResource()
+        && loanCoreUnchanged()
+        && loanNotUndeleted();
+
+      // 物理削除は v1 では禁止（論理削除運用）
+      allow delete: if canHardDelete();
+    }
+
+    // ---------------------------------------
+    // Representative allow/deny test patterns
+    // ---------------------------------------
+    // - 非ログインアクセスは拒否
+    // - users: 自分以外の読み書き拒否
+    // - friends: owner 以外の読み書き拒否
+    // - events/transactions: member 以外の読み書き拒否
+    // - threads/messages: participant 以外の読み書き拒否
+    // - loans: 当事者以外の読み書き拒否
+    // - loans: 契約コア項目（当事者/金額/IOU等）の改ざんを拒否し、運用項目（status/repayments/updatedAt/deletedAt等）の更新は許可
+    // - events.memberUids: owner 以外の変更を拒否
+    // - events.ownerUid: update で変更を拒否
+    // - threads.participantUids: createdByUid 以外の変更を拒否
+    // - threads.createdByUid: update で変更を拒否
+    // - messages.create: senderUid 不一致を拒否
+    // - messages.update: 送信者本人以外の deletedAt 変更を拒否
+    // - 物理削除は全コレクションで拒否（v1）
+  }
+}

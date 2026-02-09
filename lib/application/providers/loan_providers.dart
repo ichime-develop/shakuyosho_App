@@ -238,6 +238,7 @@ class LoanActionsNotifier extends Notifier<void> {
     final loan = await _repo.getById(loanId);
     if (loan == null) return;
     if (amountYen <= 0) return;
+    if (amountYen > loan.remainingYen) return;
 
     final newRepayments = [
       ...loan.repayments,

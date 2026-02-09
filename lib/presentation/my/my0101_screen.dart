@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakuyousho_app/application/providers/user_providers.dart';
+import 'package:shakuyousho_app/core/config/app_flags.dart';
+import 'package:shakuyousho_app/infrastructure/firestore/firebase_user_sync_service.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
@@ -46,6 +48,9 @@ class _My0101NameEditScreenState extends ConsumerState<My0101NameEditScreen> {
             .copyWith(displayName: text);
     try {
       repo.upsert(updated);
+      if (kUseFirebase) {
+        await const FirebaseUserSyncService().syncCurrentUser(updated);
+      }
     } catch (e, st) {
       final err = toAppError(e, st);
       if (!mounted) return;

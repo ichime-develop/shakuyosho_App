@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shakuyousho_app/application/providers/user_providers.dart';
 import 'package:shakuyousho_app/core/config/app_flags.dart';
 import 'package:shakuyousho_app/core/utils/app_settings.dart';
+import 'package:shakuyousho_app/infrastructure/firestore/firebase_user_sync_service.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
 
-class St0100SplashScreen extends StatefulWidget {
+class St0100SplashScreen extends ConsumerStatefulWidget {
   const St0100SplashScreen({super.key});
   @override
-  State<St0100SplashScreen> createState() => _St0100SplashScreenState();
+  ConsumerState<St0100SplashScreen> createState() => _St0100SplashScreenState();
 }
 
-class _St0100SplashScreenState extends State<St0100SplashScreen> {
+class _St0100SplashScreenState extends ConsumerState<St0100SplashScreen> {
   bool _didShowError = false;
 
   @override
@@ -24,9 +27,36 @@ class _St0100SplashScreenState extends State<St0100SplashScreen> {
   Future<void> _bootstrap() async {
     try {
       if (kUseFirebase) {
-        final auth = FirebaseAuth.instance;
+        final auth = firebase_auth.FirebaseAuth.instance;
         if (auth.currentUser == null) {
           await auth.signInAnonymously();
+        }
+
+        final userRepo = ref.read(userRepositoryProvider);
+        final myId = ref.read(currentUserIdProvider);
+        final localUser = userRepo.getById(myId);
+        final syncService = const FirebaseUserSyncService();
+        final remoteUser = await syncService.fetchCurrentUser(
+          fallbackAppUserId: myId,
+          fallbackDisplayName: localUser?.displayName ?? 'あなた',
+        );
+
+        if (remoteUser != null) {
+          final merged =
+              (localUser ??
+                      User(
+                        id: myId,
+                        displayName: remoteUser.displayName,
+                        createdAt: DateTime.now(),
+                      ))
+                  .copyWith(
+                    displayName: remoteUser.displayName,
+                    myCode: remoteUser.myCode ?? localUser?.myCode,
+                    avatarUrl: remoteUser.avatarUrl ?? localUser?.avatarUrl,
+                  );
+          userRepo.upsert(merged);
+        } else if (localUser != null) {
+          await syncService.syncCurrentUser(localUser);
         }
       }
       // TODO: 起動時の初期データ取得（Firebase移行時にここへ追加）

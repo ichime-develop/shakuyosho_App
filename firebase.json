@@ -1,1 +1,44 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"shakuyosho-app","appId":"1:307393429746:android:962e5a3bd49d79f2c7d06b","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"shakuyosho-app","appId":"1:307393429746:ios:65f4b343031658c4c7d06b","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"macos":{"default":{"projectId":"shakuyosho-app","appId":"1:307393429746:ios:65f4b343031658c4c7d06b","uploadDebugSymbols":false,"fileOutput":"macos/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"shakuyosho-app","configurations":{"android":"1:307393429746:android:962e5a3bd49d79f2c7d06b","ios":"1:307393429746:ios:65f4b343031658c4c7d06b","macos":"1:307393429746:ios:65f4b343031658c4c7d06b","web":"1:307393429746:web:e89e18180812e824c7d06b","windows":"1:307393429746:web:98b19fee26f99f52c7d06b"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "shakuyosho-app",
+          "appId": "1:307393429746:android:962e5a3bd49d79f2c7d06b",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "shakuyosho-app",
+          "appId": "1:307393429746:ios:65f4b343031658c4c7d06b",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "shakuyosho-app",
+          "appId": "1:307393429746:ios:65f4b343031658c4c7d06b",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "shakuyosho-app",
+          "configurations": {
+            "android": "1:307393429746:android:962e5a3bd49d79f2c7d06b",
+            "ios": "1:307393429746:ios:65f4b343031658c4c7d06b",
+            "macos": "1:307393429746:ios:65f4b343031658c4c7d06b",
+            "web": "1:307393429746:web:e89e18180812e824c7d06b",
+            "windows": "1:307393429746:web:98b19fee26f99f52c7d06b"
+          }
+        }
+      }
+    }
+  }
+}

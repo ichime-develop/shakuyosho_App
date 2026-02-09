@@ -289,7 +289,7 @@ class _Tr0100TransactionScreenState
                           m.displayName,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontSize: AppTextSizes.body,
-                            fontWeight: AppFontWeights.listSubtitle,
+                            fontWeight: AppFontWeights.listTitle,
                           ),
                         ),
                       );
@@ -333,7 +333,7 @@ class _Tr0100TransactionScreenState
                                 s.name,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   fontSize: AppTextSizes.body,
-                                  fontWeight: AppFontWeights.listSubtitle,
+                                  fontWeight: AppFontWeights.listTitle,
                                 ),
                               ),
                             ),
@@ -355,18 +355,24 @@ class _Tr0100TransactionScreenState
                                 textAlign: TextAlign.right,
                                 keyboardType: TextInputType.number,
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: AppTextSizes.small,
-                                  fontWeight: AppFontWeights.listSubtitle,
+                                  fontSize: AppTextSizes.body,
+                                  fontWeight: AppFontWeights.listTitle,
                                 ),
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
                                   hintText: '0',
                                   hintStyle: theme.textTheme.bodySmall?.copyWith(
-                                    fontSize: AppTextSizes.small,
+                                    fontSize: AppTextSizes.body,
                                     color: theme.hintColor,
                                   ),
                                   isDense: true,
                                   suffixText: AppStrings.amountUnit,
+                                  suffixStyle: theme.textTheme.bodySmall
+                                      ?.copyWith(
+                                        fontSize: AppTextSizes.body,
+                                        fontWeight: AppFontWeights.listTitle,
+                                        color: theme.hintColor,
+                                      ),
                                 ),
                               ),
                             ),
@@ -532,36 +538,30 @@ class _Tr0100TransactionScreenState
     final id = _editingTransaction?.id ?? _generateTxId(_eventId);
     final createdAt = _editingTransaction?.createdAt ?? DateTime.now();
 
-    // Build shares: prefer explicit inputs, otherwise split equally
+    // Build shares: 割り勘対象のみ集計し、差分がある場合は不足/過剰額を表示して保存しない
     final shares = <String, int>{};
-    if (included.isEmpty) return;
-    // parse explicit amounts if provided
     int sumShares = 0;
     for (final s in included) {
       final text = s.controller.text.trim();
-      final v = int.tryParse(text) ?? 0;
-      if (v > 0) {
-        shares[s.memberId] = v;
-        sumShares += v;
+      final parsed = text.isEmpty ? 0 : int.tryParse(text);
+      if (parsed == null || parsed < 0) {
+        _showError(context, 'わりかんの きんがく は 0 いじょう の すうじで いれてね。');
+        return;
       }
+      shares[s.memberId] = parsed;
+      sumShares += parsed;
     }
-    final diffTarget = included.any((s) => s.memberId == _payerUserId)
-        ? _payerUserId!
-        : included.first.memberId;
-    if (sumShares == 0) {
-      // equal split
-      final base = total ~/ included.length;
-      final rem = total - base * included.length;
-      for (final s in included) {
-        shares[s.memberId] = base;
-      }
-      if (rem > 0) {
-        shares[diffTarget] = (shares[diffTarget] ?? 0) + rem;
-      }
-    } else if (sumShares != total) {
-      // adjust first included to absorb diff
+    if (sumShares != total) {
       final diff = total - sumShares;
-      shares[diffTarget] = (shares[diffTarget] ?? 0) + diff;
+      final diffAmount = diff.abs().toString();
+      final message = diff > 0
+          ? '$diffAmount${AppStrings.amountUnit} たりないよ。'
+          : '$diffAmount${AppStrings.amountUnit} おおすぎるよ。';
+      _showError(
+        context,
+        message,
+      );
+      return;
     }
 
     final eventId = _eventId!;

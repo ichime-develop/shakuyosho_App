@@ -7,6 +7,7 @@ import 'package:shakuyousho_app/application/providers/loan_providers.dart';
 import 'package:shakuyousho_app/core/extensions/date_time_extension.dart';
 import 'package:shakuyousho_app/core/extensions/num_extension.dart';
 import 'package:shakuyousho_app/domain/models/loan_model.dart';
+import 'package:shakuyousho_app/presentation/common/app_keyboard_done_bar.dart';
 import 'package:shakuyousho_app/presentation/common/app_paper_background.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 import 'package:shakuyousho_app/presentation/common/app_loading_screen.dart';
@@ -40,6 +41,7 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
   final _amountController = TextEditingController();
   final _purposeController = TextEditingController();
   final _noteController = TextEditingController();
+  final _noteFocusNode = FocusNode();
   DateTime _dueDate = DateTime.now().add(const Duration(days: 7));
   String _friendId = '';
   String _friendInput = '';
@@ -59,6 +61,7 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
     _amountController.dispose();
     _purposeController.dispose();
     _noteController.dispose();
+    _noteFocusNode.dispose();
     super.dispose();
   }
 
@@ -96,145 +99,171 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 0),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 0),
 
-            // 相手の名前 (label adjusted)
-            Text('かりたひと', style: labelStyle),
-            const SizedBox(height: 8),
-            _InputField(
-              initialValue: _friendInput,
-              placeholder: 'ユーザーID / なまえ',
-              onChanged: (v) {
-                _friendInput = v;
-                _friendId = '';
-              },
-            ),
-            const SizedBox(height: 24),
-
-            // 金額
-            Text('きんがく', style: labelStyle),
-            const SizedBox(height: 8),
-            CupertinoTextField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              placeholder: '0',
-              suffix: Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Text(
-                  AppStrings.amountUnit,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: AppTextSizes.small,
-                    color: AppColors.iconDefault,
+                // 相手名は固定表示（編集不可）
+                Text('かすあいて', style: labelStyle),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppRadii.card),
+                    border: Border.all(color: AppColors.listBorder),
+                  ),
+                  child: Text(
+                    _friendInput.isEmpty ? '-' : _friendInput,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: AppTextSizes.body,
+                    ),
                   ),
                 ),
-              ),
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontSize: AppTextSizes.amountLarge,
-                fontWeight: AppFontWeights.listTitle,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppRadii.card),
-                border: Border.all(color: AppColors.listBorder),
-              ),
-            ),
-            const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-            // 目的
-            Text('ようけん', style: labelStyle),
-            const SizedBox(height: 8),
-            CupertinoTextField(
-              controller: _purposeController,
-              placeholder: 'ごはんだい など',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontSize: AppTextSizes.body,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppRadii.card),
-                border: Border.all(color: AppColors.listBorder),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // 備考
-            Text('びこう', style: labelStyle),
-            const SizedBox(height: 8),
-            CupertinoTextField(
-              controller: _noteController,
-              placeholder: 'めもなど（にんい）',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontSize: AppTextSizes.body,
-              ),
-              maxLines: 3,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppRadii.card),
-                border: Border.all(color: AppColors.listBorder),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // 返済期限
-            Text('きげん', style: labelStyle),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => _pickDate(context),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(AppRadii.card),
-                  border: Border.all(color: AppColors.listBorder),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      _dueDate.toYmdSlash(),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: AppTextSizes.body,
+                // 金額
+                Text('きんがく', style: labelStyle),
+                const SizedBox(height: 8),
+                CupertinoTextField(
+                  controller: _amountController,
+                  keyboardType: TextInputType.number,
+                  placeholder: '0',
+                  suffix: Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: Text(
+                      AppStrings.amountUnit,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: AppTextSizes.small,
+                        color: AppColors.iconDefault,
                       ),
                     ),
-                    const Spacer(),
-                    const Icon(
-                      CupertinoIcons.calendar,
-                      color: AppColors.iconDefault,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 40),
-
-            // 送るボタン（既存の借用書UIと同様）
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _onSave,
-                style: AppButtonStyles.primaryPill,
-                child: Text(
-                  'おくる',
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontSize: AppTextSizes.body,
-                    fontWeight: AppFontWeights.label,
-                    color: AppColors.primaryActionText,
+                  ),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontSize: AppTextSizes.amountLarge,
+                    fontWeight: AppFontWeights.listTitle,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppRadii.card),
+                    border: Border.all(color: AppColors.listBorder),
                   ),
                 ),
-              ),
+                const SizedBox(height: 24),
+
+                // 目的
+                Text('ようけん', style: labelStyle),
+                const SizedBox(height: 8),
+                CupertinoTextField(
+                  controller: _purposeController,
+                  placeholder: 'ごはんだい など',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: AppTextSizes.body,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppRadii.card),
+                    border: Border.all(color: AppColors.listBorder),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // 備考
+                Text('びこう', style: labelStyle),
+                const SizedBox(height: 8),
+                CupertinoTextField(
+                  controller: _noteController,
+                  focusNode: _noteFocusNode,
+                  placeholder: 'めもなど（にんい）',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: AppTextSizes.body,
+                  ),
+                  maxLines: 3,
+                  textInputAction: TextInputAction.newline,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppRadii.card),
+                    border: Border.all(color: AppColors.listBorder),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // 返済期限
+                Text('きげん', style: labelStyle),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () => _pickDate(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(AppRadii.card),
+                      border: Border.all(color: AppColors.listBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          _dueDate.toYmdSlash(),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: AppTextSizes.body,
+                          ),
+                        ),
+                        const Spacer(),
+                        const Icon(
+                          CupertinoIcons.calendar,
+                          color: AppColors.iconDefault,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                // 送るボタン（既存の借用書UIと同様）
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _onSave,
+                    style: AppButtonStyles.primaryPill,
+                    child: Text(
+                      'さくせい',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontSize: AppTextSizes.body,
+                        fontWeight: AppFontWeights.label,
+                        color: AppColors.primaryActionText,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          AppKeyboardDoneBar(focusNodes: [_noteFocusNode], onDone: () {}),
+        ],
       ),
     );
   }
@@ -518,7 +547,10 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
   }
 
   Future<void> _pickDate(BuildContext context) async {
-    DateTime temp = _dueDate;
+    final now = DateTime.now();
+    final minDate = now;
+    final initialDate = _dueDate.isBefore(minDate) ? minDate : _dueDate;
+    DateTime temp = initialDate;
 
     await showCupertinoModalPopup<void>(
       context: context,
@@ -546,26 +578,26 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                           child: Text(
                             'やめる',
                             style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                                  fontSize: AppTextSizes.small,
-                                ),
+                              fontSize: AppTextSizes.small,
+                            ),
                           ),
                           onPressed: () => Navigator.of(ctx).pop(),
                         ),
                         Text(
                           'きげん',
                           style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                                fontSize: AppTextSizes.small,
-                                fontWeight: AppFontWeights.listSubtitle,
-                                color: AppColors.iconDefault,
-                              ),
+                            fontSize: AppTextSizes.small,
+                            fontWeight: AppFontWeights.listSubtitle,
+                            color: AppColors.iconDefault,
+                          ),
                         ),
                         CupertinoButton(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             'けってい',
                             style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                                  fontSize: AppTextSizes.small,
-                                ),
+                              fontSize: AppTextSizes.small,
+                            ),
                           ),
                           onPressed: () {
                             setState(() => _dueDate = temp);
@@ -582,8 +614,8 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
                       locale: const Locale('ja', 'JP'),
                       child: CupertinoDatePicker(
                         backgroundColor: const Color(0xFFFFF8DC),
-                        initialDateTime: _dueDate,
-                        minimumDate: DateTime.now(),
+                        initialDateTime: initialDate,
+                        minimumDate: minDate,
                         maximumDate: DateTime(2100),
                         mode: CupertinoDatePickerMode.date,
                         dateOrder: DatePickerDateOrder.ymd,
@@ -603,14 +635,12 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
   Future<void> _onSave() async {
     final amount = int.tryParse(_amountController.text.trim());
     final purpose = _purposeController.text.trim();
-    final input = _friendInput.trim();
-
     if (amount == null || amount <= 0) {
       _showError('きんがく を いれてね');
       return;
     }
-    if (input.isEmpty) {
-      _showError('あいて を いれてね');
+    if (_friendId.isEmpty) {
+      _showError('あいて が みつかりません');
       return;
     }
     if (purpose.isEmpty) {
@@ -619,24 +649,9 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
     }
 
     final userRepo = ref.read(userRepositoryProvider);
-    String? resolvedId;
-    if (_friendId.isNotEmpty) {
-      final displayName = userRepo.getById(_friendId)?.displayName;
-      if (input == _friendId || input == displayName) {
-        resolvedId = _friendId;
-      }
-    }
-    resolvedId ??= userRepo.getById(input)?.id;
-    if (resolvedId == null) {
-      for (final user in userRepo.getAll()) {
-        if (user.displayName == input) {
-          resolvedId = user.id;
-          break;
-        }
-      }
-    }
+    final resolvedId = userRepo.getById(_friendId)?.id;
     if (resolvedId == null || resolvedId.isEmpty) {
-      _showError('ユーザーが みつかりません');
+      _showError('あいて が みつかりません');
       return;
     }
 
@@ -682,18 +697,18 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
         ),
         content: Text(
           msg,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontSize: AppTextSizes.small,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(fontSize: AppTextSizes.small),
         ),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
               'OK',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontSize: AppTextSizes.small,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontSize: AppTextSizes.small),
             ),
           ),
         ],
@@ -715,43 +730,6 @@ class _Lb0200ScreenState extends ConsumerState<Lb0200BorrowNotePreviewScreen> {
     );
   }
 }
-
-/// テキストフィールド
-class _InputField extends StatelessWidget {
-  const _InputField({
-    required this.placeholder,
-    this.initialValue = '',
-    this.onChanged,
-  });
-
-  final String placeholder;
-  final String initialValue;
-  final ValueChanged<String>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return CupertinoTextField(
-      controller: TextEditingController(text: initialValue),
-      placeholder: placeholder,
-      style: theme.textTheme.bodyMedium?.copyWith(
-        fontSize: AppTextSizes.body,
-      ),
-      placeholderStyle: theme.textTheme.bodySmall?.copyWith(
-        fontSize: AppTextSizes.small,
-        color: AppColors.iconDefault,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadii.card),
-        border: Border.all(color: AppColors.listBorder),
-      ),
-      onChanged: onChanged,
-    );
-  }
-}
-
 
 /// 詳細テキストブロック（スクリーン寄せ）
 class _DetailTextBlock extends StatelessWidget {

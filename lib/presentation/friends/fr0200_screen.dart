@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/chat_message_providers.dart';
@@ -800,6 +801,7 @@ class _Fr0200ThreadDetailScreenState
           CupertinoTextField(
             controller: controller,
             keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             placeholder: 'きんがく',
             suffix: Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -819,7 +821,23 @@ class _Fr0200ThreadDetailScreenState
           closeOnSuccess: false,
           onPressedAsync: () async {
             final amount = int.tryParse(controller.text.trim());
-            if (amount == null || amount <= 0) return;
+            if (amount == null || amount <= 0) {
+              await showAppDialog(
+                context: context,
+                title: 'エラー',
+                message: 'きんがく を いれてね',
+              );
+              return;
+            }
+            if (amount > loan.remainingYen) {
+              await showAppDialog(
+                context: context,
+                title: 'エラー',
+                message: 'のこり より おおきい きんがく は いれられないよ',
+              );
+              return;
+            }
+            if (!mounted) return;
             Navigator.of(context, rootNavigator: true).pop();
             try {
               await ref

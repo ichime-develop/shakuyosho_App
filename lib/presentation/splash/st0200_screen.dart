@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shakuyousho_app/application/providers/user_providers.dart';
 import 'package:shakuyousho_app/core/config/app_flags.dart';
 import 'package:shakuyousho_app/core/utils/app_settings.dart';
-import 'package:shakuyousho_app/infrastructure/firestore/firestore_collections.dart';
+import 'package:shakuyousho_app/infrastructure/firestore/firebase_user_sync_service.dart';
 import 'package:shakuyousho_app/presentation/common/app_styles.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
@@ -53,20 +51,7 @@ class _St0200FirstLaunchScreenState
     try {
       repo.upsert(updated);
       if (kUseFirebase) {
-        final uid = firebase_auth.FirebaseAuth.instance.currentUser?.uid;
-        if (uid == null || uid.isEmpty) {
-          throw Exception('ユーザーが取得できません');
-        }
-        final doc = FirestoreCollections.usersRef().doc(uid);
-        final snap = await doc.get();
-        final data = <String, dynamic>{
-          'displayName': text,
-          'updatedAt': FieldValue.serverTimestamp(),
-        };
-        if (!snap.exists) {
-          data['createdAt'] = FieldValue.serverTimestamp();
-        }
-        await doc.set(data, SetOptions(merge: true));
+        await const FirebaseUserSyncService().syncCurrentUser(updated);
       }
       await setFirstLaunchDone();
     } catch (e, st) {
