@@ -15,6 +15,7 @@ import 'package:shakuyousho_app/presentation/event/ev0300_screen.dart';
 import 'package:shakuyousho_app/presentation/settlement/sv0100_screen.dart';
 
 import '../presentation/splash/st0100_screen.dart';
+import '../presentation/splash/st0200_screen.dart';
 import '../presentation/event/ev0101_screen.dart';
 import '../presentation/friends/invite_screen.dart';
 import '../presentation/friends/qr_scanner_screen.dart';
@@ -66,6 +67,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => NoTransitionPage(
           key: state.pageKey,
           child: const St0100SplashScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/st0200',
+        name: 'ST0200',
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: state.pageKey,
+          child: const St0200FirstLaunchScreen(),
         ),
       ),
 

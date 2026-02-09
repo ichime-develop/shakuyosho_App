@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>しゃくよーしょ - 初回ログイン</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&amp;family=Noto+Sans+JP:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1A1A1A", // Changed to almost black for accents/icons
+                        "primary-content": "#ffffff",
+                        "secondary": "#F5F5DC", 
+                        "background-light": "#FDFBF0", // Warm beige/cream background
+                        "background-dark": "#181816",
+                        "text-main": "#222222", // Very dark gray, almost black
+                        "text-muted": "#666666", // Neutral gray
+                        "input-border": "#BBBBBB", // Neutral gray border
+                        "leaf-decoration": "#EAE6D6", // Subtle beige for decoration
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "Noto Sans JP", "sans-serif"],
+                        "body": ["Noto Sans JP", "sans-serif"], 
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem", 
+                        "lg": "0.75rem", 
+                        "xl": "1rem", 
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'inner-soft': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-feature-settings: "palt";
+        }
+        .input-underline {
+            border: none;
+            border-bottom: 2px solid #BBBBBB;
+            border-radius: 0;
+            padding-left: 0;
+            padding-right: 0;
+            background: transparent;
+        }
+        .input-underline:focus {
+            border-bottom-color: #1A1A1A;
+            box-shadow: none;
+            ring: 0; 
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-main antialiased min-h-screen flex flex-col items-center justify-center">
+<div class="relative flex w-full max-w-[480px] h-full min-h-screen flex-col overflow-hidden shadow-soft bg-background-light dark:bg-background-dark">
+<div class="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-yellow-100/20 to-transparent pointer-events-none"></div>
+<div class="flex-1 flex flex-col items-center justify-center px-8 py-8 z-10">
+<div class="mb-12 flex flex-col items-center">
+<div class="w-20 h-20 bg-black/5 rounded-full flex items-center justify-center mb-6 shadow-sm border border-black/10">
+<span class="material-symbols-outlined text-primary text-[40px]">handshake</span>
+</div>
+<h1 class="text-text-main dark:text-white text-[28px] font-bold tracking-tight text-center leading-tight">
+                    しゃくよーしょ
+                </h1>
+</div>
+<div class="w-full max-w-xs space-y-10 animate-fade-in">
+<div class="text-center space-y-6">
+<h2 class="text-xl text-text-main dark:text-white font-medium tracking-wide">
+                        なまえを おしえてね
+                    </h2>
+<div class="relative pt-2">
+<input class="w-full text-center text-2xl py-3 bg-transparent border-0 border-b-2 border-input-border focus:border-primary focus:ring-0 placeholder-gray-400/70 transition-colors rounded-none text-primary font-medium" placeholder="ここに かく" type="text"/>
+</div>
+</div>
+<div class="pt-4">
+<button class="w-full flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-14 px-6 bg-primary dark:bg-white/10 hover:bg-black/80 dark:hover:bg-white/20 transition-all shadow-md text-white dark:text-white text-lg font-bold tracking-wide border border-transparent dark:border-white/20">
+                        はじめる
+                    </button>
+</div>
+</div>
+</div>
+<div class="w-full relative h-[218px] bg-background-light dark:bg-background-dark mt-auto">
+<div class="absolute inset-0 opacity-40 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjRkFGN0YyIi8+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNFMEUwRTAiLz4KPC9zdmc+')] mix-blend-overlay"></div>
+<div class="absolute bottom-0 w-full flex flex-col items-center pb-6 z-20">
+<div class="flex gap-4 text-[11px] text-text-muted">
+<a class="hover:text-primary transition-colors underline decoration-dotted" href="#">りようきやく</a>
+<span class="text-gray-300">|</span>
+<a class="hover:text-primary transition-colors underline decoration-dotted" href="#">ぷらいばしー</a>
+</div>
+</div>
+<div class="absolute bottom-0 left-0 right-0 h-32 overflow-hidden pointer-events-none opacity-20">
+<svg class="absolute bottom-0 left-0 w-full h-full text-leaf-decoration" preserveAspectRatio="none" viewBox="0 0 1440 320">
+<path d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,250.7C960,235,1056,181,1152,165.3C1248,149,1344,171,1392,181.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" fill="currentColor" fill-opacity="1"></path>
+</svg>
+</div>
+<div class="absolute bottom-12 right-6 w-32 h-32 opacity-20 dark:opacity-40 pointer-events-none">
+<span class="material-symbols-outlined text-leaf-decoration dark:text-white/20 text-[128px] transform rotate-12">spa</span>
+</div>
+</div>
+</div>
+</body></html>

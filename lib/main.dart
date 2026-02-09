@@ -3,11 +3,13 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'router/app_router.dart';
 import 'core/utils/app_logger.dart';
+import 'firebase_options.dart';
 import 'presentation/common/app_paper_background.dart';
 
 /// ─────────────────────────────────────────────────────────
@@ -18,7 +20,7 @@ import 'presentation/common/app_paper_background.dart';
 
 // 将来 SDK を入れる時のフラグ（Firebase / Sentry など）。
 // 実導入時は true にし、該当コードのコメントアウトを外すだけで接続できる。
-const bool kUseFirebase = false;
+const bool kUseFirebase = true;
 const bool kUseSentry = false;
 const Color _appBgColor = Color(0xFFFFF8DC);
 
@@ -36,7 +38,9 @@ void main() {
 
       // 2) 外部SDKの初期化（必要になったらここで）
       if (kUseFirebase) {
-        // await Firebase.initializeApp();
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
         // FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
       }
       if (kUseSentry) {
@@ -59,6 +63,7 @@ void main() {
       await _openMapBox('loans');
       await _openMapBox('friends');
       await _openMapBox('messages');
+      await _openMapBox('appSettings');
 
       // 4) 依存注入の根：ProviderScope（全Providerのルート）。
       runApp(

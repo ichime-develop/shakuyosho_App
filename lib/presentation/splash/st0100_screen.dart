@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shakuyousho_app/core/utils/app_settings.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
 
@@ -21,8 +22,13 @@ class _St0100SplashScreenState extends State<St0100SplashScreen> {
   Future<void> _bootstrap() async {
     try {
       // TODO: 起動時の初期データ取得（Firebase移行時にここへ追加）
+      final firstLaunch = isFirstLaunch();
       await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
+      if (firstLaunch) {
+        context.go('/st0200');
+        return;
+      }
       context.go('/to0100');
     } catch (e, st) {
       if (_didShowError) return;
