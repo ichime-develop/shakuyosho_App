@@ -604,9 +604,6 @@ class _Tr0100TransactionScreenState
     }
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('おしはらいをほぞんしました')));
     context.pop();
   }
 

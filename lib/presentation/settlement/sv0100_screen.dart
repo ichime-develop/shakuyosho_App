@@ -154,9 +154,6 @@ class _Sv0100SettlementScreenState
             ),
           );
     }
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('かくてい')));
     context.go('/ev0100');
   }
 }

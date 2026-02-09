@@ -312,10 +312,6 @@ class _Ev0101EventCreateScreenState
       return;
     }
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('グループをつくりました')));
-
     final router = GoRouter.of(context);
     router.go('/ev0100');
     Future.microtask(() {
