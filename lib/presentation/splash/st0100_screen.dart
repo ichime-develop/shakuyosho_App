@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shakuyousho_app/core/config/app_flags.dart';
 import 'package:shakuyousho_app/core/utils/app_settings.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_error_dialog.dart';
 import 'package:shakuyousho_app/presentation/common/error/app_error_mapper.dart';
@@ -21,6 +23,12 @@ class _St0100SplashScreenState extends State<St0100SplashScreen> {
 
   Future<void> _bootstrap() async {
     try {
+      if (kUseFirebase) {
+        final auth = FirebaseAuth.instance;
+        if (auth.currentUser == null) {
+          await auth.signInAnonymously();
+        }
+      }
       // TODO: 起動時の初期データ取得（Firebase移行時にここへ追加）
       final firstLaunch = isFirstLaunch();
       await Future.delayed(const Duration(seconds: 2));

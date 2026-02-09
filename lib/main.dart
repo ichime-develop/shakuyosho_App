@@ -8,6 +8,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'router/app_router.dart';
+import 'core/config/app_flags.dart';
 import 'core/utils/app_logger.dart';
 import 'firebase_options.dart';
 import 'presentation/common/app_paper_background.dart';
@@ -18,10 +19,6 @@ import 'presentation/common/app_paper_background.dart';
 /// 画面遷移の詳細やビジネスロジックは Screen/Controller/Provider 側に分離する。
 /// ─────────────────────────────────────────────────────────
 
-// 将来 SDK を入れる時のフラグ（Firebase / Sentry など）。
-// 実導入時は true にし、該当コードのコメントアウトを外すだけで接続できる。
-const bool kUseFirebase = true;
-const bool kUseSentry = false;
 const Color _appBgColor = Color(0xFFFFF8DC);
 
 void main() {
