@@ -20,6 +20,7 @@ import 'package:shakuyousho_app/domain/models/transaction_model.dart';
 import 'package:shakuyousho_app/domain/repositories/event_repository.dart';
 import 'package:shakuyousho_app/domain/repositories/thread_repository.dart';
 import 'package:shakuyousho_app/domain/repositories/transaction_repository.dart';
+import 'package:shakuyousho_app/presentation/common/error/app_error.dart';
 
 // User関連Providerはuser_providers.dartに集約（再エクスポート）
 export 'package:shakuyousho_app/application/providers/user_providers.dart';
@@ -341,11 +342,17 @@ void _scheduleInitialReload({
       await reload();
     } catch (e, st) {
       // 初期ロード失敗は未捕捉例外にせずログ化し、画面側の再試行導線で回復させる。
+      final appErr = e is AppError ? e : null;
       AppLog.e(
         'initial_provider_reload_failed',
         error: e,
         stack: st,
-        data: {'target': target},
+        data: {
+          'target': target,
+          if (appErr != null) 'appErrorType': appErr.type.name,
+          if (appErr != null && appErr.message != null)
+            'appErrorMessage': appErr.message,
+        },
       );
     }
   });

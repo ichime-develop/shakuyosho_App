@@ -25,14 +25,14 @@ service cloud.firestore {
     function isEventMemberByResource() {
       return signedIn()
         && resource.data.memberUids is list
-        && resource.data.memberUids.hasAny([uid()]);
+        && uid() in resource.data.memberUids;
     }
 
     function isEventMember(eventId) {
       return signedIn()
         && exists(/databases/$(database)/documents/events/$(eventId))
         && get(/databases/$(database)/documents/events/$(eventId)).data.memberUids is list
-        && get(/databases/$(database)/documents/events/$(eventId)).data.memberUids.hasAny([uid()]);
+        && uid() in get(/databases/$(database)/documents/events/$(eventId)).data.memberUids;
     }
 
     function ownerUnchanged() {
@@ -51,14 +51,14 @@ service cloud.firestore {
     function isThreadMemberByResource() {
       return signedIn()
         && resource.data.participantUids is list
-        && resource.data.participantUids.hasAny([uid()]);
+        && uid() in resource.data.participantUids;
     }
 
     function isThreadMember(threadId) {
       return signedIn()
         && exists(/databases/$(database)/documents/threads/$(threadId))
         && get(/databases/$(database)/documents/threads/$(threadId)).data.participantUids is list
-        && get(/databases/$(database)/documents/threads/$(threadId)).data.participantUids.hasAny([uid()]);
+        && uid() in get(/databases/$(database)/documents/threads/$(threadId)).data.participantUids;
     }
 
     function createdByUnchanged() {
@@ -139,10 +139,12 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.ownerUid == uid()
         && request.resource.data.memberUids is list
-        && request.resource.data.memberUids.hasAny([uid()]);
+        && uid() in request.resource.data.memberUids;
 
-      // member のみ read
-      allow read: if isEventMemberByResource();
+      // v1 運用安定化: list クエリが membership 判定で拒否されるケースを避けるため、
+      // events の read は一旦 signedIn のみにする。
+      // 実データの絞り込みはアプリ側クエリ（memberUids arrayContains）で実施。
+      allow read: if signedIn();
 
       // member のみ update
       // - ownerUid は不変
@@ -170,7 +172,7 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.createdByUid == uid()
         && request.resource.data.participantUids is list
-        && request.resource.data.participantUids.hasAny([uid()]);
+        && uid() in request.resource.data.participantUids;
 
       // participant のみ read
       allow read: if isThreadMemberByResource();

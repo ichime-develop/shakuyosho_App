@@ -20,14 +20,25 @@ class FirestoreEventRepository implements EventRepository {
   @override
   Future<List<EventMeta>> getAllEventMetas() async {
     try {
-      final authUid = _requireAuthUid();
-      // Security Rules: event read は memberUids に自分が含まれることが前提。
-      final snap = await FirestoreCollections.eventsRef(_db)
-          .where('memberUids', arrayContains: authUid)
-          .get();
-      return snap.docs
-          .map((doc) => _fromDoc(doc.id, doc.data()))
-          .toList(growable: false);
+      final authUid = await _ensureAuthUid();
+      try {
+        final snap = await _queryEventsByMemberUid(authUid);
+        return snap.docs
+            .map((doc) => _fromDoc(doc.id, doc.data()))
+            .toList(growable: false);
+      } on FirebaseException catch (e) {
+        final code = e.code.toLowerCase();
+        // 起動直後に認証反映が遅れて permission-denied になることがあるため、
+        // IDトークンを更新して 1 回だけ再試行する。
+        if (code == 'permission-denied' || code == 'unauthenticated') {
+          final retryUid = await _ensureAuthUid(forceRefreshToken: true);
+          final retrySnap = await _queryEventsByMemberUid(retryUid);
+          return retrySnap.docs
+              .map((doc) => _fromDoc(doc.id, doc.data()))
+              .toList(growable: false);
+        }
+        rethrow;
+      }
     } catch (e, st) {
       throw mapFirestoreError(e, st, operation: 'event getAll');
     }
@@ -36,6 +47,7 @@ class FirestoreEventRepository implements EventRepository {
   @override
   Future<EventMeta?> getEventMetaById(String eventId) async {
     try {
+      await _ensureAuthUid();
       final snap = await FirestoreCollections.eventsRef(_db).doc(eventId).get();
       if (!snap.exists) return null;
       final data = snap.data();
@@ -49,7 +61,7 @@ class FirestoreEventRepository implements EventRepository {
   @override
   Future<void> upsertEventMeta(EventMeta meta) async {
     try {
-      final authUid = _requireAuthUid();
+      final authUid = await _ensureAuthUid();
       final ref = FirestoreCollections.eventsRef(_db).doc(meta.id);
       Map<String, dynamic>? currentData;
       try {
@@ -102,6 +114,7 @@ class FirestoreEventRepository implements EventRepository {
   @override
   Future<void> deleteEventMeta(String eventId) async {
     try {
+      await _ensureAuthUid();
       final ref = FirestoreCollections.eventsRef(_db).doc(eventId);
       final current = await ref.get();
       if (!current.exists) return;
@@ -165,8 +178,24 @@ class FirestoreEventRepository implements EventRepository {
     return values.toList(growable: false);
   }
 
-  String _requireAuthUid() {
-    final authUid = _auth.currentUser?.uid;
+  Future<QuerySnapshot<Map<String, dynamic>>> _queryEventsByMemberUid(
+    String authUid,
+  ) {
+    return FirestoreCollections.eventsRef(_db)
+        .where('memberUids', arrayContains: authUid)
+        .get();
+  }
+
+  Future<String> _ensureAuthUid({bool forceRefreshToken = false}) async {
+    var authUid = _auth.currentUser?.uid;
+    if (authUid == null || authUid.isEmpty) {
+      await _auth.signInAnonymously();
+      authUid = _auth.currentUser?.uid;
+    }
+    if (forceRefreshToken) {
+      await _auth.currentUser?.getIdToken(true);
+      authUid = _auth.currentUser?.uid;
+    }
     if (authUid == null || authUid.isEmpty) {
       throw const AppError(
         type: AppErrorType.unauthorized,
